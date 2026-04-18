@@ -1,0 +1,96 @@
+name: Bug or incorrect content
+description: Report a factual error, stale content, broken reference, or other bug in a published skill.
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please confirm the basics before filing — this repository has non-negotiable rules about what belongs in a public issue.
+
+        **Do NOT file here if:**
+        - The report would require disclosing non-public data (client names, internal paths, credentials, proprietary content). Use [SECURITY.md](../blob/main/SECURITY.md) instead.
+        - The issue is a question about whether a change fits. Open a [discussion](../discussions).
+
+        **Before reporting a broken / unreachable primary source:** manually confirm the URL in a browser. Automated fetchers (including AI assistants running validation passes) are frequently blocked by Cloudflare and similar bot protection on `.gov`, `salesforce.com`, `iso.org`, and other high-traffic primary sources. A 403 from an automated fetcher is not the same as a broken URL. See the repo-root [`TODO.md`](../blob/main/TODO.md) for context.
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Skill affected
+      description: Which skill in the repository does this issue relate to?
+      options:
+        - prompt-engineering-skill
+        - domain-research-skill
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: file
+    attributes:
+      label: File path
+      description: Path relative to the repository root, e.g. `prompt-engineering-skill/resources/qwen-prompt-api.md`.
+      placeholder: prompt-engineering-skill/resources/<file>.md
+    validations:
+      required: true
+
+  - type: input
+    id: section
+    attributes:
+      label: Section or line (optional)
+      description: If the issue is localized, name the section heading or line number.
+      placeholder: "§4 Reasoning / Thinking Control, or line 123"
+
+  - type: textarea
+    id: whats_wrong
+    attributes:
+      label: What is wrong
+      description: Quote the specific claim, example, or behavior that's incorrect or stale. Be precise.
+      placeholder: "The file states X. This is incorrect / stale because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected or correct information
+      description: What should the file say instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Primary source for the correction
+      description: Link to a Tier 1 source (provider documentation, model card, official GitHub repo, official blog post) that supports the correct version. Include the retrieval date you checked the source.
+      placeholder: |
+        https://docs.provider.com/path/to/page
+        retrieved 2026-04-19
+    validations:
+      required: true
+
+  - type: input
+    id: skill_version
+    attributes:
+      label: Skill version and contract version
+      description: From the front matter of the affected file (or SKILL.md if the file has none).
+      placeholder: "skill 0.1.0, contract 2026-04-18"
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Anything else that helps a maintainer reproduce or assess the issue.
+
+  - type: checkboxes
+    id: data_handling
+    attributes:
+      label: Data-handling confirmation
+      description: These apply before submitting.
+      options:
+        - label: I have reviewed this issue for non-public information (client, employer, organizational, PII, credentials) and found none.
+          required: true
+        - label: The primary source I linked is publicly accessible without authentication.
+          required: true

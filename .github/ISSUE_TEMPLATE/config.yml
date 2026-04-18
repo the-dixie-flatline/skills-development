@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or data-leak report
+    url: https://github.com/the-dixie-flatline/skills-development/security/advisories/new
+    about: Private vulnerability reporting for security issues or non-public-data leaks. See SECURITY.md for the full process. Do not open public issues for these concerns.
+  - name: Questions and general discussion
+    url: https://github.com/the-dixie-flatline/skills-development/discussions
+    about: For questions about whether a contribution fits, clarification about conventions, or general discussion, open a discussion rather than an issue.
+  - name: Contribution guidelines
+    url: https://github.com/the-dixie-flatline/skills-development/blob/main/CONTRIBUTING.md
+    about: Read CONTRIBUTING.md before filing. It covers data handling, source tiering, and AI-assistance declaration.

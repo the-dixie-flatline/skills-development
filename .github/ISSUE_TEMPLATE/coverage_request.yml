@@ -1,0 +1,86 @@
+name: Coverage request
+description: Request coverage of a new model family, new section within an existing family, new skill, or expanded depth in an existing section.
+title: "[coverage] "
+labels:
+  - coverage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for requesting coverage. Before filing, confirm the request fits the repository's scope: genuinely public, useful to practitioners, not already covered elsewhere at higher quality, and not an opinion / ranking / buying-guide request.
+
+        Read the "Scope of Contributions" and "Requesting New Coverage" sections of [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) before filing.
+
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: Type of coverage request
+      options:
+        - New model family (in prompt-engineering-skill)
+        - New section within an existing family reference
+        - Expanded depth in an existing section
+        - Entirely new skill
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: target
+    attributes:
+      label: Target
+      description: What specifically should be covered? (e.g. "Cohere Command R+", "qwen-prompt-api.md §6 Structured Outputs", "a new skill for database schema design").
+      placeholder: "Cohere Command R+"
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Why this belongs in the repository
+      description: |
+        Explain the practitioner use case. Address:
+        - Who benefits (role, context).
+        - Why existing coverage elsewhere is insufficient.
+        - Whether the scope is "something an average developer does often enough to care about" (the repository's contribution scope rule from README.md).
+    validations:
+      required: true
+
+  - type: textarea
+    id: primary_sources
+    attributes:
+      label: Primary sources
+      description: |
+        Link to the Tier 1 sources that would anchor the coverage (provider docs, model cards, official GitHub repos, official blog posts). Without Tier 1 sources, this coverage cannot be written.
+      placeholder: |
+        https://docs.provider.com/overview
+        https://github.com/provider/model-name/blob/main/MODEL_CARD.md
+    validations:
+      required: true
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Willing to submit the PR?
+      description: Coverage requests with an author ready to write the PR move faster.
+      options:
+        - "Yes — I can submit the PR"
+        - "Yes, with maintainer guidance"
+        - "No — this is a request only"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Scope notes, related issues, known gaps, anything that helps a maintainer assess priority.
+
+  - type: checkboxes
+    id: data_handling
+    attributes:
+      label: Data-handling confirmation
+      options:
+        - label: No non-public information is in this request (client names, employer references, internal tools, proprietary context).
+          required: true
+        - label: The primary sources I linked are publicly accessible without authentication.
+          required: true

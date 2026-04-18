@@ -1,0 +1,102 @@
+# =============================================================
+# Editor and IDE state — local machine preferences, not shared.
+# =============================================================
+
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+
+# =============================================================
+# Claude Code local state.
+#
+# settings.local.json carries personal session state by
+# convention. settings.json can accumulate incidental permission
+# grants and authorized domains during work. Until a contributor
+# curates a shared team configuration, the whole directory is
+# ignored to avoid leaking that noise into public history.
+# =============================================================
+
+.claude/
+
+# =============================================================
+# OS metadata
+# =============================================================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =============================================================
+# Python (CLAUDE.md mandates Python 3.13 with uv)
+# =============================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+!.env.example
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.hypothesis/
+
+# uv
+.uv/
+
+# =============================================================
+# Node (permitted by CLAUDE.md only when a skill's subject
+# matter requires JS/TS, e.g. browser automation).
+# =============================================================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================================
+# Test harness artifacts (when the harness lands).
+# =============================================================
+
+/tests/.cache/
+/tests/output/
+/tests/runs/
+
+# =============================================================
+# Secret-scanning tool outputs.
+#
+# Contributors are encouraged by SECURITY.md to run gitleaks,
+# trufflehog, or detect-secrets before pushing. Reports belong
+# on disk, not in history.
+# =============================================================
+
+.secrets.baseline
+.gitleaks.log
+trufflehog-report.*
+
+# =============================================================
+# Logs and dumps
+# =============================================================
+
+*.log
+*.log.*
+*.dump
+
