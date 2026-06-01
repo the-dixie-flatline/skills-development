@@ -2,13 +2,16 @@
 family: claude
 scope: api
 versions:
+  - claude-opus-4-8
   - claude-opus-4-7
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-04-18
+retrieved: 2026-06-01
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/overview
+  - https://docs.claude.com/en/docs/about-claude/models/overview
+  - https://docs.claude.com/en/docs/about-claude/model-deprecations
   - https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
   - https://platform.claude.com/docs/en/build-with-claude/extended-thinking
   - https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
@@ -16,13 +19,19 @@ primary_sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-caching
   - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
   - https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
+  - https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool
+  - https://www.anthropic.com/claude/opus
+  - https://www.anthropic.com/news/claude-opus-4-8
+  - https://www.anthropic.com/transparency
 maturity_note: |
-  Claude Opus 4.7 introduces substantial API-layer breaking changes from Opus
-  4.6: sampling parameters are rejected, manual thinking budgets are
-  rejected, thinking content is omitted from responses by default, and a new
-  tokenizer changes token counts. This file treats those changes as first-class
-  migration concerns. Files API, Citations, MCP connector, and Managed Agents
-  are out of scope; see Anthropic docs for those features.
+  Claude Opus 4.8 (`claude-opus-4-8`) is the current flagship, generally
+  available 2026-05-28; Opus 4.7 remains Active. Both Opus 4.8 and Opus 4.7
+  carry the same substantial API-layer breaking changes from Opus 4.6:
+  sampling parameters are rejected, manual thinking budgets are rejected, and
+  thinking content is omitted from responses by default. This file treats
+  those changes as first-class migration concerns. Files API, Citations, MCP
+  connector are out of scope; see Anthropic docs for those features. Lineup,
+  reasoning, and deprecation facts re-verified 2026-06-01.
 ---
 
 # Claude — API-Layer Reference
@@ -41,12 +50,15 @@ The Message Batches API (`/v1/messages/batches`) supports asynchronous batching 
 
 ### Platforms and model IDs
 
-| Platform           | Opus 4.7 ID                   | Sonnet 4.6 ID                  | Haiku 4.5 ID                                      |
-|--------------------|-------------------------------|--------------------------------|---------------------------------------------------|
-| Claude API         | `claude-opus-4-7`             | `claude-sonnet-4-6`            | `claude-haiku-4-5-20251001` (alias `claude-haiku-4-5`) |
-| Amazon Bedrock     | `anthropic.claude-opus-4-7`   | `anthropic.claude-sonnet-4-6`  | `anthropic.claude-haiku-4-5-20251001-v1:0`        |
-| Google Vertex AI   | `claude-opus-4-7`             | `claude-sonnet-4-6`            | `claude-haiku-4-5@20251001`                       |
+| Platform           | Opus 4.8 ID                   | Opus 4.7 ID                   | Sonnet 4.6 ID                  | Haiku 4.5 ID                                      |
+|--------------------|-------------------------------|-------------------------------|--------------------------------|---------------------------------------------------|
+| Claude API         | `claude-opus-4-8`             | `claude-opus-4-7`             | `claude-sonnet-4-6`            | `claude-haiku-4-5-20251001` (alias `claude-haiku-4-5`) |
+| Amazon Bedrock     | (see Bedrock model catalog)   | `anthropic.claude-opus-4-7`   | `anthropic.claude-sonnet-4-6`  | `anthropic.claude-haiku-4-5-20251001-v1:0`        |
+| Google Vertex AI   | (see Vertex model garden)     | `claude-opus-4-7`             | `claude-sonnet-4-6`            | `claude-haiku-4-5@20251001`                       |
 
+The Claude API ID for the current flagship is `claude-opus-4-8` (GA 2026-05-28). The exact Bedrock and Vertex AI ID strings for Opus 4.8 were not pinned in the retrieved primary sources; fetch the respective model catalog at integration time.
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
+[source: anthropic.com/claude/opus, retrieved 2026-06-01]
 [source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
 
 Bedrock exposes **global** (dynamic-routing) and **regional** endpoints from Sonnet 4.5 onward. Vertex AI exposes **global**, **multi-region**, and **regional** endpoints. Claude is also available on Microsoft Foundry.
@@ -84,9 +96,10 @@ Prefilled content on the **last** assistant turn is **deprecated on Claude 4.6 a
 
 ## 3. Sampling Parameters
 
-[applies-to: claude-opus-4-7]
-`temperature`, `top_p`, and `top_k` are **rejected (400 error)** when set to any non-default value. Omit these parameters entirely. If you were using `temperature = 0` for determinism, note that it never produced identical outputs on any Claude model.
+[applies-to: claude-opus-4-7, claude-opus-4-8]
+`temperature`, `top_p`, and `top_k` are **rejected (400 error)** when set to any non-default value on Claude Opus 4.7 and later, including Claude Opus 4.8. Omit these parameters entirely. If you were using `temperature = 0` for determinism, note that it never produced identical outputs on any Claude model.
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
 [testable: id=claude.opus47-sampling-rejected.v1, expected=request to claude-opus-4-7 with temperature=0.5 returns HTTP 400]
 
 On Opus 4.6, Sonnet 4.6, and Haiku 4.5 these parameters remain accepted, but `output_config.effort` is the recommended control for response characteristics.
@@ -104,14 +117,15 @@ On Opus 4.6, Sonnet 4.6, and Haiku 4.5 these parameters remain accepted, but `ou
 }
 ```
 
-- `type: "adaptive"` — model decides when and how much to think. Required mode on Opus 4.7.
-- `type: "enabled"` with `budget_tokens` — manual budget. Rejected on Opus 4.7 (400), deprecated on Opus 4.6 and Sonnet 4.6, still supported on Opus 4.5 / Sonnet 4.5 and older.
+- `type: "adaptive"` — model decides when and how much to think. The **only** supported thinking mode on Opus 4.8 and Opus 4.7.
+- `type: "enabled"` with `budget_tokens` — manual budget. Rejected on Opus 4.8 and Opus 4.7 (400; bare `thinking.type: "enabled"` is also rejected with HTTP 400), deprecated but still functional on Opus 4.6 and Sonnet 4.6 (which still support adaptive **and** manual), still supported on Opus 4.5 / Sonnet 4.5 and older.
 - `type: "disabled"` or field omitted — no thinking.
 - `budget_tokens` must be `< max_tokens` in manual mode (except with interleaved thinking).
-- `display` controls whether the `thinking` field on returned thinking blocks carries summarized reasoning or is empty. Defaults: `"summarized"` on Opus 4.6, Sonnet 4.6, Haiku 4.5, earlier Claude 4; `"omitted"` on Opus 4.7 and Mythos Preview.
+- `display` controls whether the `thinking` field on returned thinking blocks carries summarized reasoning or is empty. Defaults: `"summarized"` on Opus 4.6, Sonnet 4.6, Haiku 4.5, earlier Claude 4; `"omitted"` on Opus 4.8, Opus 4.7, and Mythos Preview.
 
 [source: platform.claude.com/docs/en/build-with-claude/extended-thinking, retrieved 2026-04-18]
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-04-18]
+[source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
 [testable: id=claude.opus47-manual-thinking-rejected.v1, expected=request to claude-opus-4-7 with thinking.type="enabled" returns HTTP 400]
 [testable: id=claude.opus47-display-default-omitted.v1, expected=request to claude-opus-4-7 with thinking.type="adaptive" and no display field returns thinking blocks with empty thinking strings]
 
@@ -135,6 +149,9 @@ On Opus 4.6, Sonnet 4.6, and Haiku 4.5 these parameters remain accepted, but `ou
 
 Setting `effort: "high"` is identical to omitting the parameter. At `high` and above on adaptive-capable models, Claude almost always thinks; at `low` / `medium` it may skip thinking on simple queries.
 [source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-04-18]
+
+Opus 4.8 uses the same reasoning-control model as Opus 4.7: adaptive thinking only (manual budgets rejected) with `output_config.effort` as the lever. Per-effort-level availability and token multipliers for Opus 4.8 were not pinned in the retrieved primary sources; do not assume the Opus 4.7 availability rows transfer level-for-level. Measure on your own evals.
+[source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
 
 ### `output_config.task_budget` (beta)
 
@@ -229,9 +246,12 @@ All current 4.x models emit multiple `tool_use` blocks in a single assistant tur
 ### Client vs server tools
 
 - **Client tools** run in the caller's application: user-defined tools plus Anthropic-schema tools like `bash`, `text_editor`, and `memory`.
-- **Server tools** run in Anthropic's infrastructure: `web_search`, `code_execution`, `web_fetch`, `tool_search`. Server tool types are **versioned** (e.g. `web_search_20260209`). Check the tool reference for the current versioned type string before use.
+- **Server tools** run in Anthropic's infrastructure: `web_search`, `code_execution`, `web_fetch`, `tool_search`. Server tool types are **versioned**. Check the tool reference for the current versioned type string before use.
 
 [source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-04-18]
+
+For the web search server tool specifically, the latest type is `web_search_20260209` (adds dynamic filtering; requires the code-execution tool enabled); the previous `web_search_20250305` remains available. Citations are always on, returned as `web_search_result_location` blocks (url, title, cited_text up to 150 chars). Pricing is $10 per 1,000 searches. An organization admin must enable the tool in the Console before use.
+[source: platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-06-01]
 
 ### Tool-use system-prompt overhead
 
@@ -357,15 +377,19 @@ Vertex AI: choose **global**, **multi-region** (within a geographic area), or **
 
 ## 9. Deprecations and Breaking Changes
 
-### Opus 4.7 breaking changes from Opus 4.6
+### Opus 4.7 and Opus 4.8 breaking changes from Opus 4.6
 
-[applies-to: claude-opus-4-7]
+[applies-to: claude-opus-4-7, claude-opus-4-8]
 
-- **Sampling parameters rejected.** `temperature`, `top_p`, `top_k` non-default values → 400. Omit them.
-- **Manual thinking rejected.** `thinking.type: "enabled"` → 400. Use `{type: "adaptive"}` with `output_config.effort`.
-- **`thinking.display` default changed** from `"summarized"` (Opus 4.6) to `"omitted"`. Thinking `thinking` field returns empty unless you set `display: "summarized"` explicitly.
-- **New tokenizer.** Token counts for the same text are **1.0× to 1.35× higher** than Opus 4.6. Update `max_tokens` and compaction thresholds with headroom.
-- **Behavioral shifts** (more literal instruction following, shorter default verbosity, fewer default tool calls) are not API errors but require prompt tuning — see `claude-prompt.md` §6.
+Opus 4.8 carries the same three hard API-rejection changes as Opus 4.7 (sampling, manual thinking, default `thinking.display`). The tokenizer and behavioral-shift bullets below were documented against Opus 4.7; the retrieved sources did not confirm identical figures for Opus 4.8.
+
+- **Sampling parameters rejected.** `temperature`, `top_p`, `top_k` non-default values → 400 on Opus 4.7 and later, including Opus 4.8. Omit them.
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
+- **Manual thinking rejected.** `thinking.type: "enabled"` → 400 (adaptive is the only supported mode on both Opus 4.8 and Opus 4.7). Use `{type: "adaptive"}` with `output_config.effort`.
+[source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
+- **`thinking.display` default changed** from `"summarized"` (Opus 4.6) to `"omitted"` on Opus 4.7 and Opus 4.8. Thinking `thinking` field returns empty unless you set `display: "summarized"` explicitly.
+- [applies-to: claude-opus-4-7] **New tokenizer.** Token counts for the same text are **1.0× to 1.35× higher** than Opus 4.6. Update `max_tokens` and compaction thresholds with headroom.
+- [applies-to: claude-opus-4-7] **Behavioral shifts** (more literal instruction following, shorter default verbosity, fewer default tool calls) are not API errors but require prompt tuning — see `claude-prompt.md` §6.
 
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
 
@@ -379,15 +403,16 @@ Vertex AI: choose **global**, **multi-region** (within a geographic area), or **
 
 ### Model retirements
 
-- **Claude Sonnet 4** (`claude-sonnet-4-20250514`) retires **2026-06-15**. Migrate to `claude-sonnet-4-6`.
-- **Claude Opus 4** (`claude-opus-4-20250514`) retires **2026-06-15**. Migrate to `claude-opus-4-7`.
-- **Claude Haiku 3** (`claude-3-haiku-20240307`) retires **2026-04-19**. Migrate to `claude-haiku-4-5`.
+- **Claude Sonnet 4** (`claude-sonnet-4-20250514`), deprecated 2026-04-14, retires **2026-06-15**. Replacement `claude-sonnet-4-6`.
+- **Claude Opus 4** (`claude-opus-4-20250514`), deprecated 2026-04-14, retires **2026-06-15**. Replacement `claude-opus-4-8`.
+- **Claude Haiku 3** (`claude-3-haiku-20240307`) is **already Retired** — retirement date **April 20, 2026** (in the past as of 2026-06-01). Replacement `claude-haiku-4-5-20251001`.
 
-[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
 
 ## 10. Gaps
 
-- **Files API, PDF support, Citations, MCP connector, Claude Managed Agents, Claude Code–specific API behaviors** are all real product surfaces but out of scope here. See Anthropic's per-feature docs.
+- **Files API, PDF support, Citations, MCP connector, Claude Code–specific API behaviors** are all real product surfaces but out of scope here. See Anthropic's per-feature docs.
+- **Claude Managed Agents and the web-search-tool research pattern** are documented in `resources/agent-orchestration-surfaces.md` and `resources/deep-research-agents.md`.
 - **`redacted_thinking` content-block type** is referenced in some primary sources for safety-redacted reasoning; the retrieval pass did not pin down its exact semantics or trigger conditions. Treat as partial until re-verified.
 - **Anthropic SDK per-language parameter name variance** (e.g. `outputConfig` in TypeScript, `OutputConfig` in C#/Java) is predictable from the JSON field names but not exhaustively documented here.
 - **Exact current version of each server-tool type** (e.g. `web_search_20260209`) drifts. Fetch the tool reference page at integration time rather than relying on a stamped value.
