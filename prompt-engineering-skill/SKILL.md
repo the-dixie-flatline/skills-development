@@ -16,6 +16,8 @@ Route to the right family-specific reference when the user is prompting, configu
 
 The split exists so someone writing a webui prompt loads only the smaller prompt-layer file; someone building against the API loads both.
 
+A second class of reference is **cross-family surface files** (`resources/*-surface.md`, `resources/deep-research-agents.md`, `resources/agent-orchestration-surfaces.md`). These tabulate behavior that is inherently cross-family — hosted deep-research agents, hosted multi-agent orchestration, OpenAI-compatibility divergences, and consumer/web-UI degradation. They are loaded *in addition to* a family file when the task targets one of those surfaces (see the surface axis in Routing).
+
 ## When to Use
 
 Invoke this skill when the task centers on a specific LLM family and the question is family-specific:
@@ -55,19 +57,28 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 
 | Family  | Prompt-layer | API-layer | Notes              |
 |---------|--------------|-----------|--------------------|
-| Claude  | published    | published | Covers Opus 4.7 + Sonnet 4.6 + Haiku 4.5 as of 2026-04-18. Flags Opus 4.7 breaking changes |
-| OpenAI  | published    | published | Covers GPT-5.4 flagship + 5.4-pro/mini/nano + Codex + Realtime as of 2026-04-18. Responses API primary; Assistants API sunsetting 2026-08-26 |
-| Gemini  | published    | published | Covers Gemini 3.1 Pro Preview + 3 Flash + 3.1 Flash-Lite Preview + 2.5 GA as of 2026-04-18 |
-| Gemma   | published    | published | Open weights, Apache 2.0. Covers Gemma 4 E2B / E4B / 26B-A4B / 31B as of 2026-04-19. New chat template vs Gemma 3 |
-| Llama   | published    | published | Open weights, Meta. Covers Llama 4 Scout + Maverick as of 2026-04-19. No Llama 5 released |
-| Qwen    | published    | published | Pilot family. Covers Qwen3.6-Plus closed flagship + Qwen3.6-35B-A3B open weights as of 2026-04-18 |
-| Grok    | published    | published | OpenAI-compatible API. Covers Grok 4.20 + 4.1 Fast pairs + multi-agent variant as of 2026-04-19 |
-| Mistral | published    | published | Open weights + native API. Covers Mistral 3 family + Small 4 hybrid + Magistral as of 2026-04-19 |
-| DeepSeek| published    | published | Covers DeepSeek-V3.2 flagship (chat + reasoner) + V3.2-Speciale as of 2026-04-19. Text-only, MIT license, OpenAI-compatible API |
+| Claude  | published    | published | Opus 4.8 flagship (GA 2026-05-28) + Opus 4.7 still Active + Sonnet 4.6 + Haiku 4.5, as of 2026-06-01. Adaptive-only thinking on 4.7/4.8; Opus 4 / Sonnet 4 retire 2026-06-15 |
+| OpenAI  | published    | published | GPT-5.5 flagship + 5.5-pro + 5.4 (cheaper tier) /mini/nano + 5.3-codex, as of 2026-06-01. Responses API primary; Assistants removed 2026-08-26 (→ Responses + Conversations); o*-deep-research IDs shut down 2026-07-23 |
+| Gemini  | published    | published | 3.5 Flash GA + 3.1 Flash-Lite GA + 3.1 Pro Preview, as of 2026-06-01. thinkingLevel replaces thinkingBudget on Gemini 3; 2.0 GA shut down 2026-06-01, 2.5 GA sunsets 2026-10-16 |
+| Gemma   | published    | published | Open weights, Apache 2.0. Gemma 4 E2B / E4B / 26B-A4B / 31B, re-verified 2026-06-01. 128K/256K context split; per-size dedicated draft model |
+| Llama   | published    | published | Open weights, Meta. Llama 4 Scout + Maverick, re-confirmed 2026-06-01. No Llama 5 released |
+| Qwen    | published    | published | Qwen3.7-Max GA flagship + Qwen3.6-Plus (demoted GA) + open `qwen3.6-35b-a3b` MoE + dense `Qwen3.6-27B`, as of 2026-06-01 |
+| Grok    | published    | published | OpenAI-compatible API. grok-4.3 flagship + grok-build-0.1, as of 2026-06-01. reasoning_effort {none,low,medium,high}; prior fast/4.x/3 slugs retired 2026-05-15 |
+| Mistral | published    | published | Open weights + native API. Mistral Medium 3.5 frontier + Small 4 hybrid, as of 2026-06-01. Unified binary reasoning_effort (high|none); Magistral → Legacy |
+| DeepSeek| published    | published | DeepSeek V4 (`deepseek-v4-flash` / `deepseek-v4-pro`), as of 2026-06-01. MIT, 1M ctx; legacy chat/reasoner retire 2026-07-24; V3.2-Speciale API expired 2025-12-15 |
 
-"Planned" is an honest gap, not a placeholder. When the user asks about an uncovered family, tell them it is not yet covered rather than improvising a reference-shaped answer.
+### Cross-family surface resources
 
-Update this table whenever a reference lands or is removed.
+| Resource | Status | Covers |
+|----------|--------|--------|
+| `deep-research-agents.md`              | published | Hosted deep-research agents (Gemini, OpenAI, Perplexity) + web-search tool-use loops (Anthropic, Grok), as of 2026-06-01 |
+| `openai-compatibility-surface.md`      | published | Per-provider divergences through OpenAI-shaped endpoints (Grok, DeepSeek, Gemini, Qwen, Mistral, vLLM, llama.cpp), as of 2026-06-01 |
+| `agent-orchestration-surfaces.md`      | published | Anthropic Managed Agents, OpenAI hosted/SDK split, the 3 Gemini agent products, as of 2026-06-01 |
+| `webui-surfaces-and-silent-degradation.md` | published | Consumer/web-UI surfaces, tier-labeled; leads with documented gaps, as of 2026-06-01 |
+
+An uncovered family or surface is an honest gap, not a placeholder. When the user asks about something not covered, tell them it is not yet covered rather than improvising a reference-shaped answer.
+
+Update these tables whenever a reference lands or is removed.
 
 ## Reading Discipline
 
