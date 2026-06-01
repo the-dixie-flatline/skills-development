@@ -2,23 +2,31 @@
 family: qwen
 scope: api
 versions:
+  - qwen3.7-max
   - qwen3.6-plus
-  - qwen3.6-plus-2026-04-02
-  - Qwen/Qwen3.6-35B-A3B
-  - Qwen/Qwen3.6-35B-A3B-FP8
-retrieved: 2026-04-18
+  - qwen3.6-35b-a3b
+  - Qwen/Qwen3.6-27B
+retrieved: 2026-06-01
 primary_sources:
+  - https://qwen.ai/blog?id=qwen3.7
+  - https://www.alibabacloud.com/help/en/model-studio/deep-thinking
+  - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
+  - https://www.alibabacloud.com/help/en/model-studio/compatibility-with-openai-responses-api
+  - https://huggingface.co/Qwen/Qwen3.6-27B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B/raw/main/tokenizer_config.json
   - https://github.com/QwenLM/Qwen3.6
   - https://www.alibabacloud.com/blog/qwen3-6-plus-towards-real-world-agents_603005
   - https://www.alibabacloud.com/help/en/model-studio/models
 maturity_note: |
-  Qwen3.6 is current as of this retrieval. Some of the deepest API-layer
-  guidance (structured output grammar specifics, full caching/batch surface,
-  exact Alibaba Cloud Model Studio endpoint URLs) is not fully present in the
-  retrieved primary sources and appears in the "Gaps" section below rather
-  than being paraphrased from Tier 2/3 sources.
+  Qwen3.7-Max is the current GA closed flagship (hybrid-mode `qwen3.7-max`);
+  Qwen3.6-Plus is demoted but still GA. Open weights are pinned to the MoE
+  `qwen3.6-35b-a3b` and the dense `Qwen/Qwen3.6-27B`. Reasoning surfaces differ
+  by API layer: Chat Completions returns `reasoning_content`, the OpenAI
+  Responses-compatible layer returns a reasoning item with `summary[]`. Older
+  open-weights template and sampling detail below retains its 2026-04-18
+  retrieval date and has not been re-verified in this pass. For the cross-family
+  OpenAI-compat hazard matrix, see `resources/openai-compatibility-surface.md`.
 ---
 
 # Qwen — API-Layer Reference
@@ -47,7 +55,7 @@ Model Studio exposes Qwen through three concurrently-available API surfaces:
 - Anthropic-compatible protocol
 - Native DashScope
 
-All three accept the same model IDs (e.g. `qwen3.6-plus`, `qwen3.6-plus-2026-04-02`). Regional endpoints depend on account region:
+All three accept the same model IDs (e.g. `qwen3.7-max`, `qwen3.6-plus`). Regional endpoints depend on account region:
 
 | Region              | Data center                                 |
 |---------------------|---------------------------------------------|
@@ -61,20 +69,35 @@ All three accept the same model IDs (e.g. `qwen3.6-plus`, `qwen3.6-plus-2026-04-
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 [source: www.alibabacloud.com/blog/qwen3-6-plus-towards-real-world-agents_603005, retrieved 2026-04-18]
 
-Exact endpoint URL paths per compatibility mode are covered in Gaps (§10) — they are not quoted verbatim in the retrieved primary excerpts. Resolve against the current Model Studio documentation before shipping integration code.
+The OpenAI-compatible base URL for the regional (Singapore) endpoint is `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`. A US endpoint and a Beijing `dashscope` (mainland) endpoint also exist; select the base URL matching the account region.
+[source: https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions, retrieved 2026-06-01]
+
+For the cross-family OpenAI-compatibility hazard matrix (parameter-mapping deviations across providers), see `resources/openai-compatibility-surface.md`.
 
 ### Model IDs
 
 Dated versions are available alongside the rolling ID:
 
 ```
-qwen3.6-plus                 # rolling
+qwen3.7-max                  # rolling, hybrid mode, GA
+qwen3.7-max-2026-05-20       # pinned, hybrid mode
+qwen3.7-max-preview          # rolling, thinking-only line
+qwen3.7-max-2026-05-17       # pinned, thinking-only line
+
+qwen3.6-plus                 # rolling, hybrid, demoted but GA
 qwen3.6-plus-2026-04-02      # pinned
 
-Qwen/Qwen3.6-35B-A3B         # open weights, BF16
-Qwen/Qwen3.6-35B-A3B-FP8     # open weights, FP8
+qwen3.6-27b                  # dense, DashScope-hosted id
+
+Qwen/Qwen3.6-35B-A3B         # open weights, MoE, BF16
+Qwen/Qwen3.6-35B-A3B-FP8     # open weights, MoE, FP8
+Qwen/Qwen3.6-27B             # open weights, dense + vision encoder
 ```
 
+`qwen3.7-max` is GA via Alibaba Cloud Model Studio in hybrid mode; the thinking-only line ships as `qwen3.7-max-preview` / `qwen3.7-max-2026-05-17`.
+[source: https://qwen.ai/blog?id=qwen3.7, retrieved 2026-06-01]
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
+[source: https://huggingface.co/Qwen/Qwen3.6-27B, model card, retrieved 2026-06-01]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, retrieved 2026-04-18]
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 
@@ -203,9 +226,9 @@ tokenizer.apply_chat_template(
 
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 
-### Alibaba Cloud Model Studio (OpenAI-compatible)
+### Alibaba Cloud Model Studio — OpenAI Chat Completions
 
-Both parameters live at the top level of `extra_body`, not nested under `chat_template_kwargs`:
+`enable_thinking` is not a standard OpenAI parameter; it is passed via `extra_body` on the Chat Completions layer. Both `enable_thinking` and `preserve_thinking` live at the top level of `extra_body`, not nested under `chat_template_kwargs`:
 
 ```python
 client.chat.completions.create(
@@ -218,7 +241,23 @@ client.chat.completions.create(
 )
 ```
 
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
+
+### Reasoning output shape (Chat Completions)
+
+On the Chat Completions layer the reasoning text is returned in `reasoning_content` with the final answer in `content`. This holds for both non-streaming and streaming responses (the streaming delta exposes `reasoning_content` incrementally).
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
+
+### Alibaba Cloud Model Studio — OpenAI Responses-compatible layer
+
+On the OpenAI Responses-API-compatible layer the controls differ:
+
+- `enable_thinking` is deprecating. Use `reasoning.effort` instead; when both are supplied, `reasoning.effort` takes precedence.
+- Reasoning output is not returned in `reasoning_content`. It is surfaced as a reasoning item exposing a `summary[]` array.
+
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
+[source: https://www.alibabacloud.com/help/en/model-studio/compatibility-with-openai-responses-api, retrieved 2026-06-01]
 
 ### Defaults
 
@@ -310,7 +349,8 @@ For production JSON use: prefer grammar-constrained decoding via the inference s
 
 ## 7. Caching, Batch, Streaming
 
-- **Context caching**, Alibaba Cloud Model Studio: `qwen3-coder-plus` lists a 20% discount for implicit cache hits and 10% for explicit cache hits in its pricing table. Similar caching on other tiers is not confirmed in the retrieved excerpts.
+- **Context caching**, Alibaba Cloud Model Studio: the OpenAI-compatible surface reports cache usage via the OpenAI-standard `prompt_tokens_details.cached_tokens` field, and explicit context caching is supported. Multimodal input is supported on the same surface.
+[source: https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions, retrieved 2026-06-01]
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 
 - **Streaming**: not quoted verbatim in the retrieved excerpts; OpenAI-compatible and Anthropic-compatible endpoints conventionally support SSE streaming and the compatibility claim implies it.
@@ -378,13 +418,17 @@ For long-video understanding with the 35B-A3B open-weights model, raise `longest
 - **`qwen-turbo` deprecated** in favor of `qwen-flash` on Alibaba Cloud Model Studio.
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 
+- **`enable_thinking` deprecating on the OpenAI Responses-compatible layer.** Migrate to `reasoning.effort` (which takes precedence when both are sent). `enable_thinking` remains the documented control on the Chat Completions layer, passed via `extra_body`.
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
+[source: https://www.alibabacloud.com/help/en/model-studio/compatibility-with-openai-responses-api, retrieved 2026-06-01]
+
 - **Tool-call parser name differs from reasoning-parser name.** `--tool-call-parser qwen3_coder` vs. `--reasoning-parser qwen3`. A single-word parser flag for both operations is not available.
 [source: github.com/QwenLM/Qwen3.6, README, retrieved 2026-04-18]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 
 ## 10. Gaps
 
-- **Exact Alibaba Cloud Model Studio endpoint URL paths** for the OpenAI-compatible, Anthropic-compatible, and native DashScope surfaces are not quoted in the retrieved excerpts. Integration code must resolve these against current Model Studio documentation at authoring time.
+- **Endpoint URL paths** for the Anthropic-compatible and native DashScope surfaces are not quoted in the retrieved excerpts (the OpenAI-compatible regional base URL is documented in §1). Integration code must resolve the remaining surfaces against current Model Studio documentation at authoring time.
 - **Structured-output mechanics** (JSON-mode equivalent, strict schema validation, grammar hooks beyond the generic vLLM/SGLang facilities) are not documented in the retrieved sources for Qwen3.6.
 - **Batch API** surface on Alibaba Cloud Model Studio is not covered in the retrieved excerpts.
 - **Parallel tool-call emission** behavior is not explicitly documented for Qwen3.6; whether the model reliably emits multiple `<tool_call>` blocks in one turn is unverified.
