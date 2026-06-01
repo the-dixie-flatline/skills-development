@@ -38,9 +38,16 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 1. **Identify the target family** from the user's prompt, imported SDK (`anthropic`, `openai`, `google-genai`, transformers model ID, etc.), file naming, or an explicit question.
    - **Empty-arg case.** When the skill is invoked with no family argument, resolve the family from the triggering turn (the user's prose, the open file, the imported SDK). If the family is not recoverable that way, ask before loading anything. Never default to a family.
    - **Generated-prompt case.** When the deliverable is a prompt *for another model*, two families are in play: the **subject family** (whose behavior the prompt-author is reasoning about) and the **consumer family** (the model that will actually run the prompt). Route on the consumer family — load its files, because its behavioral quirks and contract are what the generated prompt must satisfy. If the task also requires reasoning about the authoring model's own output, load that family too and say which is which.
-2. **Decide scope.**
+2. **Decide scope.** Scope is additive, not either/or.
    - Prompt-layer only: load `resources/{family}-prompt.md`.
    - API-layer relevant: also load `resources/{family}-prompt-api.md`. Triggers include the user mentioning sampling parameters, tools, structured outputs, reasoning/thinking budgets, streaming, caching, chat template tokens, or specific SDK calls.
+   - **Mixed-task rule.** If the task includes authoring or rewriting prompts for the family, load the prompt-layer file *too* — even when the task is primarily integration or migration. From-scratch prompt writing needs the behavioral quirks and anti-patterns that live only in `{family}-prompt.md`. API involvement does not displace the prompt-layer file.
+   - **Surface axis (third routing axis).** Beyond the family and the prompt-vs-API split, ask which *surface* the task targets. Hosted agent/product surfaces have their own contract distinct from the standard chat API, and their references are cross-family:
+     - Hosted deep-research agents (async submit/poll) or web-search research loops → `resources/deep-research-agents.md`.
+     - Hosted multi-agent / agent-orchestration surfaces → `resources/agent-orchestration-surfaces.md`.
+     - Calling a non-OpenAI family through an OpenAI-shaped endpoint → `resources/openai-compatibility-surface.md`.
+     - Consumer / web-UI behavior (vs the API) → `resources/webui-surfaces-and-silent-degradation.md`.
+     Load the cross-family surface file *in addition to* the family file, not instead of it.
 3. **Read the loaded file's front matter first.** The `versions:` field and `retrieved:` date decide whether the content still applies. If `retrieved:` is older than 90 days, say so before relying on the content.
 4. **Answer using loaded content plus the reading discipline below.** Do not fill gaps from parametric memory; surface them as gaps.
 
