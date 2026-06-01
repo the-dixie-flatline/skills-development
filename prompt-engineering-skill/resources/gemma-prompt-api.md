@@ -10,8 +10,9 @@ versions:
   - google/gemma-4-26B-A4B-it
   - google/gemma-4-31B
   - google/gemma-4-31B-it
-retrieved: 2026-04-19
+retrieved: 2026-06-01
 primary_sources:
+  - https://ai.google.dev/gemma/docs/core
   - https://ai.google.dev/gemma/docs/core/model_card_4
   - https://ai.google.dev/gemma/docs/core/prompt-formatting-gemma4
   - https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4
@@ -24,7 +25,10 @@ maturity_note: |
   `<start_of_turn>` / `<end_of_turn>`, and native function calling is added
   with its own token protocol. Exact vLLM / SGLang minimum versions for
   Gemma 4 chat-template support were not quoted in the retrieved primary
-  sources and appear in Gaps.
+  sources and appear in Gaps. Lineup re-verified 2026-06-01: four sizes
+  unchanged, Apache 2.0, 128K context for the small models / 256K for the
+  medium models, and a dedicated draft model shipped per size for
+  speculative decoding.
 ---
 
 # Gemma — API-Layer Reference
@@ -327,6 +331,11 @@ No provider-hosted caching or batch discount applies. Specific flag configuratio
 - **Video max length**: 60s at 1 fps.
 
 [source: huggingface.co/google/gemma-4-E4B-it, retrieved 2026-04-19]
+
+### Speculative decoding (dedicated draft model)
+
+All four sizes (E2B, E4B, 31B, 26B A4B) ship a **dedicated draft model** (multi-token prediction) for speculative decoding. The docs name it only "dedicated draft model"; there is no documented `-it-assistant` or other drafter-suffix model ID — do not assume one.
+[source: ai.google.dev/gemma/docs/core, retrieved 2026-06-01]
 
 ### On-device path (LiteRT)
 
