@@ -2,30 +2,35 @@
 family: gemini
 scope: prompt
 versions:
+  - gemini-3.5-flash
+  - gemini-3.1-flash-lite
   - gemini-3.1-pro-preview
-  - gemini-3-flash-preview
-  - gemini-3.1-flash-lite-preview
-  - gemini-3.1-flash-live-preview
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-04-18
+retrieved: 2026-06-01
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
+  - https://ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025
   - https://ai.google.dev/gemini-api/docs/thinking
   - https://ai.google.dev/gemini-api/docs/function-calling
   - https://ai.google.dev/gemini-api/docs/caching
   - https://ai.google.dev/gemini-api/docs/structured-output
-  - https://blog.google/products/gemini/gemini-3-flash/
+  - https://ai.google.dev/gemini-api/docs/deprecations
 maturity_note: |
-  Gemini 3 is Google's current generation. Gemini 3.1 Pro, Gemini 3 Flash
-  (released 2025-12-17), and Gemini 3.1 Flash-Lite are all in Preview;
-  Gemini 2.5 Pro, Flash, and Flash-Lite remain stable/GA. A Gemini 3
-  generation change replaces `thinkingBudget` with `thinkingLevel` — this is
-  the most material migration point for prompt engineers coming from 2.5.
-  Context-window sizes and per-model pricing are not fully present in the
-  retrieved Tier 1 sources; consult the current models page at integration
-  time.
+  Gemini 3 is Google's current generation. Gemini 3.5 Flash reached GA on
+  2026-05-19 and Gemini 3.1 Flash-Lite reached GA on 2026-05-07; Gemini 3.1
+  Pro remains Preview (no GA). The Gemini 3 line uses `thinkingLevel`
+  {minimal, low, medium, high} as the reasoning control, replacing the 2.5-era
+  `thinkingBudget` — this is the most material migration point for prompt
+  engineers coming from 2.5. Deprecation pressure is high: Gemini 2.0 Flash /
+  Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
+  sunset 2026-10-16. Context-window sizes and per-model pricing are not fully
+  present in the retrieved Tier 1 sources; consult the current models page at
+  integration time.
 ---
 
 # Gemini — Prompt-Layer Reference
@@ -38,29 +43,39 @@ Pick by task axis. Preview ≠ unstable, but does indicate the surface may still
 
 | Target task                                                | Preferred model                       | Status       |
 |------------------------------------------------------------|---------------------------------------|--------------|
+| Most intelligent; sustained frontier agentic and coding    | `gemini-3.5-flash`                    | GA (released 2026-05-19) |
+| Lowest-latency, lowest-cost Gemini 3 text                  | `gemini-3.1-flash-lite`               | GA (since 2026-05-07) |
 | Advanced reasoning, long-horizon agentic work              | `gemini-3.1-pro-preview`              | Preview      |
-| Balanced quality and speed on Gemini 3                     | `gemini-3-flash-preview`              | Preview (released 2025-12-17) |
-| Lowest-latency, lowest-cost Gemini 3 text                  | `gemini-3.1-flash-lite-preview`       | Preview      |
-| Real-time audio-to-audio dialogue (Live API)               | `gemini-3.1-flash-live-preview`       | Preview      |
-| Reasoning workloads on stable GA                           | `gemini-2.5-pro`                      | GA           |
-| Price-performance on stable GA                             | `gemini-2.5-flash`                    | GA           |
-| Fast / cheapest stable GA                                  | `gemini-2.5-flash-lite`               | GA           |
-| Native image generation                                    | `gemini-3.1-flash-image-preview` (Nano Banana 2), `gemini-3-pro-image-preview` (Nano Banana Pro), `gemini-2.5-flash-image` (Nano Banana) | Mixed GA/Preview |
-| Text-to-speech                                             | `gemini-3.1-flash-tts-preview`, `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts`    | Preview      |
+| Reasoning workloads on stable GA                           | `gemini-2.5-pro`                      | GA (sunset 2026-10-16) |
+| Price-performance on stable GA                             | `gemini-2.5-flash`                    | GA (sunset 2026-10-16) |
+| Fast / cheapest stable GA                                  | `gemini-2.5-flash-lite`               | GA (sunset 2026-10-16) |
 | UI automation via screen interaction                       | `gemini-2.5-computer-use-preview-10-2025` | Preview   |
-| Multi-step research automation                             | `deep-research-pro-preview-12-2025`   | Preview      |
-| Video / music generation                                   | `veo-3.1-generate-preview`, `lyria-3-pro-preview` | Preview |
-| Multimodal embeddings                                      | `gemini-embedding-2-preview`, `gemini-embedding-001` | Mixed |
 
-[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-04-18]
-[source: blog.google/products/gemini/gemini-3-flash, retrieved 2026-04-18]
+[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview, retrieved 2026-06-01]
+
+`gemini-3.5-flash` carries a Jan 2025 knowledge cutoff with a latest-update stamp of May 2026.
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
+
+A separate endpoint, `gemini-3.1-pro-preview-customtools`, is tuned to prioritize your custom tools over built-in tools.
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview, retrieved 2026-06-01]
+
+**Computer use is not a 3.x-text-model capability.** Only `gemini-2.5-computer-use-preview-10-2025` (Preview) supports screen interaction. `gemini-3.5-flash`, `gemini-3.1-flash-lite`, and `gemini-3.1-pro-preview` do **not** support computer use.
+[source: ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite, retrieved 2026-06-01]
 
 ### Deprecated / retired
 
-- `gemini-3-pro-preview` (the **original** 3 Pro preview — superseded by `gemini-3.1-pro-preview`) was shut down **2026-03-09**.
-- `gemini-2.0-flash` and `gemini-2.0-flash-lite` are deprecated; shutdown pending.
+- `gemini-2.0-flash` / `gemini-2.0-flash-lite` GA (and `-001` variants) shut down **2026-06-01**.
+- `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` GA sunset **2026-10-16**.
+- `gemini-3-pro-preview` (the **original** 3 Pro preview — superseded by `gemini-3.1-pro-preview`) shut down **2026-03-09**.
+- `gemini-3.1-flash-lite-preview` shut down **2026-05-25** (superseded by GA `gemini-3.1-flash-lite`).
+- `gemini-3-flash-preview` was the preview that `gemini-3.5-flash` replaced.
 
-[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-04-18]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-06-01]
 
 ## 2. Prompt Structure Conventions
 
@@ -84,13 +99,16 @@ Unlike Anthropic, Google's Gemini documentation does not recommend a specific XM
 
 ## 3. Instruction Patterns
 
-### Thinking defaults are high on Gemini 3
+### Thinking defaults vary by tier on Gemini 3
 
-Gemini 3 flagships and Flash default to `thinkingLevel: "high"`. If the workload is latency-sensitive or token-sensitive, step down to `"medium"`, `"low"`, or `"minimal"` explicitly — do not assume reasoning is off by default the way it is on many OpenAI-compatible stacks.
-[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-04-18]
+`thinkingLevel` {minimal, low, medium, high} is the recommended reasoning control for Gemini 3 models and onward; it replaces the 2.5-era `thinkingBudget`. Defaults differ by model: `gemini-3.1-pro-preview` defaults to `high`, `gemini-3.5-flash` to `medium`, `gemini-3.1-flash-lite` to `minimal`. For latency- or token-sensitive workloads on Pro or Flash, step down explicitly — do not assume reasoning is off by default the way it is on many OpenAI-compatible stacks.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
 
-[applies-to: gemini-3.1-flash-lite-preview] Flash-Lite defaults to `thinkingLevel: "minimal"` — closer to a classical non-thinking chat model. For reasoning tasks on Flash-Lite, raise the level.
-[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-04-18]
+[applies-to: gemini-3.1-pro-preview] 3.1 Pro cannot set `minimal` and cannot disable thinking.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
+
+[applies-to: gemini-3.1-flash-lite] Flash-Lite defaults to `thinkingLevel: "minimal"` — closer to a classical non-thinking chat model. For reasoning tasks on Flash-Lite, raise the level.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
 
 ### Grounding via Google Search is a built-in tool
 
@@ -99,7 +117,7 @@ Rather than stuffing web search results into the prompt manually, enable the `go
 
 ### Thought signatures in multi-turn + tool use
 
-[applies-to: gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-3.1-flash-lite-preview]
+[applies-to: gemini-3.5-flash, gemini-3.1-flash-lite, gemini-3.1-pro-preview]
 Gemini 3 returns `thoughtSignature` fields on response parts — opaque encrypted representations of the model's internal reasoning. In multi-turn conversations that include function calling, **pass these signatures back unchanged** alongside the parts that carried them. Concatenating parts, merging parts across signatures, or dropping signatures can drop thought context silently. Google's guidance: "always send the thought_signature back to the model inside its original Part."
 [source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-04-18]
 [source: ai.google.dev/gemini-api/docs/function-calling, retrieved 2026-04-18]
@@ -127,11 +145,10 @@ Gemini is natively multimodal — text, image, video, audio, and PDF inputs are 
 
 - **Images and video** enter as either `inlineData` (base64 payload) or `fileData` (URI returned by the Files API).
 - **PDFs** work the same way — pass as `inlineData` or `fileData`.
-- **Audio** on the Live API variant (`gemini-3.1-flash-live-preview`) supports streaming bi-directional audio for real-time dialogue.
-- **Screen interaction / computer use** is exposed via the specialized `gemini-2.5-computer-use-preview-10-2025` model, which takes screenshots as image parts and emits UI action commands.
+- **Screen interaction / computer use** is exposed only via the specialized `gemini-2.5-computer-use-preview-10-2025` model, which takes screenshots as image parts and emits UI action commands. The 3.x text models do not support computer use.
 
 [source: ai.google.dev/gemini-api/docs/function-calling, retrieved 2026-04-18]
-[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-04-18]
+[source: ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025, retrieved 2026-06-01]
 
 A common convention: place multimodal inputs **before** the text instructions that reference them. Gemini attends to ordering within a `user` turn's parts array.
 
@@ -150,15 +167,15 @@ A common convention: place multimodal inputs **before** the text instructions th
 [source: ai.google.dev/gemini-api/docs/caching, retrieved 2026-04-18]
 
 - **`gemini-3.1-pro-preview` and `gemini-3-pro-preview` are different models.** The original `gemini-3-pro-preview` was shut down 2026-03-09 and superseded by `gemini-3.1-pro-preview`. Don't hard-code the old ID.
-[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-04-18]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-06-01]
 
 ## 7. Anti-Patterns
 
 - **Do not use `"assistant"` as a message role.** Gemini uses `"model"`. `"assistant"` is a Claude/OpenAI convention and not portable.
 [source: ai.google.dev/gemini-api/docs/function-calling, retrieved 2026-04-18]
 
-- **Do not rely on `thinkingBudget` for Gemini 3 work.** `thinkingBudget` is accepted on Gemini 3 for backwards compatibility but the contract is `thinkingLevel` (minimal/low/medium/high). Mixing budgets on 3.1 Pro may cause unexpected performance.
-[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-04-18]
+- **Do not use `thinkingBudget` for Gemini 3 work.** `thinkingLevel` (minimal/low/medium/high) is the control for Gemini 3 and onward. `thinkingBudget` is retained for the 2.5 series only — "2.5 series models don't support thinkingLevel; use thinkingBudget instead." Do not carry 2.5 budget code forward to 3.x.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
 
 - **Do not use full JSON Schema for `responseSchema`.** Gemini supports an OpenAPI-derived subset. `minLength`, `maxLength`, `multipleOf`, complex `pattern` regexes, recursive schemas, and external `$ref` URLs are silently ignored or rejected. Validate against Gemini's supported construct list.
 [source: ai.google.dev/gemini-api/docs/structured-output, retrieved 2026-04-18]
@@ -177,5 +194,5 @@ A common convention: place multimodal inputs **before** the text instructions th
 - **Exact cache-hit discount percentage** for explicit caching is referenced but not quoted numerically in the retrieved Tier 1 caching excerpt. Earlier community reporting cites 90% on Gemini 2.5+ but this is not replicated verbatim in the current primary page.
 - **Vertex AI vs Gemini API prompt-level behavioral differences** (if any) are not covered here; the two platforms share model IDs but have distinct control planes.
 - **Live API prompting conventions** (bidirectional audio, VAD, end-of-turn signals) are not covered here; the Live API is a distinct surface with its own prompting discipline.
-- **Gemini 3 Deep Think mode** is referenced in public blog posts but not documented in-depth in the retrieved API excerpts.
+- **Gemini Deep Research, the Antigravity managed agent, and Computer Use** are documented in `resources/deep-research-agents.md` and `resources/agent-orchestration-surfaces.md`.
 - **Cross-language prompting quirks** across Gemini's multilingual support are not covered.
