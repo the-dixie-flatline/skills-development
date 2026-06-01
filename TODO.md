@@ -26,6 +26,29 @@ Rough list of things that need work but don't block anything shipping now. Keep 
 
 **Contributions welcome.** If you have a clean pattern for cross-domain primary-source verification that handles bot blockers gracefully, open a discussion before writing the PR.
 
+## Route-out to `prompt-engineering-architect` (from the 2026-06-01 refresh)
+
+The prompt-engineering-skill 0.2.0 refresh surfaced several items that are methodology,
+not family fact, and belong in a future `prompt-engineering-architect` skill rather than in
+the family-specific reference. They were deliberately NOT authored into prompt-engineering-skill.
+Captured here so they are not lost:
+
+- **Fabrication-guard / research-discipline block.** Generic, topic-independent guards for
+  authoring deep-research-mode prompts (demand primary-source tiering; flag invented runtimes,
+  mis-attributed benchmarks, fabricated CLI flags). Proven prompt-correction asset; model-agnostic.
+- **Router-portable / model-agnostic pattern set.** The inverse of "pick one family": enumerate
+  forbidden family-specific affordances and substitution-robust alternatives for prompts that must
+  run across heterogeneous models behind a router.
+- **Citation-conflation detection rule.** The *phenomenon* is named in
+  `webui-surfaces-and-silent-degradation.md`; the detection methodology (attribution-match, not
+  URL-resolves) is author methodology and belongs in the architect skill.
+- **Reading-discipline methodology** beyond the two notes already added to SKILL.md (#16): the
+  broader "weight operator-measured behavior over benchmark priors" and version-delta-caution
+  discipline as a reusable methodology block.
+
+Declined (confirmed out of scope, do not author anywhere): local inference-stack / runtime tuning,
+image-generation prompting, NotebookLM.
+
 ## Stale `research-skill/` placeholder directory
 
 An empty `research-skill/` directory exists at the repo root (leftover from early planning before the `domain-research-skill/` name was chosen). Decide whether to remove it or repurpose it for a future skill, then clean up.
