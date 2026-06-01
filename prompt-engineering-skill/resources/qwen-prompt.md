@@ -2,23 +2,28 @@
 family: qwen
 scope: prompt
 versions:
+  - qwen3.7-max
   - qwen3.6-plus
-  - qwen3.6-plus-2026-04-02
-  - Qwen/Qwen3.6-35B-A3B
-  - Qwen/Qwen3.6-35B-A3B-FP8
-retrieved: 2026-04-18
+  - qwen3.6-35b-a3b
+  - Qwen/Qwen3.6-27B
+retrieved: 2026-06-01
 primary_sources:
+  - https://qwen.ai/blog?id=qwen3.7
+  - https://www.alibabacloud.com/help/en/model-studio/deep-thinking
+  - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
+  - https://huggingface.co/Qwen/Qwen3.6-27B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B
   - https://www.alibabacloud.com/blog/qwen3-6-plus-towards-real-world-agents_603005
   - https://www.alibabacloud.com/help/en/model-studio/models
   - https://github.com/QwenLM/Qwen3.6
 maturity_note: |
-  Qwen3.6 is current as of this retrieval. The closed flagship (qwen3.6-plus)
-  launched 2026-04-02; the first Qwen3.6 open-weight variant (Qwen3.6-35B-A3B)
-  launched 2026-04-16. User documentation at qwen.readthedocs.io was marked
-  "coming soon" on the upstream GitHub as of the retrieval date; some
-  fine-grained guidance in this file draws from the Hugging Face model card and
-  tokenizer configuration as the available Tier 1 sources.
+  Qwen3.7-Max is the current GA closed flagship (hybrid-mode `qwen3.7-max`,
+  available via Alibaba Cloud Model Studio). Qwen3.6-Plus is demoted but still
+  GA (hybrid thinking, thinking on by default). Open weights are pinned to the
+  MoE `qwen3.6-35b-a3b` and the new dense `Qwen/Qwen3.6-27B`. Some older
+  fine-grained guidance below remains grounded in the Qwen3.6-35B-A3B model card
+  and tokenizer configuration; claims carrying a 2026-04-18 retrieval date have
+  not been re-verified in this pass.
 ---
 
 # Qwen — Prompt-Layer Reference
@@ -27,11 +32,12 @@ Portable prompting guidance for the Qwen3.6 generation. API-layer detail (chat t
 
 ## 1. Model Selection
 
-The current Qwen lineup on Alibaba Cloud Model Studio spans agentic coding flagships, balanced general-purpose tiers, specialized reasoning and coding variants, and multimodal/omni tiers. The open-weights lineup covers the Qwen3.6-35B-A3B MoE plus several Qwen3.5 sizes. Pick on the task axis, not the brand.
+The current Qwen lineup on Alibaba Cloud Model Studio spans agentic coding flagships, balanced general-purpose tiers, specialized reasoning and coding variants, and multimodal/omni tiers. The open-weights lineup covers the Qwen3.6-35B-A3B MoE and the dense Qwen3.6-27B, plus several Qwen3.5 sizes. Pick on the task axis, not the brand.
 
 | Target task                                          | Preferred model                                          | Notes                                                                                             |
 |------------------------------------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| Agentic coding, repo-level reasoning, UI→code        | `qwen3.6-plus`                                           | Flagship; 1M context; multimodal; integrates with Claude Code, Cline, OpenCode, Qwen Code        |
+| Frontier closed flagship, hybrid thinking            | `qwen3.7-max`                                            | GA via Model Studio; hybrid mode; pinned snapshot `qwen3.7-max-2026-05-20`                        |
+| Agentic coding, repo-level reasoning, UI→code        | `qwen3.6-plus`                                           | Demoted but GA; hybrid thinking on by default; 1M context; native multimodal                     |
 | Autonomous coding agent on proprietary infra         | `qwen3-coder-plus`                                       | 1M context; coder-specialized; supports context caching                                           |
 | Balanced general-purpose, closed                     | `qwen3.5-plus` / `qwen-plus`                             | 1M context; both support thinking mode                                                            |
 | Fast / cheap general-purpose                         | `qwen3.5-flash` / `qwen-flash`                           | 1M context; lower cost                                                                            |
@@ -40,9 +46,13 @@ The current Qwen lineup on Alibaba Cloud Model Studio spans agentic coding flags
 | Vision / multimodal understanding                    | `qwen3-vl-plus` / `qwen3-vl-flash`                       | 262K context, thinking mode supported                                                             |
 | Text + image + audio + video, speech output          | `qwen3.5-omni-plus` / `qwen3-omni-flash`                 | Omni-modal; preview pricing                                                                       |
 | Very long text analysis (10M tokens)                 | `qwen-long`                                              | Mainland China only; summarization / information extraction                                       |
-| Open-weights general + agentic coding                | `Qwen/Qwen3.6-35B-A3B`                                   | Apache 2.0; 35B total / 3B active; 262K native, YaRN-extensible to ~1M                           |
-| Open-weights lower-cost or smaller footprint         | `Qwen/Qwen3.5-*` (4B / 9B / 27B / 35B-A3B / 122B-A10B)   | Use the smallest that meets quality bar                                                           |
+| Open-weights general + agentic coding (MoE)          | `Qwen/Qwen3.6-35B-A3B`                                   | 35B total / 3B active; 262K native, YaRN-extensible to ~1M                                        |
+| Open-weights flagship-level coding (dense)           | `Qwen/Qwen3.6-27B`                                       | 27B dense; vision encoder; 262K native, YaRN to ~1.01M; DashScope id `qwen3.6-27b`               |
+| Open-weights lower-cost or smaller footprint         | `Qwen/Qwen3.5-*` (4B / 9B / 27B / 35B-A3B / 122B-A10B)   | Use the smallest that meets quality bar; 3.5-27B is the prior dense generation                    |
 
+[source: https://qwen.ai/blog?id=qwen3.7, retrieved 2026-06-01]
+[source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
+[source: https://huggingface.co/Qwen/Qwen3.6-27B, model card, retrieved 2026-06-01]
 [source: alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 
@@ -87,9 +97,10 @@ The model card recommends allocating 32,768 output tokens for normal queries and
 
 ### Thinking preservation across turns
 
-[applies-to: Qwen/Qwen3.6-35B-A3B, qwen3.6-plus]
-Qwen3.6 adds a `preserve_thinking` option that, when enabled, retains `<think>` traces from prior turns in the conversation. This is off by default. Turn it on for multi-turn agentic flows where decision-consistency and KV-cache reuse across turns matter; leave it off for stateless Q&A, where retained reasoning inflates input token counts without downstream benefit. The parameter lives in `chat_template_kwargs` for open-weights deployments, or in `extra_body` for Alibaba Cloud Model Studio calls — see `qwen-prompt-api.md` for placement.
+[applies-to: Qwen/Qwen3.6-35B-A3B, Qwen/Qwen3.6-27B, qwen3.6-plus]
+Qwen3.6 adds a `preserve_thinking` option that, when enabled, retains reasoning traces from prior turns in the conversation. This is off by default. Turn it on for multi-turn agentic flows where decision-consistency and KV-cache reuse across turns matter; leave it off for stateless Q&A, where retained reasoning inflates input token counts without downstream benefit. The parameter lives in `chat_template_kwargs` for open-weights deployments, or in `extra_body` for Alibaba Cloud Model Studio calls — see `qwen-prompt-api.md` for placement. The dense Qwen3.6-27B documents the same `preserve_thinking` behavior on its model card.
 [source: www.alibabacloud.com/blog/qwen3-6-plus-towards-real-world-agents_603005, retrieved 2026-04-18]
+[source: https://huggingface.co/Qwen/Qwen3.6-27B, model card, retrieved 2026-06-01]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 
 ## 4. Context Window Practical Guidance
