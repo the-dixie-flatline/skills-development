@@ -2,33 +2,33 @@
 family: mistral
 scope: api
 versions:
+  - mistral-medium-3-5
   - mistral-small-2603
-  - mistralai/Mistral-Small-4-119B-2603
-  - mistral-large-2512
-  - mistral-medium-2508
-  - mistral-small-2506
-  - ministral-3-14b-2512
-  - ministral-3-8b-2512
-  - ministral-3-3b-2512
-  - magistral-medium-1.2-2509
-  - magistral-small-1.2-2509
-  - mistralai/Magistral-Small-2506
-retrieved: 2026-04-19
+retrieved: 2026-06-01
 primary_sources:
-  - https://docs.mistral.ai/getting-started/models/models_overview/
+  - https://docs.mistral.ai/models/model-cards/mistral-medium-3-5-26-04
+  - https://docs.mistral.ai/models/model-cards/mistral-small-4-0-26-03
+  - https://docs.mistral.ai/models/overview
+  - https://docs.mistral.ai/resources/changelogs
+  - https://docs.mistral.ai/api/endpoint/chat
+  - https://docs.mistral.ai/studio-api/conversations/reasoning
+  - https://docs.mistral.ai/studio-api/conversations/reasoning/adjustable
+  - https://docs.mistral.ai/resources/migration-guides
+  - https://docs.mistral.ai/resources/known-limitations
   - https://docs.mistral.ai/cookbooks/concept-deep-dive-tokenization-chat_templates
-  - https://huggingface.co/mistralai/Mistral-Small-4-119B-2603
-  - https://mistral.ai/news/mistral-3
-  - https://docs.mistral.ai/getting-started/changelog
 maturity_note: |
-  Mistral has both a closed API (La Plateforme) and open weights (HuggingFace,
-  Apache 2.0). The wire API is OpenAI-compatible for messages, tools, and
-  tool_choice, which makes OpenAI SDK code portable with a base_url swap.
-  The open-weights side has its own tokenizer-level control-token protocol
-  (`[INST]`, `[/INST]`, plus function-calling tokens) that callers interacting
-  with the model directly (vLLM, transformers) must respect. `mistral-common`
-  is the canonical reference implementation and is the right first choice
-  rather than hand-built chat strings.
+  Mistral has both a hosted API (La Plateforme) and open weights. The wire
+  API is OpenAI-compatible for messages, tools, and tool_choice, so OpenAI
+  SDK code is portable with a base_url swap to `https://api.mistral.ai/v1`.
+  Mistral Medium 3.5 (`mistral-medium-3-5`, released 2026-04-27, Modified MIT,
+  256K) is the current frontier model; Small 4 (`mistral-small-2603`, 256K) is
+  the current open hybrid model. Adjustable reasoning is unified across both
+  via `reasoning_effort`, which on the chat endpoint accepts only `"high"` or
+  `"none"`. The chat schema documents `max_tokens` (not OpenAI's
+  `max_completion_tokens`). The Magistral 1.0-1.2 family is Legacy/Deprecated.
+  The open-weights side has a tokenizer-level control-token protocol
+  (`[INST]`, `[/INST]`, plus function-calling tokens); `mistral-common` is the
+  canonical reference implementation.
 ---
 
 # Mistral — API-Layer Reference
@@ -40,10 +40,12 @@ API-call-level detail for current Mistral models. Portable prompt-layer content 
 ### Endpoints
 
 - **La Plateforme** — Mistral's native API at `https://api.mistral.ai/v1/...`. Chat completions, embeddings, FIM (fill-in-the-middle) for Codestral, OCR, moderation, audio.
-- **OpenAI-compatible** — the chat completions endpoint accepts OpenAI SDK code with a base URL change and API-key swap.
+- **OpenAI-compatible** — same Chat Completions request structure; point `base_url` at `https://api.mistral.ai/v1`, swap the API key, and change the model name. OpenAI SDK code is then portable.
+[source: docs.mistral.ai/resources/migration-guides, retrieved 2026-06-01]
 - **Third-party hosts**: Amazon Bedrock, Azure Foundry, Hugging Face Inference, Modal, IBM WatsonX, OpenRouter, Fireworks, Together AI, Unsloth AI. Coming soon: NVIDIA NIM, AWS SageMaker.
-
 [source: mistral.ai/news/mistral-3, retrieved 2026-04-19]
+
+For the cross-family OpenAI-compatibility matrix, see `resources/openai-compatibility-surface.md` rather than duplicating it here.
 
 ### SDKs
 
@@ -54,8 +56,9 @@ API-call-level detail for current Mistral models. Portable prompt-layer content 
 
 ### Model-ID versioning
 
-Mistral uses `YYMM` date suffixes (e.g. `mistral-small-2603` = March 2026, `magistral-medium-1.2-2509` = September 2025). Strip the suffix for alias-latest behavior on La Plateforme; pin the dated form for stable snapshots.
-[source: docs.mistral.ai/getting-started/changelog, retrieved 2026-04-19]
+Mistral uses `YYMM` date suffixes (e.g. `mistral-small-2603` = March 2026). The catalog also exposes incrementing aliases such as `mistral-medium-3-5` (`mistral-medium-3-5+1`) and `mistral-small-2603` (`mistral-small-2603+1`). Strip the suffix for alias-latest behavior on La Plateforme; pin the dated form for stable snapshots.
+[source: docs.mistral.ai/models/model-cards/mistral-medium-3-5-26-04, retrieved 2026-06-01]
+[source: docs.mistral.ai/models/model-cards/mistral-small-4-0-26-03, retrieved 2026-06-01]
 
 ## 2. Chat Template / Message Structure
 
@@ -128,56 +131,58 @@ V1 placed it at the first user message instead. This is a breaking difference be
 
 ```json
 {
-  "model": "mistral-small-2603",
+  "model": "mistral-medium-3-5",
   "messages": [
     { "role": "system",    "content": "..." },
     { "role": "user",      "content": "..." },
     { "role": "assistant", "content": "..." },
     { "role": "tool",      "content": "...", "tool_call_id": "..." }
   ],
-  "reasoning_effort": "high"
+  "reasoning_effort": "high",
+  "max_tokens": 1024
 }
 ```
 
+Use `max_tokens` for the completion-length cap. The chat schema documents `max_tokens` ("the maximum number of tokens to generate in the completion") and has **no** `max_completion_tokens` field — Mistral has not adopted OpenAI's rename; send `max_tokens`.
+[source: docs.mistral.ai/api/endpoint/chat, retrieved 2026-06-01]
+
 The `tool` role at the API layer maps to the tokenizer's function-calling control tokens at rendering time.
-[source: huggingface.co/mistralai/Mistral-Small-4-119B-2603, retrieved 2026-04-19]
+[source: docs.mistral.ai/cookbooks/concept-deep-dive-tokenization-chat_templates, retrieved 2026-04-19]
 
 ## 3. Sampling Parameters
 
-Recommended sampling on Mistral Small 4, per mode:
+- **`max_tokens`** caps completion length. The chat schema documents `max_tokens`; there is no `max_completion_tokens` field. Send `max_tokens`.
+[source: docs.mistral.ai/api/endpoint/chat, retrieved 2026-06-01]
+- When `reasoning_effort` is `"high"`, leave headroom in `max_tokens` for the thinking chunk that precedes the answer; with `"none"` the thinking chunk is omitted.
+[source: docs.mistral.ai/studio-api/conversations/reasoning/adjustable, retrieved 2026-06-01]
 
-| `reasoning_effort` | Temperature          | `do_sample` | max_new_tokens |
-|--------------------|----------------------|-------------|----------------|
-| `"none"`           | 0.0–0.7 (task-dependent) | `True`   | ~1024          |
-| `"high"`           | 0.7                  | `True`      | ~1024+ (reasoning traces need headroom) |
-
-[source: huggingface.co/mistralai/Mistral-Small-4-119B-2603, retrieved 2026-04-19]
-
-Per-model sampling defaults for other Mistral models (Large 3, Medium 3.1, Ministral 3, Magistral) are not uniformly published in the retrieved primary sources. Validate on workload.
+Per-mode and per-model temperature defaults are not uniformly published in the retrieved primary sources. Validate on workload.
 
 ## 4. Reasoning / Thinking Control
 
-### Mistral Small 4 hybrid reasoning
+### Adjustable reasoning (`reasoning_effort`)
 
-[applies-to: mistralai/Mistral-Small-4-119B-2603, mistral-small-2603]
+[applies-to: mistral-medium-3-5, mistral-small-2603]
 
 ```json
 {
-  "model": "mistral-small-2603",
+  "model": "mistral-medium-3-5",
   "messages": [...],
-  "reasoning_effort": "none" | "high"
+  "reasoning_effort": "high" | "none"
 }
 ```
 
-`reasoning_effort` is **binary** on Small 4 — only `"none"` (fast, approximates Small 3.2 behavior) and `"high"` (deep reasoning, approximates Magistral behavior) are officially documented. OpenAI's full ladder (`minimal`/`low`/`medium`/`high`/`xhigh`) is not supported as-is.
-[source: huggingface.co/mistralai/Mistral-Small-4-119B-2603, retrieved 2026-04-19]
-[testable: id=mistral.small4-reasoning-effort-binary.v1, expected=request to mistral-small-2603 with reasoning_effort="medium" returns an error or is silently coerced to "none" or "high"]
+Adjustable reasoning is available on `mistral-medium-3-5` and `mistral-small-latest`. On the chat endpoint, `reasoning_effort` accepts **only `"high"` or `"none"`** — not the OpenAI four-level (`low`/`medium`/`high`/`none`) scale. `"high"` emits a full thinking chunk before the answer; `"none"` omits the thinking chunk and applies minimal thinking.
+[source: docs.mistral.ai/api/endpoint/chat, retrieved 2026-06-01]
+[source: docs.mistral.ai/studio-api/conversations/reasoning/adjustable, retrieved 2026-06-01]
+[testable: id=mistral.reasoning-effort-high-emits-thinking.v1, expected=request with reasoning_effort="high" returns a thinking chunk before the answer; reasoning_effort="none" returns an answer with the thinking chunk omitted]
 
-### Magistral reasoning
+### Magistral reasoning (Legacy)
 
-[applies-to: magistral-medium-1.2-2509, magistral-small-1.2-2509, mistralai/Magistral-Small-2506]
-Magistral reasons **by design** — no `reasoning_effort` toggle documented. The model is specialized for chain-of-thought across 8 languages (EN, FR, ES, DE, IT, AR, RU, zh-Hans).
-[source: mistral.ai/news/magistral, retrieved 2026-04-19]
+[applies-to: magistral-medium-2509]
+Native reasoning models `magistral-small-latest` / `magistral-medium-latest` always generate reasoning traces — no `reasoning_effort` toggle. The Magistral 1.0-1.2 family is in the Legacy/Deprecated table; the documented alternative for `magistral-medium-2509` is Mistral Medium 3.5.
+[source: docs.mistral.ai/studio-api/conversations/reasoning, retrieved 2026-06-01]
+[source: docs.mistral.ai/models/overview, retrieved 2026-06-01]
 
 ### vLLM reasoning-parser flag
 
@@ -187,10 +192,10 @@ For open-weights deployments that want the thinking trace separated from the fin
 --reasoning-parser mistral
 ```
 
-Use with Mistral Small 4 or Magistral; the parser extracts the reasoning segment.
+Use with the open-weights models; the parser extracts the reasoning segment.
 [source: huggingface.co/mistralai/Mistral-Small-4-119B-2603, retrieved 2026-04-19]
 
-Exact reasoning-output tag format (whether wrapped in `<think>...</think>`, placed in a separate field, or otherwise) is not quoted in the retrieved primary sources; see §11 (Gaps).
+Exact reasoning-output tag format (whether wrapped in `<think>...</think>`, placed in a separate field, or otherwise) is not quoted in the retrieved primary sources; see §10 (Gaps).
 
 ## 5. Tool Use / Function Calling
 
@@ -267,7 +272,8 @@ For constrained JSON output without using the schema field directly, JSON-mode (
 
 ## 7. Caching, Batch, Streaming
 
-- **Prompt caching on La Plateforme**: not prominently documented in retrieved primary sources. If caching applies, it is not surfaced via a `cache_control` field or a cached-token discount in the retrieved excerpts. Hosted third parties (Bedrock, Together) may apply their own caching.
+- **Prompt caching**: supported via the `prompt_cache_key` parameter on the chat endpoint. Cached tokens are billed at 10% of the standard input price.
+[source: docs.mistral.ai/api/endpoint/chat, retrieved 2026-06-01]
 - **Batch API**: not covered in retrieved sources.
 - **Streaming**: SSE streaming is supported via the OpenAI-compatible chat completions endpoint, standard event types (`chunk`, tool-call events).
 
@@ -334,37 +340,34 @@ The `guardrails` parameter was introduced on conversations and chat completions 
 Mixing a V1-era chat template rendering against a V2+ tokenizer silently degrades output quality without errors.
 [source: docs.mistral.ai/cookbooks/concept-deep-dive-tokenization-chat_templates, retrieved 2026-04-19]
 
-### Magistral → Mistral Small 4 unification
+### Magistral family → Legacy/Deprecated
 
-[applies-to: mistralai/Mistral-Small-4-119B-2603, mistral-small-2603]
-Mistral Small 4 (March 2026) unifies Magistral (reasoning), Pixtral (multimodal), and Devstral (code) into one hybrid model. Magistral 1.2 variants remain available; for new work prefer Small 4 with `reasoning_effort: "high"`.
-[source: huggingface.co/mistralai/Mistral-Small-4-119B-2603, retrieved 2026-04-19]
+[applies-to: magistral-medium-2509]
+The Magistral 1.0-1.2 family is in the Legacy/Deprecated table. Native reasoning still works (the models always emit traces), but the documented alternative for `magistral-medium-2509` is Mistral Medium 3.5. Adjustable reasoning via `reasoning_effort` on `mistral-medium-3-5` / `mistral-small-latest` is the current path.
+[source: docs.mistral.ai/models/overview, retrieved 2026-06-01]
+[source: docs.mistral.ai/studio-api/conversations/reasoning, retrieved 2026-06-01]
 
 ### Pixtral 12B (v1) deprecation
 
-Pixtral 12B is marked deprecated on the Mistral news site. Migrate to Mistral Small 4 or Ministral 3 for multimodal workloads.
+Pixtral 12B is marked deprecated on the Mistral news site. Migrate to a current model for multimodal workloads.
 [source: mistral.ai/news/mistral-3, retrieved 2026-04-19]
 
-### License tier distinction
+### License
 
-- **Open (Apache 2.0)**: Mistral Large 3, Mistral Small 4, Mistral Small 3.2, Ministral 3 family, Magistral Small, Codestral (check per-version).
-- **Premier (closed / commercial)**: Mistral Medium 3.1, Magistral Medium.
+- **Mistral Medium 3.5** (`mistral-medium-3-5`): released as open weights under a **Modified MIT** license.
+[source: docs.mistral.ai/models/model-cards/mistral-medium-3-5-26-04, retrieved 2026-06-01]
 
-Re-verify per model at integration time.
-[source: docs.mistral.ai/getting-started/models/models_overview/, retrieved 2026-04-19]
-[source: mistral.ai/news/mistral-3, retrieved 2026-04-19]
+Re-verify the license per model at integration time.
+[source: docs.mistral.ai/models/overview, retrieved 2026-06-01]
 
 ## 10. Gaps
 
-- **Reasoning output tag format** for Small 4's `"high"` mode is not quoted in retrieved primary sources. vLLM `--reasoning-parser mistral` implies a parseable structure; the exact emission wrapping (tag form, field name) needs a targeted retrieval.
+- **`max_completion_tokens` handling** — the chat schema omits the field; whether the endpoint rejects, ignores, or silently maps it is undocumented. Send `max_tokens`.
+- **`reasoning_effort` out-of-schema values** — the chat schema lists only `"high"` and `"none"`; whether `"low"` / `"medium"` are rejected or coerced is not stated.
+- **Reasoning output tag format** for the `"high"` mode is not quoted in retrieved primary sources. vLLM `--reasoning-parser mistral` implies a parseable structure; the exact emission wrapping (tag form, field name) needs a targeted retrieval.
 - **Tool-calling control tokens at the tokenizer level** (`[AVAILABLE_TOOLS]`, `[TOOL_CALLS]`, `[TOOL_RESULTS]`, `[/TOOL_RESULTS]`) are community-known but not quoted verbatim with IDs in the retrieved primary chat-template page.
-- **V7 tokenizer status** — references exist in community discussion; primary docs in the retrieved pass cover V1 through V3-Tekken only.
 - **Structured outputs `response_format` semantics** (strict-mode support, schema subset, model-support matrix) were not retrieved in this pass.
-- **La Plateforme prompt caching** (if any) — not documented in retrieved sources.
 - **Batch API** parameter shape is not covered.
-- **Per-model context windows** beyond Small 4's 256K are not uniformly quoted.
-- **Image content-part shape** (detail parameter, resolution budgets) is undocumented in retrieved sources.
-- **`guardrails` parameter rule schema** — structure of custom rules is not quoted.
-- **Magistral reasoning output format** — whether the model wraps thoughts in a specific tag or emits them inline — is not quoted in retrieved sources.
+- **Mistral Medium 3.5 parameter counts** (total / active) are not quoted in the retrieved model card.
+- **Image content-part shape** (detail parameter, per-request count limits beyond the 20 MB per-image cap) is not fully documented in retrieved sources.
 - **Parallel tool-call disable flag** — whether `parallel_tool_calls: false` is accepted — is not explicitly documented.
-- **Devstral 2 and Codestral 25.08 deployment flags and FIM (fill-in-the-middle) specifics** are covered in separate docs not fetched here.
