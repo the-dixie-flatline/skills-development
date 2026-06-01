@@ -79,8 +79,10 @@ Applies to every loaded reference.
   - `[applies-to: <version-id>, ...]` — version-scoped claim. Ignore when the user's target is outside scope.
   - `[unverified]` — plausibly true, not documented by the provider. Relay with the same marker; do not promote it to fact.
   - `[disputed: <summary>]` — primary sources conflict. Present both positions.
-- **Honor "Gaps" sections.** When the user asks about something a reference explicitly lists as unknown, say "I do not know" plus the file's framing. Do not paper over the gap.
-- **Do not export cross-family guidance.** A Qwen-specific chat-template quirk is not generalizable to Llama just because both use ChatML-derived formats. Stay inside the family the user is targeting.
+- **Honor "Gaps" sections — this is the skill's strongest feature.** When the user asks about something a reference explicitly lists as unknown, say "I do not know" plus the file's framing. Do not paper over the gap. A declared gap is load-bearing: when a family file states that some surface is not exposed (an agent or trace shape a vendor does not document, a field whose behavior is unverified), that declared gap lets you reject a wrong premise instead of inventing an API to satisfy it. A declared gap beats a silent one precisely here. Never convert a declared gap into a confident answer.
+- **Do not export cross-family guidance.** A Qwen-specific chat-template quirk is not generalizable to Llama just because both use ChatML-derived formats. Stay inside the family the user is targeting. (The cross-family `*-surface.md` resources are the deliberate exception: they exist precisely to tabulate cross-family divergence and are safe to read across families.)
+- **Weight measured behavior over benchmark priors.** When a reference's documented behavior conflicts with the user's own operator-measured observation, weight the measurement above benchmark or marketing priors and above this file's general claims. Note the conflict and recommend updating the file rather than overriding the user's evidence.
+- **Test a newer variant on your own axis before switching.** A newer model ID is not automatically better on a specific task. When advising a version migration, recommend testing the newer variant on the user's actual evaluation axis before adopting it; version-delta improvements are workload-dependent.
 
 ## Cross-Family Portability
 
