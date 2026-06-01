@@ -1,7 +1,7 @@
 ---
 name: prompt-engineering-skill
-description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, or migrates a prompt between versions. Skip for general prompt-engineering methodology (use prompt-engineering-architect) and for questions about how this current Claude session should respond.
-version: 0.1.0
+description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, configures a hosted deep-research or agent-orchestration surface, calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology (use prompt-engineering-architect) and for questions about how this current Claude session should respond.
+version: 0.2.0
 contract-version: 2026-04-18
 ---
 
