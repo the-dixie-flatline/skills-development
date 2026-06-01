@@ -48,7 +48,7 @@ Invoke this skill when the task centers on a specific LLM family and the questio
      - Calling a non-OpenAI family through an OpenAI-shaped endpoint → `resources/openai-compatibility-surface.md`.
      - Consumer / web-UI behavior (vs the API) → `resources/webui-surfaces-and-silent-degradation.md`.
      Load the cross-family surface file *in addition to* the family file, not instead of it.
-3. **Read the loaded file's front matter first.** The `versions:` field and `retrieved:` date decide whether the content still applies. If `retrieved:` is older than 90 days, say so before relying on the content.
+3. **Read the loaded file's front matter first.** The `versions:` field and `retrieved:` date decide whether the content still applies. If `retrieved:` is older than 90 days, say so before relying on the content. **This freshness check applies to family content reused from earlier in the conversation, not only to files read fresh this turn.** If you are answering from family guidance already in context, re-confirm its `retrieved:` date before relying on it; do not let the check lapse just because the file was loaded earlier.
 4. **Answer using loaded content plus the reading discipline below.** Do not fill gaps from parametric memory; surface them as gaps.
 
 ## Coverage Status
