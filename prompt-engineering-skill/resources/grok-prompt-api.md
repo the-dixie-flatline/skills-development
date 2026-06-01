@@ -2,65 +2,55 @@
 family: grok
 scope: api
 versions:
-  - grok-4.20-0309-reasoning
-  - grok-4.20-0309-non-reasoning
-  - grok-4.20-multi-agent-0309
-  - grok-4-1-fast-reasoning
-  - grok-4-1-fast-non-reasoning
-retrieved: 2026-04-19
+  - grok-4.3
+  - grok-build-0.1
+retrieved: 2026-06-01
 primary_sources:
   - https://docs.x.ai/developers/models
-  - https://docs.x.ai/docs/guides/reasoning
-  - https://docs.x.ai/docs/guides/function-calling
-  - https://docs.x.ai/developers/advanced-api-usage/prompt-caching/how-it-works
-  - https://docs.x.ai/developers/release-notes
+  - https://docs.x.ai/developers/model-capabilities/text/reasoning
+  - https://docs.x.ai/developers/rest-api-reference/inference/chat
+  - https://docs.x.ai/developers/advanced-api-usage/prompt-caching/usage-and-pricing
+  - https://docs.x.ai/developers/migration/may-15-retirement
+  - https://docs.x.ai/llms.txt
 maturity_note: |
   Grok's API is OpenAI-compatible at the wire level, which makes most
-  OpenAI SDK code portable with minor changes. Two Grok-specific behaviors
-  matter most: `reasoning_effort` has non-portable semantics (rejected on
-  most models; controls agent count on the multi-agent variant), and the
-  `x-grok-conv-id` HTTP header is the recommended lever for maximizing
-  prompt-cache hit rates. Some caching mechanics (minimum cacheable tokens,
-  exact TTL) were not quoted in the retrieved primary sources and appear in
-  Gaps.
+  OpenAI SDK code portable with minor changes. The current flagship is
+  grok-4.3 (1,000,000-token context, supports non-reasoning mode); reasoning
+  is controlled by `reasoning_effort` ({none, low, medium, high}, default
+  "low"). grok-build-0.1 is a fast coding model. Effective 2026-05-15 the
+  prior fast / 4.x / 3 slugs were retired and auto-redirect to grok-4.3
+  (or grok-build-0.1 for grok-code-fast-1). The `x-grok-conv-id` HTTP header
+  is the optional lever for maximizing prompt-cache hit rates.
 ---
 
 # Grok — API-Layer Reference
 
-API-call-level detail for current Grok 4.x models. Portable prompt-layer content (selection, behavioral quirks, anti-patterns) lives in `grok-prompt.md`.
+API-call-level detail for current Grok models. Portable prompt-layer content (selection, behavioral quirks, anti-patterns) lives in `grok-prompt.md`. For the cross-family OpenAI-compatibility matrix, see `resources/openai-compatibility-surface.md` (not duplicated here).
 
 ## 1. API Surface
 
 ### Endpoints and SDKs
 
-- **xAI API** at `https://api.x.ai/v1/...` — OpenAI-compatible (same paths: `/chat/completions`, `/responses` where supported, `/batches`).
+- **xAI API** at `https://api.x.ai/v1` — OpenAI-compatible (same paths: `/chat/completions`, `/responses` where supported, `/batches`).
 - **xAI SDK** (`xai_sdk` Python package) — first-party.
-- **OpenAI SDK** — works against the xAI API by pointing `base_url` at `api.x.ai/v1` and swapping the API key.
+- **OpenAI SDK** — works against the xAI API by pointing `base_url` at `https://api.x.ai/v1` and swapping the API key.
 
-[source: docs.x.ai/docs/guides/function-calling, retrieved 2026-04-19]
-
-### Specialized endpoints
-
-- **Batch API** — supports chat completions, image generation, image editing, and video generation.
-- **Speech-to-Text API** — 25 languages, batch + streaming modes.
-- **Text-to-Speech API** — "natural-sounding speech".
-- **Grok Imagine API** — bundle for video/audio generative workflows.
-
-[source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/rest-api-reference/inference/chat, retrieved 2026-06-01]
+[source: https://docs.x.ai/llms.txt, retrieved 2026-06-01]
 
 ### Model IDs
 
-Dated and aliased IDs both work. Use dated IDs for pinning:
+Use the flagship and coding model IDs directly:
 
 ```
-grok-4.20-0309-reasoning
-grok-4.20-0309-non-reasoning
-grok-4.20-multi-agent-0309
-grok-4-1-fast-reasoning
-grok-4-1-fast-non-reasoning
+grok-4.3
+grok-build-0.1
 ```
 
-[source: docs.x.ai/developers/models, retrieved 2026-04-19]
+`grok-4`, `grok-4-latest`, `grok-3`, and the prior fast slugs are listed as aliases that resolve to `grok-4.3` (see §9 for the 2026-05-15 retirement and redirect behavior).
+
+[source: docs.x.ai/developers/models, retrieved 2026-06-01]
+[source: https://docs.x.ai/developers/migration/may-15-retirement, retrieved 2026-06-01]
 
 ## 2. Chat Template / Message Structure
 
@@ -70,7 +60,7 @@ Grok uses OpenAI-compatible JSON messages, not a special-token chat template.
 
 ```json
 {
-  "model": "grok-4.20-0309-reasoning",
+  "model": "grok-4.3",
   "messages": [
     { "role": "system", "content": "..." },
     { "role": "user", "content": "..." }
@@ -79,66 +69,48 @@ Grok uses OpenAI-compatible JSON messages, not a special-token chat template.
 }
 ```
 
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/rest-api-reference/inference/chat, retrieved 2026-06-01]
 
 Roles: `system`, `user`, `assistant`, `tool` (standard OpenAI shape). Content supports text and image parts in the OpenAI-compatible format.
 
 ## 3. Sampling Parameters
 
 Standard OpenAI-compatible fields (`temperature`, `top_p`, etc.) are accepted. The retrieved primary sources do not publish per-model recommended defaults or bounds; rely on per-workload validation rather than hard-coding values.
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
+
+**Reasoning-model incompatibilities:**
+
+- `presencePenalty` / `frequencyPenalty` / `stop` **cannot be used with reasoning models** and return an error.
+- `logprobs` / `top_logprobs` are **silently ignored** on grok-4.20 and newer.
+
+[source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-06-01]
 
 ## 4. Reasoning / Thinking Control
 
-### Per-model `reasoning_effort` semantics
+### `reasoning_effort` semantics
 
-The `reasoning_effort` parameter is the most Grok-specific behavior to get right.
+`grok-4.3` supports `reasoning_effort` with values {none, low, medium, high}. It defaults to `"low"`; `"none"` means no reasoning occurs (a non-reasoning response). This is a normal reasoning control, not a per-variant semantic.
 
-| Model                                 | Accepts `reasoning_effort`? | Semantics                                          |
-|---------------------------------------|-----------------------------|----------------------------------------------------|
-| `grok-4.20-0309-reasoning`            | No (reasons automatically)  | Parameter not needed; reasoning depth is internal  |
-| `grok-4.20-0309-non-reasoning`        | **No — returns error**      | Do not send the field                              |
-| `grok-4.20-multi-agent-0309`          | **Yes — controls agent count** | `low`/`medium` → 4 agents; `high`/`xhigh` → 16 agents |
-| `grok-4-1-fast-reasoning`             | No (reasons automatically)  | Reasoning handled internally                       |
-| `grok-4-1-fast-non-reasoning`         | **No — returns error**      | Do not send the field                              |
+| Value      | Effect                                          |
+|------------|-------------------------------------------------|
+| `none`     | No reasoning; lower latency                      |
+| `low`      | Default                                          |
+| `medium`   | More deliberation                                |
+| `high`     | Maximum reasoning effort                         |
 
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
-[testable: id=grok.reasoning-effort-rejected-non-reasoning.v1, expected=request to grok-4.20-0309-non-reasoning with reasoning_effort="high" returns HTTP 4xx]
-[testable: id=grok.multi-agent-effort-controls-count.v1, expected=grok-4.20-multi-agent-0309 with reasoning_effort="high" produces more parallel agent traces than reasoning_effort="low"]
+[source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-06-01]
+[testable: id=grok.reasoning-effort-none-disables.v1, expected=grok-4.3 with reasoning_effort="none" returns no reasoning content / zero reasoning tokens]
 
-This is a **breaking divergence from OpenAI conventions**. Wrappers that always-send `reasoning_effort` must either omit the field or branch on model ID.
+Wrappers porting OpenAI's `reasoning.effort` map cleanly, except OpenAI's value set differs; constrain to {none, low, medium, high} for grok-4.3.
 
 ### Reasoning output in responses
 
-- **Token count**: `response.usage.reasoning_tokens`.
-- **Streamed summary**: `reasoning_content` chunks in the SSE stream, or `response.reasoning_summary_text.delta` events via the OpenAI SDK pathway.
-- **Encrypted full reasoning**: opt-in via `include: ["reasoning.encrypted_content"]` in the request.
-- **Billing**: reasoning tokens are billed as part of total output consumption — not a separate line item.
+- **Reasoning content (non-streaming, Chat Completions)**: `message.reasoning_content`.
+- **Reasoning token count**: `usage.completion_tokens_details.reasoning_tokens`.
+- **Streamed reasoning**: `chunk.reasoning_content` (Chat Completions / xAI SDK), or the `response.reasoning_summary_text.delta` SSE event (Responses API).
+- **Encrypted full reasoning**: opt-in via `include: ["reasoning.encrypted_content"]` (Responses API only).
 
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
-
-### Example request / response (reasoning)
-
-```json
-{
-  "input": [
-    { "role": "system", "content": "You are a highly intelligent AI assistant." },
-    { "role": "user",   "content": "What is 101*3?" }
-  ],
-  "model": "grok-4.20-reasoning",
-  "stream": false
-}
-```
-
-Response surface:
-
-```
-Final Response: The result of 101 multiplied by 3 is 303.
-Completion tokens: 14
-Reasoning tokens: 310
-```
-
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-06-01]
+[source: https://docs.x.ai/developers/rest-api-reference/inference/chat, retrieved 2026-06-01]
 
 ## 5. Tool Use / Function Calling
 
@@ -207,17 +179,13 @@ Function calls are **not streamed progressively** — the call arrives whole in 
 
 ### Built-in tools
 
-Tools that execute on xAI servers rather than the caller's code:
+Tools that execute on xAI servers rather than the caller's code. The verified developer-API surface is the server-side Web Search / X Search tools (`web_search`), which return `response.citations`. This is Grok's differentiating capability vs other frontier families.
 
-- **Web Search** (`web_search`) — general web grounding.
-- **X Search** (`x_search`) — real-time X / Twitter data access. This is Grok's differentiating capability vs other frontier families.
-- **Code Execution** — server-side code execution.
-- **Collections Search** — search uploaded knowledge-base collections.
+The consumer "DeepSearch" agent (grok.com / X) is a separate product surface, not a developer-API feature. For the cross-family async-research-agent comparison, see `resources/deep-research-agents.md` (Grok is documented there as the web-search tool-use shape, not a managed async agent).
 
-Parameter shapes for each built-in tool beyond the type name were not captured in this retrieval pass; see §10 (Gaps).
+Parameter shapes for the built-in tools beyond the type name were not captured in this retrieval pass; see §10 (Gaps).
 
-[source: docs.x.ai/developers/tools/overview, retrieved 2026-04-19]
-[source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/tools/web-search, retrieved 2026-06-01]
 
 ## 6. Structured Outputs
 
@@ -230,69 +198,70 @@ Structured Outputs are supported on current Grok models (per the release notes).
 ### Automatic prompt caching
 
 - **Always on** — no explicit enablement required.
-- **Discount**: cached-input pricing is ~10× cheaper than base input (e.g. `grok-4.20` $2.00/MTok input vs $0.20/MTok cached; `grok-4-1-fast` $0.20 vs $0.05). Effectively a 90% discount.
-- **Reporting**: cached token count is in the response `usage` object.
-- **Cache-hit maximization**: set the `x-grok-conv-id` HTTP header on multi-turn sessions to pin routing to the same cache node.
-- **Eviction**: cache entries can be evicted under memory pressure, and requests may be routed to different servers. Caching is best-effort, not guaranteed.
+- **`grok-4.3` cached input**: $0.20/MTok.
+- **Reporting**: cached token count is at `usage.prompt_tokens_details.cached_tokens` (Chat Completions) / `usage.input_tokens_details.cached_tokens` (Responses API).
+- **Cache-hit maximization**: set the optional `x-grok-conv-id` HTTP header on multi-turn sessions to pin routing to the same cache node.
 
-[source: docs.x.ai/developers/models, retrieved 2026-04-19]
-[source: docs.x.ai/developers/advanced-api-usage/prompt-caching/how-it-works, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/advanced-api-usage/prompt-caching/usage-and-pricing, retrieved 2026-06-01]
+[source: docs.x.ai/developers/models/grok-4.3, retrieved 2026-06-01]
 
 Minimum cacheable tokens, cache TTL, and exhaustive invalidation rules were not quoted in the retrieved primary excerpt; see §10 (Gaps).
 
-### Batch API
-
-Batch API supports chat completions plus image generation, image editing, and video generation (expanded in recent releases). Latency-insensitive pricing discounts apply (standard industry pattern; exact percentage not in retrieved excerpt).
-[source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
-
 ### Streaming
 
-Standard SSE streaming on the OpenAI-compatible chat completions endpoint. Notable rule: **function calls arrive as whole chunks, not streamed incrementally**.
+Standard SSE streaming on the OpenAI-compatible chat completions endpoint. Streamed reasoning surfaces as `chunk.reasoning_content` (Chat Completions / xAI SDK) or the `response.reasoning_summary_text.delta` event (Responses API). Notable rule: **function calls arrive as whole chunks, not streamed incrementally**.
+[source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-06-01]
 [source: docs.x.ai/docs/guides/function-calling, retrieved 2026-04-19]
 
 ## 8. Deployment Flags (closed-platform routing)
 
-- **`x-grok-conv-id` HTTP header** — pins routing to the cache node serving a conversation; maximizes cache-hit rate.
-- **Rate limits** — 10M TPM / 1,800 RPM on text and reasoning tiers.
-- **Enterprise tier** — `grok-4.1-fast` is available in the xAI Enterprise API.
+- **`x-grok-conv-id` HTTP header** — optional; pins routing to the cache node serving a conversation to maximize cache-hit rate.
 
-[source: docs.x.ai/developers/advanced-api-usage/prompt-caching/how-it-works, retrieved 2026-04-19]
-[source: docs.x.ai/developers/models, retrieved 2026-04-19]
-[source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
+[source: https://docs.x.ai/developers/advanced-api-usage/prompt-caching/usage-and-pricing, retrieved 2026-06-01]
 
 No region-routing (Bedrock-style) or data-residency flags are surfaced in the retrieved primary sources — Grok is served from xAI infrastructure directly.
 
 ## 9. Deprecations and Breaking Changes
 
-### `reasoning_effort` semantic divergence from OpenAI
+### 2026-05-15 slug retirement
 
-[applies-to: grok-4.20-0309-non-reasoning, grok-4-1-fast-reasoning, grok-4-1-fast-non-reasoning]
-Sending `reasoning_effort` on non-multi-agent, non-reasoning models **returns an error**. Callers porting OpenAI patterns must branch on model ID or strip the field.
+Effective **2026-05-15 at 12:00 PM PT**, these slugs were retired from the xAI API:
 
-[applies-to: grok-4.20-multi-agent-0309]
-`reasoning_effort` controls **agent count**, not reasoning depth. Values map: `low`/`medium` → 4 agents, `high`/`xhigh` → 16 agents.
-[source: docs.x.ai/docs/guides/reasoning, retrieved 2026-04-19]
+```
+grok-4-1-fast-reasoning
+grok-4-1-fast-non-reasoning
+grok-4-fast-reasoning
+grok-4-fast-non-reasoning
+grok-4-0709
+grok-code-fast-1
+grok-3
+grok-imagine-image-pro
+```
+
+Retired slugs auto-redirect to `grok-4.3`: reasoning slugs resolve at `low` effort, non-reasoning slugs at `none` effort; `grok-code-fast-1` redirects to `grok-build-0.1`. Separately, `grok-4`, `grok-4-latest`, `grok-3`, and the fast slugs are listed as **aliases** of `grok-4.3` (they already resolve to it). Note `grok-4` itself is not in the retirement list (only `grok-4-0709`).
+
+Pin `grok-4.3` or `grok-build-0.1` directly for new work.
+
+[source: https://docs.x.ai/developers/migration/may-15-retirement, retrieved 2026-06-01]
+[source: docs.x.ai/developers/models, retrieved 2026-06-01]
+
+### Reasoning-model parameter incompatibilities
+
+`presencePenalty` / `frequencyPenalty` / `stop` return an error on reasoning models; `logprobs` / `top_logprobs` are silently ignored on grok-4.20 and newer. See §3.
+[source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-06-01]
 
 ### Function call streaming shape
 
-[applies-to: grok-4.20-0309-reasoning, grok-4.20-0309-non-reasoning, grok-4.20-multi-agent-0309, grok-4-1-fast-reasoning, grok-4-1-fast-non-reasoning]
 Function calls arrive whole in a single SSE chunk. Callers that assumed incremental streaming (some OpenAI-era code) will misparse.
 [source: docs.x.ai/docs/guides/function-calling, retrieved 2026-04-19]
-
-### Legacy models
-
-`grok-3` remains GA via the API but is superseded by 4.20 and 4.1 Fast for new work. `grok-2` is older still. No explicit retirement date is quoted in the retrieved primary sources.
-[source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
 
 ## 10. Gaps
 
 - **Minimum cacheable tokens** for Grok's automatic caching is not quoted in the retrieved primary caching excerpt.
-- **Cache TTL** and explicit invalidation rules are not quoted (beyond "evicted under memory pressure, may be routed to different servers").
+- **Cache TTL** and explicit invalidation rules are not quoted.
 - **Structured Outputs parameter shape** is not verified verbatim against Grok's primary docs; OpenAI-compatible shape is assumed but flagged unverified above.
-- **Built-in tool parameter shapes** (`x_search`, `web_search`, `code_execution`, `collections_search`) beyond type names were not captured.
+- **Built-in tool parameter shapes** (`web_search`, X Search, code execution, collections) beyond type names were not captured.
+- **`grok-build-0.1` pricing and parameter surface** are not quoted; Playground "coming soon".
 - **Image-content-part shape** in request messages (detail parameter, resolution budgets, file vs URL) is not quoted.
 - **Max output tokens per model** is not listed in the retrieved lineup excerpt.
-- **Batch API discount percentage** and exact request/response contract are not covered here.
-- **Speech-to-Text / Text-to-Speech / Grok Imagine parameter surfaces** are separate endpoints and not covered in this reference.
-- **Knowledge-cutoff verification date** beyond "November 2024" (e.g. exact day) is not stated.
-- **Multi-agent variant trace shape** — how 4 or 16 parallel agents' work is exposed to the caller — is not captured.
+- **`grok-4.3`-specific knowledge cutoff** is not documented; only the Grok 3 / Grok 4 November 2024 statement is published.
