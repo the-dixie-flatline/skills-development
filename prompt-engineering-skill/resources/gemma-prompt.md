@@ -10,8 +10,9 @@ versions:
   - google/gemma-4-26B-A4B-it
   - google/gemma-4-31B
   - google/gemma-4-31B-it
-retrieved: 2026-04-19
+retrieved: 2026-06-01
 primary_sources:
+  - https://ai.google.dev/gemma/docs/core
   - https://ai.google.dev/gemma/docs/core/model_card_4
   - https://ai.google.dev/gemma/docs/core/prompt-formatting-gemma4
   - https://ai.google.dev/gemma/docs/capabilities/text/function-calling-gemma4
@@ -22,7 +23,10 @@ maturity_note: |
   Gemma 3 in two respects: a new chat template (`<|turn>` / `<turn|>`
   replaces `<start_of_turn>` / `<end_of_turn>`), and native function calling
   with its own token protocol (Gemma 3 had no native tool-calling surface).
-  Apache 2.0 license, no regional or MAU restrictions.
+  Apache 2.0 license, no regional or MAU restrictions. Lineup re-verified
+  2026-06-01: four sizes unchanged (E2B, E4B, 26B-A4B, 31B), Apache 2.0,
+  128K context for the small models / 256K for the medium models, and a
+  dedicated draft model shipped per size for speculative decoding.
 ---
 
 # Gemma — Prompt-Layer Reference
@@ -48,6 +52,7 @@ Notes:
 - Only the E-series (E2B, E4B) supports **audio** input. The 26B MoE and 31B dense variants handle text, image, and video but not audio.
 - 26B A4B is a mixture-of-experts with **8 active / 128 total + 1 shared** expert routing.
 - All models are multimodal at training; base (non-`it`) and instruct (`-it`) variants are published.
+- All four sizes (E2B, E4B, 26B A4B, 31B) ship with a **dedicated draft model** (multi-token prediction) for speculative decoding. The docs name it only "dedicated draft model"; no `-it-assistant` or other drafter suffix is documented. [source: ai.google.dev/gemma/docs/core, retrieved 2026-06-01]
 - Apache 2.0 license with no 700M MAU clause and no regional restrictions — materially more permissive than Llama 4.
 
 [source: ai.google.dev/gemma/docs/core/model_card_4, retrieved 2026-04-19]
