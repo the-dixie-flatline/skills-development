@@ -2,33 +2,39 @@
 family: openai
 scope: api
 versions:
+  - gpt-5.5
+  - gpt-5.5-pro
   - gpt-5.4
-  - gpt-5.4-2026-03-05
-  - gpt-5.4-pro
   - gpt-5.4-mini
   - gpt-5.4-nano
   - gpt-5.3-codex
-  - gpt-5.2-codex
-  - gpt-5.2
-  - gpt-5.1
-  - gpt-5
-retrieved: 2026-04-18
+retrieved: 2026-06-01
 primary_sources:
-  - https://developers.openai.com/api/docs/models/gpt-5.4
+  - https://developers.openai.com/api/docs/models
+  - https://developers.openai.com/api/docs/models/gpt-5.5
+  - https://developers.openai.com/api/docs/models/gpt-5.5-pro
+  - https://developers.openai.com/api/docs/models/gpt-5.3-codex
+  - https://developers.openai.com/api/docs/models/compare
   - https://developers.openai.com/api/docs/guides/reasoning
   - https://developers.openai.com/api/docs/api-reference/responses/create
   - https://developers.openai.com/api/docs/guides/migrate-to-responses
   - https://developers.openai.com/api/docs/guides/prompt-caching
   - https://developers.openai.com/api/docs/guides/structured-outputs
-  - https://developers.openai.com/api/docs/changelog
+  - https://developers.openai.com/api/docs/guides/deep-research
+  - https://developers.openai.com/api/docs/guides/agents/orchestration
+  - https://developers.openai.com/api/docs/deprecations
+  - https://developers.openai.com/codex/changelog
 maturity_note: |
-  OpenAI's primary endpoint for new work is now the Responses API
-  (`POST /v1/responses`). Chat Completions remains supported but is not
-  recommended for new work, and some GPT-5.4 feature combinations (notably
-  tool calling with `reasoning: none`) are Responses-only. The Assistants
-  API sunsets 2026-08-26. Some sections below were drawn from partial
-  retrievals of the API reference; fields called out as "inferred" in
-  retrieval are marked `[unverified]` here.
+  GPT-5.5 (snapshot gpt-5.5-2026-04-23) is the current flagship; gpt-5.5-pro is
+  the highest-compute variant (Responses API incl. Batch; streaming NOT
+  supported). GPT-5.4 is retained as the cheaper coding/professional tier. The
+  primary endpoint for new work is the Responses API (`POST /v1/responses`).
+  The Assistants API was deprecated 2025-08-26 and is removed 2026-08-26; its
+  replacement is the Responses API plus the Conversations API (state
+  management). The o3-deep-research and o4-mini-deep-research model IDs, plus
+  gpt-5.2-codex and earlier legacy codex IDs, shut down 2026-07-23. Some
+  sections below were drawn from partial retrievals of the API reference;
+  fields called out as "inferred" in retrieval are marked `[unverified]` here.
 ---
 
 # OpenAI — API-Layer Reference
@@ -45,16 +51,21 @@ API-call-level detail for the current GPT-5.x generation. Portable prompt-layer 
 - **Batch** — `POST /v1/batch` — 50% discount, latency insensitive.
 - **Flex Processing** — same 50% discount as Batch but runs through the Responses API. Preferred over Batch when caching is required (pre-GPT-5 models do not support caching on the Batch API).
 - **Compaction** — `POST /responses/compact` — client-side compaction endpoint added 2025-12-11.
-- **Assistants API** — sunset **2026-08-26**. Do not start new work here.
+- **Conversations API** — the named state-management replacement for Assistants threads, used alongside the Responses API. Confirmed to exist as the Assistants replacement; the dedicated endpoint reference was not fetched in this pass, so the endpoint path and field schema are not stated here.
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
+- **Assistants API** — deprecated 2025-08-26, removed **2026-08-26**. Migration target is the Responses API plus the Conversations API. Do not start new work here.
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
 
-[source: developers.openai.com/api/docs/models/gpt-5.4, retrieved 2026-04-18]
+[source: developers.openai.com/api/docs/models, retrieved 2026-06-01]
 [source: developers.openai.com/api/docs/guides/migrate-to-responses, retrieved 2026-04-18]
 [source: developers.openai.com/api/docs/guides/prompt-caching, retrieved 2026-04-18]
 [source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
 
 ### SDKs and model IDs
 
-First-party SDKs: Python, TypeScript. Model IDs are bare strings on the OpenAI endpoint (`gpt-5.4`, `gpt-5.4-2026-03-05`); Azure OpenAI uses deployment-name indirection.
+First-party SDKs: Python, TypeScript. Model IDs are bare strings on the OpenAI endpoint (`gpt-5.5`, `gpt-5.5-2026-04-23`, `gpt-5.5-pro`, `gpt-5.5-pro-2026-04-23`); Azure OpenAI uses deployment-name indirection.
+[source: developers.openai.com/api/docs/models/gpt-5.5, retrieved 2026-06-01]
+[source: developers.openai.com/api/docs/models/gpt-5.5-pro, retrieved 2026-06-01]
 
 ## 2. Chat Template / Message Structure
 
@@ -64,7 +75,7 @@ There is no special-token chat template. The Responses API uses an `input` array
 
 ```json
 {
-  "model": "gpt-5.4",
+  "model": "gpt-5.5",
   "instructions": "You are a helpful assistant.",
   "input": [
     { "role": "user", "content": "..." }
@@ -142,15 +153,14 @@ Per-model valid values and defaults:
 
 | Model            | Valid effort values                          | Default   |
 |------------------|----------------------------------------------|-----------|
-| `gpt-5.4`        | `none`, `low`, `medium`, `high`, `xhigh`     | `none`    |
-| `gpt-5.4-pro`    | `none`, `low`, `medium`, `high`, `xhigh`     | `none`    |
-| `gpt-5.1`        | `none`, `low`, `medium`, `high`              | `none`    |
-| `gpt-5`          | `minimal`, `low`, `medium`, `high`           | `medium`  |
-| `gpt-5.2-codex`  | `low`, `medium`, `high`, `xhigh`             | model-specific |
+| `gpt-5.5`        | `none`, `low`, `medium`, `high`, `xhigh`     | `medium`  |
+| `gpt-5.3-codex`  | `low`, `medium`, `high`, `xhigh`             | model-specific |
 
-[source: developers.openai.com/api/docs/guides/reasoning, retrieved 2026-04-18]
-[source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
-[testable: id=openai.gpt54-default-effort-none.v1, expected=request to gpt-5.4 with no reasoning field returns usage with output_tokens_details.reasoning_tokens = 0]
+[source: developers.openai.com/api/docs/models/gpt-5.5, retrieved 2026-06-01]
+[source: developers.openai.com/api/docs/models/gpt-5.3-codex, retrieved 2026-06-01]
+[testable: id=openai.gpt55-default-effort-medium.v1, expected=request to gpt-5.5 with no reasoning field returns usage with output_tokens_details.reasoning_tokens > 0]
+
+Per-model effort defaults for `gpt-5.4`, `gpt-5.4-mini`, and `gpt-5.4-nano` were not re-verified in this pass; set `reasoning.effort` explicitly rather than relying on the implicit default.
 
 ### Reasoning tokens
 
@@ -185,8 +195,8 @@ Skipping this step after a function call degrades multi-step reasoning quality. 
 
 ### Chat Completions limitation on GPT-5.4
 
-[applies-to: gpt-5.4, gpt-5.4-pro]
-Function calling with `reasoning: none` is **not supported** on Chat Completions for GPT-5.4. This combination requires the Responses API. On Chat Completions, raising effort above `none` re-enables tool calling for GPT-5.4.
+[applies-to: gpt-5.4]
+Function calling with `reasoning: none` is **not supported** on Chat Completions for GPT-5.4. This combination requires the Responses API. On Chat Completions, raising effort above `none` re-enables tool calling for GPT-5.4. Not re-verified for `gpt-5.5` in the 2026-06-01 pass.
 [source: developers.openai.com/api/docs/guides/migrate-to-responses, retrieved 2026-04-18]
 
 ## 5. Tool Use / Function Calling
@@ -213,14 +223,14 @@ Mixes function tools (custom) and built-in server-side tools:
 ]
 ```
 
-Built-in tool types surfaced in the current primary source: `web_search`, `file_search`, `code_interpreter`, `computer_use`, Hosted Shell (networking in containers, added 2026-02-10), Skills tool (added 2026-02-10), MCP (mentioned as supported).
-[source: developers.openai.com/api/docs/models/gpt-5.4, retrieved 2026-04-18]
-[source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
+Hosted tools available on `gpt-5.5`: web search, file search, code interpreter, hosted shell, computer use, MCP, and tool search. These plus the Responses API, the Conversations API (state), and Background mode constitute the hosted/server-side agent surface; Agent Builder/ChatKit is the hosted build surface.
+[source: developers.openai.com/api/docs/models/gpt-5.5, retrieved 2026-06-01]
+[source: developers.openai.com/api/docs/guides/agents/orchestration, retrieved 2026-06-01]
 
 ### `tool_choice`
 
 String values (`"auto"`, `"none"`, `"required"`) or an object specifying a named function. Exact shape of the object variant was not quoted verbatim in the retrieved excerpt.
-[applies-to: gpt-5.4, gpt-5.4-pro, gpt-5.1] [unverified] `tool_choice: "required"` forces the model to emit a tool call on every response; this is accepted on the Responses API but specific interactions with reasoning effort are not documented in the retrieved excerpts.
+[unverified] `tool_choice: "required"` forces the model to emit a tool call on every response; this is accepted on the Responses API but specific interactions with reasoning effort are not documented in the retrieved excerpts.
 
 ### Strict function tools
 
@@ -312,7 +322,7 @@ Text output arrives as a JSON string in `output_text`; the SDK convenience layer
 ### Prompt caching
 
 - **Minimum cacheable**: 1024 tokens.
-- **TTL**: 5–10 minutes of inactivity, up to 1 hour. Extended 24-hour retention on `gpt-5.4`, `gpt-5.2`, `gpt-5.1`, `gpt-5`, `gpt-4.1` and variants.
+- **TTL**: 5–10 minutes of inactivity, up to 1 hour. Extended 24-hour retention was documented on the GPT-5 family and `gpt-4.1` variants as of the 2026-04-18 retrieval; the model list was not re-verified for `gpt-5.5` in this pass.
 - **Discount**: up to 90% off input-token cost on cache hit; latency reduced by up to 80%.
 - **Cached content**: messages, images (including base64, with `detail` matching required), tool definitions, structured-output schemas.
 - **Response field**: `usage.prompt_tokens_details.cached_tokens`.
@@ -329,14 +339,17 @@ The structured-output schema serves as a prefix to the system message and **is**
 
 ### Long-input surcharge
 
-[applies-to: gpt-5.4, gpt-5.4-pro]
-Prompts exceeding **272,000 input tokens** incur **2× input** and **1.5× output** pricing. Below 272K, standard pricing applies.
+[applies-to: gpt-5.4]
+Prompts exceeding **272,000 input tokens** incur **2× input** and **1.5× output** pricing. Below 272K, standard pricing applies. Not re-verified for `gpt-5.5` in the 2026-06-01 pass.
 [source: developers.openai.com/api/docs/models/gpt-5.4, retrieved 2026-04-18]
 
 ### Streaming
 
 Server-Sent Events (SSE) on the Responses API. The changelog references WebSocket mode support for the Responses API as of 2026-02-23. Exact event types emitted over SSE were not quoted verbatim in the retrieved excerpt.
 [source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
+
+**`gpt-5.5-pro` does not support streaming.** It is available for the Responses API (including Batch) but responses cannot be streamed.
+[source: developers.openai.com/api/docs/models/gpt-5.5-pro, retrieved 2026-06-01]
 
 ## 8. Deployment Flags (closed-platform routing)
 
@@ -347,27 +360,37 @@ There is no self-hosted path; "deployment" on OpenAI means choosing among endpoi
 - **Flex Processing**: 50% discount via Responses API for latency-insensitive work with full caching support.
 - **Batch**: 50% discount via `/v1/batch`; limited caching on pre-GPT-5 models.
 - **Server-side context management**: `context_management: [{type: "...", compact_threshold: N}]` configures server-side compaction (added 2026-02-10). [unverified] exact `type` enum values not quoted verbatim in the retrieved API-reference excerpt.
+- **Deep Research**: invoked via the Responses API in background mode with model `o3-deep-research` or `o4-mini-deep-research`. Requires at least one data source (web search, remote MCP, or file search with vector stores); citations are returned as `annotations`; function calling is NOT supported. These model IDs are deprecating 2026-07-23 (replacement `gpt-5.5-pro`), creating a near-term doc/model mismatch. Full detail in `resources/deep-research-agents.md`.
+  [source: developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
+- **Multi-agent orchestration**: handoffs are Agents-SDK-only (Python `agents` / JS `@openai/agents`); there is no hosted multi-agent handoff API endpoint. The hosted surface is the Responses API + Conversations API + Background mode + hosted tools on `gpt-5.5`. See `resources/agent-orchestration-surfaces.md`.
+  [source: developers.openai.com/api/docs/guides/agents/orchestration, retrieved 2026-06-01]
 
 [source: developers.openai.com/api/docs/api-reference/responses/create, retrieved 2026-04-18]
 [source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
 
 ## 9. Deprecations and Breaking Changes
 
-### GPT-5 → GPT-5.1 default change
+### Reasoning effort defaults across versions
 
-[applies-to: gpt-5.1, gpt-5.2, gpt-5.3-codex, gpt-5.4, gpt-5.4-pro, gpt-5.4-mini, gpt-5.4-nano]
-Default `reasoning.effort` changed from `medium` (GPT-5) to `none`. Prompts relying on GPT-5's implicit reasoning will produce no reasoning on 5.1+ unless `effort` is set explicitly.
+Default `reasoning.effort` differs between models: GPT-5 defaulted to `medium`, the 5.1–5.4 line moved to `none`, and `gpt-5.5` documents `medium` as default. Per-model defaults for `gpt-5.4` / `gpt-5.4-mini` / `gpt-5.4-nano` were not re-verified in this pass. Set `effort` explicitly on migration rather than relying on an implicit default.
+[source: developers.openai.com/api/docs/models/gpt-5.5, retrieved 2026-06-01]
 [source: developers.openai.com/api/docs/changelog, retrieved 2026-04-18]
 
 ### GPT-5.4 Chat Completions limitation
 
-[applies-to: gpt-5.4, gpt-5.4-pro]
-Function calling with `reasoning: none` is **not supported** on Chat Completions. Either raise effort or migrate to Responses API.
+[applies-to: gpt-5.4]
+Function calling with `reasoning: none` is **not supported** on Chat Completions. Either raise effort or migrate to Responses API. Not re-verified for `gpt-5.5` in the 2026-06-01 pass.
 [source: developers.openai.com/api/docs/guides/migrate-to-responses, retrieved 2026-04-18]
 
-### API deprecations
+### API and model deprecations
 
-- **Assistants API** — sunset **2026-08-26**. Do not start new work.
+- **Assistants API** — deprecated 2025-08-26, removed **2026-08-26**. Migration target is the Responses API plus the Conversations API.
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
+- **`o3-deep-research` / `o3-deep-research-2025-06-26` and `o4-mini-deep-research` / `o4-mini-deep-research-2025-06-26`** — shut down **2026-07-23**, replacement `gpt-5.5-pro`.
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
+- **`gpt-5.2-codex` and legacy codex IDs (`gpt-5.1-codex-max`, etc.)** — shut down **2026-07-23**, replacement `gpt-5.5`.
+  [source: developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
 - **Chat Completions** — not deprecated as of retrieval; Responses API is recommended for new work.
 - **Legacy JSON mode (`response_format: {type: "json_object"}`)** — still works; use `text.format` + `json_schema` with `strict: true` for new work.
 
@@ -382,7 +405,7 @@ Function calling with `reasoning: none` is **not supported** on Chat Completions
 | `role: "system"` in `messages`      | top-level `instructions` field         |
 | `response_format: {...}`            | `text.format: {...}`                   |
 | `max_tokens`                        | `max_output_tokens`                    |
-| Stateful via Assistants API threads | `store: true` + `previous_response_id` |
+| Stateful via Assistants API threads | Conversations API + `store: true` / `previous_response_id` |
 | n/a                                 | `background: true`                     |
 
 [source: developers.openai.com/api/docs/guides/migrate-to-responses, retrieved 2026-04-18]
@@ -391,10 +414,11 @@ Function calling with `reasoning: none` is **not supported** on Chat Completions
 
 - **Full Responses API request shape** — the API-reference excerpt retrieved for this pass was partial; several fields (`tool_choice` object variants, `include` key enumeration, `context_management.type` enum, `text.format` additional type variants beyond `json_schema`) are not quoted verbatim.
 - **Streaming event-type enumeration** for SSE on Responses API was not retrieved.
-- **Realtime API parameter shape** (`gpt-realtime-1.5`, `gpt-audio-1.5`) is separate and not covered.
+- **Conversations API endpoint schema** — confirmed to exist as the named Assistants replacement, but the dedicated endpoint reference (path, fields) was not fetched in this pass and is not stated here.
+- **Realtime API parameter shape** is separate and not covered.
 - **Batch API request/response shape** is separate; only caching interaction is covered here.
 - **Azure OpenAI deployment-indirection specifics** and model-name mappings are not covered.
 - **Per-model temperature / top_p defaults** are not quoted numerically.
-- **o-series model lineup details** as of 2026-04-18 — the 5.x family supersedes o-series for new work, but o-series models remain available and their current state is not detailed here.
-- **Skills tool and Hosted Shell tool full parameter contracts** are referenced in the changelog but the detailed parameter shapes were not fetched.
-- **Agents SDK API surface** is separate from the Responses API; out of scope here.
+- **Per-model reasoning defaults for `gpt-5.4` / `gpt-5.4-mini` / `gpt-5.4-nano`** and GPT-5.5 multimodal / caching / long-input details were not re-verified in the 2026-06-01 pass.
+- **`gpt-5.4-nano` price and context detail** beyond "low-latency variant" were not retrieved.
+- **Deep Research and the hosted agent surface** are documented in `resources/deep-research-agents.md` and `resources/agent-orchestration-surfaces.md`; the Agents SDK orchestration surface is separate from the Responses API.
