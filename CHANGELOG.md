@@ -12,6 +12,79 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.2.0 — 2026-06-01
+
+Family-lineup refresh against live primary sources (`retrieved: 2026-06-01`) plus a
+scope expansion from "how to prompt model X" to "how to prompt, configure, and deploy
+against model X's surfaces." Contract-version unchanged (2026-04-18).
+
+### Urgent retirement-cliff corrections
+
+- **Claude** — `claude-opus-4-20250514` / `claude-sonnet-4-20250514` retire **2026-06-15**;
+  the Opus 4 replacement is corrected to `claude-opus-4-8`. `claude-3-haiku-20240307` is
+  already Retired (April 20, 2026).
+- **DeepSeek** — legacy `deepseek-chat` / `deepseek-reasoner` hard-retire **2026-07-24**
+  (now map to `deepseek-v4-flash`); V3.2-Speciale's temporary API endpoint expired
+  **2025-12-15** (weights remain).
+- **Gemini** — 2.0 Flash / Flash-Lite GA shut down **2026-06-01**; 2.5 GA sunsets
+  **2026-10-16**.
+- **Grok** — the prior fast / 4.x / 3 slugs were retired **2026-05-15** and redirect to
+  `grok-4.3` (or `grok-build-0.1` for `grok-code-fast-1`).
+
+### Flagship and lineup moves
+
+- **Claude** — added Opus 4.8 (`claude-opus-4-8`, GA 2026-05-28, 1M ctx, cutoff Jan 2026)
+  as flagship; Opus 4.7 still Active; adaptive thinking is the only mode on 4.7/4.8 (manual
+  budgets rejected). Sonnet 4.6 knowledge cutoff flagged `[disputed]` (Aug 2025 vs May 2025
+  across two live Anthropic surfaces).
+- **OpenAI** — GPT-5.5 (`gpt-5.5-2026-04-23`) flagship + 5.5-pro; GPT-5.4 retained as the
+  cheaper tier; top Codex `gpt-5.3-codex`. Assistants API removed 2026-08-26, migration target
+  corrected to **Responses + Conversations**; o\*-deep-research IDs shut down 2026-07-23;
+  multi-agent handoffs documented as Agents-SDK-only.
+- **Gemini** — 3.5 Flash GA + 3.1 Flash-Lite GA + 3.1 Pro Preview; `thinkingLevel` replaces
+  `thinkingBudget` on Gemini 3; Computer Use isolated to `gemini-2.5-computer-use-preview-10-2025`.
+- **DeepSeek** — V4 production (`deepseek-v4-flash` / `deepseek-v4-pro`, MIT, 1M ctx, 384K out);
+  tri-state reasoning (Non-think / Think / Think Max, the last recommending ≥384K context);
+  reasoning_content round-trip is now conditional on tool calls.
+- **Qwen** — Qwen3.7-Max GA flagship; Qwen3.6-Plus demoted-but-GA; added dense open-weights
+  `Qwen3.6-27B` alongside the `qwen3.6-35b-a3b` MoE.
+- **Mistral** — Mistral Medium 3.5 (Modified MIT, 256K) frontier + Small 4; unified
+  `reasoning_effort` is binary (`high`|`none`) on the chat endpoint; Magistral → Legacy.
+- **Gemma** — Gemma 4 lineup re-verified (128K/256K context split; per-size dedicated draft model).
+- **Llama** — re-confirmed; no Llama 5; Scout + Maverick current.
+
+### New cross-family resources
+
+- `resources/deep-research-agents.md` — hosted deep-research agents (Gemini, OpenAI,
+  Perplexity async submit/poll) vs web-search tool-use loops (Anthropic, Grok).
+- `resources/openai-compatibility-surface.md` — single-source matrix of per-provider
+  divergences through OpenAI-shaped endpoints (Grok, DeepSeek, Gemini, Qwen, Mistral, vLLM,
+  llama.cpp). Family `-api.md` files cross-reference it.
+- `resources/agent-orchestration-surfaces.md` — Anthropic Managed Agents (300/600 limits),
+  OpenAI hosted/SDK split, the three disaggregated Gemini agent products.
+- `resources/webui-surfaces-and-silent-degradation.md` — tier-labeled; leads with the honest
+  gap (consumer default reasoning effort undocumented). Detection methodology routed to
+  `prompt-engineering-architect`.
+
+### SKILL.md routing and discipline
+
+- Empty-arg routing (#5), generated-prompt subject-vs-consumer routing (#7), additive
+  mixed-task scope (#6), a third "surface" routing axis (#9), reuse-from-context freshness
+  check (#8), a strengthened declared-Gaps stance (#10), and reading-discipline notes —
+  weight measured behavior over benchmark priors; test a newer variant before switching (#16).
+- Coverage table rewritten; cross-family resource rows added. SCHEMA.md gained a cross-family
+  resource-file convention. Corrected the Cross-Family Portability section (the Grok
+  "reasoning_effort = agent count" claim was false; DeepSeek's reasoning round-trip is conditional).
+
+### Known limitations at 0.2.0
+
+- Several family-file sections not touched by this refresh retain their 2026-04-18/19 inline
+  provenance (re-verification covered lineup, reasoning, deprecation, and the new surfaces).
+- Family knowledge cutoffs for current Qwen and all DeepSeek models remain undocumented (Gaps).
+- A few REINSTATED candidate facts failed their author-time canonical confirm and were NOT
+  shipped: a 65,536 output cap for Gemini Deep Research (that figure belongs to the Antigravity
+  Agent) and xAI "DeeperSearch" (Tier-3 only).
+
 ## prompt-engineering-skill 0.1.0 — 2026-04-19
 
 ### Added
