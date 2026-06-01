@@ -4,19 +4,22 @@ scope: api
 versions:
   - meta-llama/Llama-4-Scout-17B-16E-Instruct
   - meta-llama/Llama-4-Maverick-17B-128E-Instruct
-retrieved: 2026-04-19
+retrieved: 2026-06-01
 primary_sources:
+  - https://www.llama.com/models/llama-4/
   - https://www.llama.com/docs/model-cards-and-prompt-formats/llama4/
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/prompt_format.md
+  - https://huggingface.co/meta-llama
   - https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct
 maturity_note: |
   Llama 4 is open-weights. "API" here means the chat-template contract plus
   the inference-stack surface (transformers, vLLM, SGLang), not a
-  provider-hosted HTTP endpoint. Sampling-parameter defaults are not
-  explicitly published by Meta for Llama 4; this file does not fabricate them.
-  vLLM/SGLang version floors beyond `transformers>=4.51.0` were not pulled
-  in this retrieval pass and appear in Gaps.
+  provider-hosted HTTP endpoint. Lineup re-confirmed 2026-06-01: Scout and
+  Maverick remain current and no Llama 5 has been released. Sampling-parameter
+  defaults are not explicitly published by Meta for Llama 4; this file does not
+  fabricate them. vLLM/SGLang version floors beyond `transformers>=4.51.0` were
+  not pulled in this retrieval pass and appear in Gaps.
 ---
 
 # Llama — API-Layer Reference

@@ -4,16 +4,21 @@ scope: prompt
 versions:
   - meta-llama/Llama-4-Scout-17B-16E-Instruct
   - meta-llama/Llama-4-Maverick-17B-128E-Instruct
-retrieved: 2026-04-19
+retrieved: 2026-06-01
 primary_sources:
+  - https://www.llama.com/models/llama-4/
   - https://www.llama.com/docs/model-cards-and-prompt-formats/llama4/
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/prompt_format.md
+  - https://huggingface.co/meta-llama
   - https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct
 maturity_note: |
-  Llama 4 (released 2025-04-05) remains Meta's current generation as of this
-  retrieval. No Llama 5 has been announced. Behemoth (288B active) was still
-  training at the 2025-04-05 release and is not publicly available. The
+  Llama 4 (released 2025-04-05) remains Meta's current generation. Lineup
+  re-confirmed 2026-06-01: Scout and Maverick are still the only publicly
+  available Llama 4 instruct variants, and no Llama 5 has been released on any
+  Meta first-party surface (llama.com lists only Llama 4 and Llama 3; the
+  meta-llama HF org card labels Llama 4 "Current"). Behemoth (288B active) was
+  still training at the 2025-04-05 release and is not publicly available. The
   knowledge cutoff is August 2024, the oldest of the current-generation
   frontier families, which matters for any use case sensitive to recent
   world knowledge.
