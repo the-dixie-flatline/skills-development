@@ -39,9 +39,58 @@ Each family has up to two references:
 - Verbatim copies of provider documentation. Link to primary sources; vendored copies go silently wrong when the source updates.
 - Second-person marketing voice. Write to the reader as a technical peer.
 
+## Cross-Family Resource Files
+
+Some reference files are inherently cross-family: they tabulate behavior that spans
+providers and would be wrong to duplicate into each `{family}-prompt-api.md`. These
+are the exception to "one skill, one family" and to the "do not export cross-family
+guidance" reading rule — they exist precisely to compare across families.
+
+Two naming patterns are in use:
+
+- `{topic}-surface.md` — a divergence matrix across families for one surface
+  (e.g. `openai-compatibility-surface.md`, `webui-surfaces-and-silent-degradation.md`).
+- `{topic}.md` for a shared hosted-product pattern (e.g. `deep-research-agents.md`,
+  `agent-orchestration-surfaces.md`).
+
+### Front matter for cross-family files
+
+Use the same two anchor fields, with `family: cross-family`, plus a `families:` list:
+
+```yaml
+---
+family: cross-family
+scope: deep-research-agents | openai-compatibility | agent-orchestration | webui-surfaces
+families: [openai, gemini, ...]   # the families this file actually covers
+retrieved: YYYY-MM-DD
+primary_sources:
+  - https://...
+maturity_note: |
+  ...
+---
+```
+
+`scope:` on a cross-family file names the resource class, not `prompt`/`api`. There is
+no `versions:` field; per-claim `[applies-to: <id>]` markers carry version scope instead,
+since a cross-family file spans many IDs.
+
+### Rules specific to cross-family files
+
+- **Each provider section is self-contained.** A reader pulling the Grok rows must not
+  need the DeepSeek rows. The file may be read in part.
+- **Single source per fact.** A cross-family file is the canonical home for its matrix;
+  the family `{family}-prompt-api.md` files cross-reference it with a one-line pointer
+  rather than duplicating the rows. This pointer is a soft reference (the family file
+  still stands alone for its own content), not the forbidden hard dependency between
+  reference files.
+- **Date-stamp volatile IDs and lead with gaps where the honest finding is an absence**
+  (the web-UI surface file leads with "consumer default reasoning effort is undocumented").
+- **Detection/methodology stays out.** Naming a failure mode is in scope; the detection
+  rules and mitigation methodology route to the `prompt-engineering-architect` skill.
+
 ## Front Matter
 
-Every reference file starts with YAML front matter.
+Every family reference file starts with YAML front matter.
 
 ```yaml
 ---
