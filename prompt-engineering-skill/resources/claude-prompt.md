@@ -2,25 +2,31 @@
 family: claude
 scope: prompt
 versions:
+  - claude-opus-4-8
   - claude-opus-4-7
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-04-18
+retrieved: 2026-06-01
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/overview
+  - https://docs.claude.com/en/docs/about-claude/models/overview
+  - https://docs.claude.com/en/docs/about-claude/model-deprecations
   - https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
   - https://platform.claude.com/docs/en/build-with-claude/effort
+  - https://www.anthropic.com/claude/opus
+  - https://www.anthropic.com/news/claude-opus-4-8
   - https://www.anthropic.com/news/claude-opus-4-7
 maturity_note: |
-  Claude Opus 4.7 became generally available in early 2026 and introduces
-  several breaking changes from Opus 4.6 that shift prompt-engineering
-  practice: sampling parameters are rejected, manual thinking budgets are
-  rejected, and thinking content is omitted from responses by default. Sonnet
-  4.6 and Haiku 4.5 are stable mid-tier and fast-tier models for the 4.x
-  generation.
+  Claude Opus 4.8 (`claude-opus-4-8`) is the current flagship, generally
+  available 2026-05-28; Opus 4.7 remains Active. Both Opus 4.8 and Opus 4.7
+  share the same hard breaking changes from Opus 4.6: sampling parameters are
+  rejected, manual thinking budgets are rejected, and thinking content is
+  omitted from responses by default. Sonnet 4.6 and Haiku 4.5 are stable
+  mid-tier and fast-tier models for the 4.x generation. Lineup, reasoning,
+  and deprecation facts re-verified 2026-06-01.
 ---
 
 # Claude — Prompt-Layer Reference
@@ -33,14 +39,24 @@ Three current-generation models. Pick by task axis, not brand.
 
 | Target task                                                | Preferred model                              | Notes                                                                                      |
 |------------------------------------------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------|
-| Long-horizon agentic coding, hardest reasoning, memory     | `claude-opus-4-7`                            | 1M context; 128K max output; adaptive thinking only; new tokenizer (1.0–1.35× prior count) |
+| Most complex tasks: hardest reasoning, long-horizon agentic coding, memory | `claude-opus-4-8`            | Current flagship (GA 2026-05-28); 1M context (200K on Microsoft Foundry); 128K max output; adaptive thinking only |
+| Prior flagship, still Active for pinned/complex workloads  | `claude-opus-4-7`                            | 1M context; 128K max output; adaptive thinking only; new tokenizer (1.0–1.35× prior count) |
 | Balanced intelligence and speed; coding; computer use      | `claude-sonnet-4-6`                          | 1M context; 64K max output; adaptive + manual thinking                                     |
 | High-throughput, low-latency, near-frontier at lowest cost | `claude-haiku-4-5` (`claude-haiku-4-5-20251001`) | 200K context; 64K max output; first Haiku with extended thinking                       |
 
-[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
+[source: anthropic.com/claude/opus, retrieved 2026-06-01]
 
-Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5, Opus 4.1) remain available for pinned workloads. Claude Sonnet 4 and Claude Opus 4 retire **2026-06-15**; Claude Haiku 3 retires **2026-04-19**. Migrate before the retirement dates.
-[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+Opus 4.8 is a hybrid reasoning model; its adaptive thinking automatically adjusts how much thinking it uses. Knowledge cutoff and training-data cutoff are both Jan 2026; pricing is $5/MTok input, $25/MTok output.
+[source: anthropic.com/claude/opus, retrieved 2026-06-01]
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
+
+[applies-to: claude-sonnet-4-6] [disputed: the developer models-overview page states a reliable knowledge cutoff of Aug 2025 with a training-data cutoff of Jan 2026; the Transparency Hub and the Sonnet 4.6 system card state a flat knowledge cutoff of May 2025] Sonnet 4.6's stated knowledge cutoff differs across two live Anthropic surfaces; both positions are presented rather than collapsed.
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
+[source: anthropic.com/transparency, retrieved 2026-06-01]
+
+Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5, Opus 4.1) remain available for pinned workloads. Claude Sonnet 4 and Claude Opus 4 (deprecated 2026-04-14) retire **2026-06-15** — replacements `claude-sonnet-4-6` and `claude-opus-4-8` respectively. Claude Haiku 3 (`claude-3-haiku-20240307`) is **already Retired** (retirement date April 20, 2026; replacement `claude-haiku-4-5-20251001`). Migrate before remaining retirement dates.
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
 
 Vision is supported on all three current models. Claude Opus 4.7 accepts images up to 2576 px / 3.75 MP — roughly 3× Opus 4.6's 1568 px / 1.15 MP ceiling — and maps model coordinates 1:1 to pixels (no scale-factor math for computer-use workflows).
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
@@ -112,10 +128,12 @@ Ask Claude to quote relevant passages before carrying out a task. Place quotes i
 
 ## 4. Context Window Practical Guidance
 
+- **Opus 4.8**: 1M tokens (200K on Microsoft Foundry).
 - **Opus 4.7 and Sonnet 4.6**: 1M tokens at standard API pricing, no long-context premium.
 - **Haiku 4.5**: 200K tokens.
 
 [source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
 
 [applies-to: claude-opus-4-7] Opus 4.7 uses a new tokenizer that may consume 1.0× to 1.35× as many tokens as Opus 4.6 on the same text. Budget `max_tokens` and compaction triggers with this headroom in mind.
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
@@ -182,8 +200,9 @@ Videos are processed as frame sequences; the current Claude generation does not 
 - **Do not carry over Opus 4.5 anti-laziness scaffolding** to 4.6+ models. It leads to overtriggering on tools and skills. Tune back aggressive "if in doubt, use X" guidance.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
 
-- **Do not set `temperature`, `top_p`, or `top_k` on Opus 4.7** (API-layer rejection, 400). Previously-used `temperature=0` for determinism never produced identical outputs anyway; remove the parameter. See the API file for the migration.
+- **Do not set `temperature`, `top_p`, or `top_k` on Opus 4.7 and later, including Opus 4.8** (API-layer rejection, 400). Previously-used `temperature=0` for determinism never produced identical outputs anyway; remove the parameter. See the API file for the migration.
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
 
 - **Do not rely on vague negative design prompts** ("make it clean and minimal") to escape Opus 4.7's cream/serif default. They shift to a different fixed palette, not to variety. Specify a concrete palette and typography, or ask the model to propose options first.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
@@ -191,7 +210,7 @@ Videos are processed as frame sequences; the current Claude generation does not 
 - **Do not force interim progress updates** on Opus 4.7 ("every 3 tool calls, summarize progress"). The model already provides regular updates; scaffolding interferes.
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
 
-- **Do not use prompting to cap thinking cost** on Opus 4.6 / Sonnet 4.6 / Opus 4.7 when `effort` or `max_tokens` would do it more directly. Prompt-based steering of thinking is supported but is the less reliable lever.
+- **Do not use prompting to cap thinking cost** on Opus 4.6 / Sonnet 4.6 / Opus 4.7 / Opus 4.8 when `effort` or `max_tokens` would do it more directly. Prompt-based steering of thinking is supported but is the less reliable lever.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
 
 ## 8. Gaps
