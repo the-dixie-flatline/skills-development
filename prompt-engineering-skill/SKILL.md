@@ -99,13 +99,13 @@ Applies to every loaded reference.
 
 When porting a prompt or integration between families, these are the points where assumptions break. This list is the meta-map; each family file has the specifics. Consult the target family file before reusing a pattern.
 
-- **Reasoning / thinking controls are not portable.** Parameter names, accepted values, and semantics all differ: `reasoning.effort` (OpenAI, some Grok); `thinking.type` + `output_config.effort` (Claude); `thinkingLevel` or `thinkingBudget` (Gemini); `enable_thinking` + `preserve_thinking` (Qwen); `<|think|>` token or `enable_thinking` kwarg (Gemma); `thinking: {type: "enabled"}` or model ID (DeepSeek); binary `reasoning_effort: "none" | "high"` (Mistral Small 4); `reasoning_effort` rejected on most Grok models but repurposed for **agent count** on Grok multi-agent; nothing at all (Llama). Treat `reasoning_effort` as a family-scoped name, not a universal knob.
+- **Reasoning / thinking controls are not portable.** Parameter names, accepted values, and semantics all differ: `reasoning.effort` {none,low,medium,high,xhigh} (OpenAI); `thinking.type: "adaptive"` + `output_config.effort` (Claude — adaptive-only on Opus 4.7/4.8, manual budgets rejected); `thinkingLevel` {minimal,low,medium,high} on Gemini 3 or `thinkingBudget` on Gemini 2.5; `enable_thinking` + `preserve_thinking` (Qwen); `<|think|>` token (Gemma); tri-state `thinking: {type:"enabled"|"disabled"}` or `reasoning_effort: "high" | "max"` (DeepSeek V4); binary `reasoning_effort: "high" | "none"` (Mistral, chat endpoint); `reasoning_effort` {none,low,medium,high}, default `low` (Grok grok-4.3); nothing at all (Llama). Treat `reasoning_effort` as a family-scoped name, not a universal knob — even where the name is shared, the accepted value set differs.
 
 - **Reasoning-artifact multi-turn handling actively contradicts between families.**
   - Claude: `thinking` blocks **must** be preserved unchanged in tool-use multi-turn.
   - OpenAI: reasoning items **must** be preserved (via `previous_response_id` or explicit inclusion).
   - Gemini: `thoughtSignature` must be passed back.
-  - DeepSeek: `reasoning_content` **must not** be sent back — returns HTTP 400.
+  - DeepSeek (V4): **conditional** — on non-tool-call turns `reasoning_content` is ignored if sent back; on tool-call turns it **must** be passed back or the API returns HTTP 400. (The legacy `deepseek-reasoner` rule was: any `reasoning_content` on input returns 400.)
   - Gemma: strip thoughts from prior-turn history.
   - Qwen: opt-in via `preserve_thinking: True` (default `False`).
 
@@ -119,7 +119,7 @@ When porting a prompt or integration between families, these are the points wher
 
   Prompts copied across families without role remapping will misparse.
 
-- **"OpenAI-compatible" at the wire level is not "OpenAI-equivalent" semantically.** Several non-OpenAI families (Grok, DeepSeek, Mistral, Gemini via shim) accept OpenAI-shaped requests but diverge on behavior: Grok rejects `reasoning_effort` on most models and repurposes it on multi-agent; DeepSeek rejects `reasoning_content` on input; Mistral's `reasoning_effort` is binary. Compatible wire format is a migration convenience, not a behavior guarantee.
+- **"OpenAI-compatible" at the wire level is not "OpenAI-equivalent" semantically.** Several non-OpenAI families (Grok, DeepSeek, Mistral, Qwen, Gemini via shim) accept OpenAI-shaped requests but diverge on behavior: the reasoning field name, the multi-turn round-trip rule, rejected/no-op params, and cache-token field paths all differ per provider (e.g. Grok errors on `presence_penalty`/`frequency_penalty`/`stop` for reasoning models; DeepSeek's reasoning round-trip is conditional on tool calls; Mistral's `reasoning_effort` is binary and uses `max_tokens` not `max_completion_tokens`). Compatible wire format is a migration convenience, not a behavior guarantee. The full per-provider matrix is in `resources/openai-compatibility-surface.md`.
 
 - **Open-weights chat templates need the canonical encoder.** Hand-assembling template strings is a landmine across open-weights families — Gemma's asymmetric `<|turn>` / `<turn|>`, DeepSeek's full-width `｜` and `▁` characters, Llama's token migration from 3.x, Mistral's version-dependent whitespace rules, Qwen's ChatML-derived structure. Use the provider's canonical encoder (`mistral-common`, DeepSeek's `encode_messages`, HuggingFace `apply_chat_template` where a Jinja template ships) rather than constructing the token stream manually.
 
