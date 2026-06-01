@@ -35,7 +35,9 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 
 ## Routing Procedure
 
-1. **Identify the target family** from the user's prompt, imported SDK (`anthropic`, `openai`, `google-genai`, transformers model ID, etc.), file naming, or an explicit question. If ambiguous, ask before loading anything.
+1. **Identify the target family** from the user's prompt, imported SDK (`anthropic`, `openai`, `google-genai`, transformers model ID, etc.), file naming, or an explicit question.
+   - **Empty-arg case.** When the skill is invoked with no family argument, resolve the family from the triggering turn (the user's prose, the open file, the imported SDK). If the family is not recoverable that way, ask before loading anything. Never default to a family.
+   - **Generated-prompt case.** When the deliverable is a prompt *for another model*, two families are in play: the **subject family** (whose behavior the prompt-author is reasoning about) and the **consumer family** (the model that will actually run the prompt). Route on the consumer family — load its files, because its behavioral quirks and contract are what the generated prompt must satisfy. If the task also requires reasoning about the authoring model's own output, load that family too and say which is which.
 2. **Decide scope.**
    - Prompt-layer only: load `resources/{family}-prompt.md`.
    - API-layer relevant: also load `resources/{family}-prompt-api.md`. Triggers include the user mentioning sampling parameters, tools, structured outputs, reasoning/thinking budgets, streaming, caching, chat template tokens, or specific SDK calls.
