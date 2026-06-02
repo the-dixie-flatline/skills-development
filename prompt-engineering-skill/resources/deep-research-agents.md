@@ -120,6 +120,13 @@ Do not assert an output-token cap for Gemini Deep Research. The 65,536-token cap
 **Agent API preset.** The Agent API also exposes a `deep-research` preset, called as `client.responses.create(preset="deep-research")`. This is distinct from calling `model="sonar-deep-research"` directly; they are two different entry points to the capability.
 [source: https://docs.perplexity.ai/docs/sonar/models/sonar-deep-research, retrieved 2026-06-01]
 
+**Realized cost runs well above the nominal output rate.** Third-party telemetry reports the *realized* output cost on `sonar-deep-research` far above the nominal $8 / 1M output rate — on the order of ~$120 / 1M output tokens (roughly 15x) — because reasoning, citation, and search-query billing stack on top of base output. Budget from measured end-to-end usage, not the headline output price. [community-reported]
+[tier: 2, source: openrouter.ai/perplexity/sonar-deep-research, retrieved 2026-06-02]
+[source: https://docs.perplexity.ai/docs/sonar/models/sonar-deep-research, retrieved 2026-06-01]
+
+**Citations come back on the response payload, not through a tool-call channel.** The `citations` and `search_results` objects (above) ride on the response itself; an integration that does not explicitly read them off the response surfaces no sources. A reproducible third-party client bug turned on exactly this omission. [community-reported]
+[tier: 2, source: github.com/danny-avila/LibreChat/issues/9005, retrieved 2026-06-02]
+
 A GA / beta / preview lifecycle label is not stated on the model page. See Gaps.
 
 ## Shape B: Web-Search Tool-Use Loops (not managed async agents)
