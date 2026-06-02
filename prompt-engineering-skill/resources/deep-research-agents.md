@@ -21,7 +21,10 @@ maturity_note: |
   tool-use loops that are not managed async agents (Anthropic, xAI Grok). Every
   agent and model ID below is preview or otherwise volatile and rotates without
   notice; treat all IDs as date-stamped to the retrieval date and re-verify
-  before pinning.
+  before pinning. A "Cross-Agent Behavioral Observations" section (added
+  2026-06-02) records recurring Tier-2 (academic/community) behaviors that span
+  agents; those claims carry their own [community-reported] markers and
+  2026-06-02 retrieval dates, distinct from the Tier-1 vendor facts above.
 ---
 
 # Deep Research Agents — Cross-Family Reference
@@ -162,6 +165,22 @@ Do not assert "DeeperSearch" as a distinct named developer feature. It is not do
 | xAI Grok   | B     | `web_search` server tool                       | Synchronous, in-request | `response.citations`              |
 
 Shape A decouples submission from result: budget for minutes of latency, persist the identifier, and reconnect or webhook to the result. Shape B returns within one request: no identifier to persist, no terminal-state enum, latency bounded by the model's own search loop. Status-string conventions differ even within Shape A — Gemini uses lowercase (`completed`), Perplexity uses uppercase (`CREATED`) — so status-handling code does not port across providers.
+
+## Cross-Agent Behavioral Observations
+
+These behaviors recur across more than one hosted deep-research agent and are recorded here rather than duplicated into each provider section. All are Tier-2 (academic or community) and flagged `[community-reported]`; none is a vendor guarantee. This section names the behavior only — detection and mitigation methodology is out of scope and routes to the `prompt-engineering-architect` skill.
+
+**Structured-repository blind spot.** Hosted deep-research and web agents traverse the open prose web (news, articles, vendor pages, search-result snippets) well, but reach *structured* authoritative data layers far less reliably: data behind public REST APIs, bulk datasets, and database- or JavaScript-backed query UIs. A controlled WebArena study found agents given API access scored more than 24 points higher (absolute success rate) than browsing-only agents on the same tasks, isolating how much of the structured layer browsing alone leaves behind. A finance-research benchmark that required SEC EDGAR access put even the best agent (OpenAI o3) at 46.8% accuracy. Operational consequence: when a question's primary evidence lives behind an API or database UI, the agent can silently omit it; pre-fetching that layer separately is more reliable than expecting the agent to reach it. [community-reported]
+[tier: 2, source: arxiv.org/abs/2410.16464 (Beyond Browsing: API-Based Web Agents), retrieved 2026-06-02]
+[tier: 2, source: arxiv.org/abs/2508.00828 (Finance Agent Benchmark), retrieved 2026-06-02]
+
+**Agents diverge, and a single agent is not self-sufficient on citations.** Different hosted agents ground and cite the same question very differently — one public leaderboard records Gemini 2.5 Pro Deep Research at ~111 average effective citations, described as exceptional relative to other systems — so two agents on one prompt are not redundant runs of the same process. And no single agent is dependable on citation faithfulness alone: a long-standing citation benchmark found even the best models lack complete citation support roughly half the time. Treat a primary-source re-fetch and quote-match as load-bearing, not optional, before relying on any one agent's report. [community-reported]
+[tier: 2, source: deepresearch-bench.github.io (DeepResearch Bench), retrieved 2026-06-02]
+[tier: 2, source: aclanthology.org/2023.emnlp-main.398 (ALCE), retrieved 2026-06-02]
+
+**Long reports collect more than they synthesize.** Benchmarks built specifically for long-form research generation find current agents far from saturated on synthesis quality. A live benchmark evaluating 17 frontier deep-research systems reports recurring synthesis-stage failure modes, and a generative-research-synthesis benchmark found no system exceeds a ~31% geometric mean across knowledge-synthesis, retrieval-quality, and verifiability metrics. A long, fluent report is not evidence that cross-source synthesis actually happened — verify the synthesis, not just the length. [community-reported]
+[tier: 2, source: arxiv.org/abs/2510.14240 (LiveResearchBench), retrieved 2026-06-02]
+[tier: 2, source: arxiv.org/abs/2508.20033 (DeepScholar-Bench), retrieved 2026-06-02]
 
 ## Gaps
 
