@@ -49,21 +49,42 @@ stale, or incorrect?* If yes, fix it before committing.
 ### Directive 2: Zero Non-Public Data
 
 This repository contains only publicly available information. Non-public data of any kind
-must never enter the repository, a pull request, an issue, or a commit message. Specifically:
+must never enter the repository, a pull request, an issue, or a commit message.
+
+**The governing question is: "Is this idea already in the public domain?"** This test
+applies to every contributor, not just the maintainers. If the knowledge is already public
+— anyone could discover it from public sources, vendor APIs, or published literature — it
+is publishable here regardless of where you personally first encountered it. If it is not
+public — it belongs to you, an employer, a client, or any third party as IP, a proprietary
+practice, or a novel/unpublished idea — it must not ship, even abstracted, until it is
+genuinely in the public domain. Prompt engineering itself is a well-documented public
+discipline; so is how a publicly available model behaves. A specific unpublished method,
+or private business context, is not.
 
 **Never use or reference:**
 - **Memory content.** Claude's memory of past conversations with any user is off-limits
   for this project. When working in this repository, operate as if the memory system
   does not exist. Do not retrieve memories. Do not reference what "we discussed" or
   "you mentioned" from prior sessions. Do not port content, patterns, or examples that
-  came from personal or client conversations into this public repo.
+  came from personal or client conversations into this public repo. This prohibition is on
+  porting conversation *content* and private material — not on public-domain knowledge
+  (such as how a public model behaves) that happens to have surfaced in a private session;
+  that knowledge is governed by the public-domain test above and the carve-in below.
 - **Personal uploads.** Files the user has uploaded in conversations outside this
   repository — whether sensitive or not — are treated as private. Do not use them as
   source material unless the user explicitly re-shares them specifically for this
   repository.
-- **Client or employer information.** No references to specific clients, employers,
-  consulting engagements, internal tooling, organizational names, personnel, or business
-  arrangements. This applies even when the reference seems innocuous.
+- **Non-public business context — yours, an employer's, a client's, or any third party's.**
+  No references to specific clients, employers, consulting engagements, internal tooling,
+  organizational names, personnel, or business arrangements. This applies even when the
+  reference seems innocuous, and it protects contributors' own context as much as the
+  maintainers'.
+- **Novel or unpublished ideas, methods, or practices not yet in the public domain.** A
+  proprietary technique, an unreleased approach, or an original idea that is not already
+  publicly documented does not belong here until it is public. A well-documented general
+  discipline that someone merely *adopts* (e.g., color-team review, prompt engineering) is
+  already public and is fine; the proprietary *application* of it to a specific business is
+  not.
 - **Internal documentation of any organization.** Internal wikis, Slack exports, private
   Notion pages, internal design docs, architectural diagrams from private systems,
   proprietary prompts, or any material not published on a public URL.
@@ -77,6 +98,22 @@ must never enter the repository, a pull request, an issue, or a commit message. 
 - **Real personal data.** Names of individuals (other than public figures in their
   public capacity), email addresses, physical addresses, phone numbers, account IDs,
   or any other PII. Examples and test fixtures use synthetic or widely-known fictional data.
+
+**Publishable even when first observed in private work: public model behavior.**
+Observations about how a publicly available model behaves are public-domain knowledge —
+anyone with API access can discover them, and others will. A model's quirks, failure modes,
+prompt-corrections, sampling/format sensitivities, and degradation patterns are in scope
+even when first noticed during private, client, or internal work, provided they are
+abstracted to the level of the model's behavior and carry no business context. The dividing
+line is **business context, not the observation**: the behavior is publishable; the task
+that surfaced it (what was being prompted about and why) is not. Reproducibility test —
+*could a practitioner with API access and no knowledge of the contributor's business
+recognize or reproduce this behavior from the statement?* If yes, strip any remaining task
+context and publish it with the correct tier marker. If the claim only makes sense with the
+business context attached, it is a business claim, not a model-behavior claim — keep it out.
+First-party behavioral observations the vendor does not document and that have not been
+independently reproduced at scale are flagged `[field-observed]` (see `SCHEMA.md`), stated
+as ranges with a sample-size caveat, never as fixed vendor-grade numbers.
 
 **The contributor-generated-PR threat model:** A non-trivial risk for a public repository
 is that a contributor runs an AI assistant that has access to private data from their
