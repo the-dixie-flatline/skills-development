@@ -188,6 +188,14 @@ Markers annotate claims for downstream tooling and readers.
 - `[applies-to: <version-id>, ...]` — claim is scoped to specific model versions; overrides the file's `versions:` header.
 - `[testable: id=<family>.<short-description>.v<N>, expected=<observable>]` — empirically validatable claim; the test harness extracts this.
 - `[unverified]` — plausibly true but not documented by the provider.
+- `[field-observed]` — a first-party behavioral observation against the public model:
+  observed directly in practice, not vendor-documented, and not independently reproduced at
+  scale. State it as a range with a sample-size caveat (e.g., N=1-2), never as a fixed
+  vendor-grade number. Distinct from `[community-reported]` (someone else reported it) and
+  `[unverified]` (plausible but unobserved). Subject to the CLAUDE.md Directive-2 abstraction
+  bar: it must describe public-model behavior only, with all business context stripped.
+- `[community-reported]` — reported by a reputable non-vendor third party (Tier 2). Relay
+  with the marker; do not promote to Tier 1.
 - `[disputed: <summary>]` — primary sources disagree; state both positions inline.
 
 ### Testable claim IDs
