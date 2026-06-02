@@ -54,7 +54,14 @@ Before contributing, read [`CONTRIBUTING.md`](./CONTRIBUTING.md) and
 [`CLAUDE.md`](./CLAUDE.md). The short version:
 
 - Verify your claims against primary sources.
-- No private or proprietary data — yours or anyone else's.
+- The test for what's safe to submit is **"Is this idea already in the public domain?"**
+  If yes, it's fair game no matter where you first saw it. If it's someone's non-public IP,
+  proprietary practice, or novel/unpublished idea — yours, an employer's, or a client's — it
+  stays out until it's public.
+- No private or proprietary data, and no business context — yours or anyone else's.
+- Public-model behavior is welcome, including lessons you learned in private work, as long
+  as you abstract them to the model's behavior (no client, data, or task), and label
+  first-party undocumented observations `[field-observed]`.
 - If you used an AI assistant to help, double-check for leaked context.
 - Keep PRs focused.
 
