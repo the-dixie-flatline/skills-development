@@ -34,22 +34,37 @@ In-scope:
 - New skills following the structural conventions in `CLAUDE.md`
 - Improvements to prose clarity without changing meaning
 - Test harness additions that validate existing claims
+- Field-observed behavioral notes on a public model, abstracted and `[field-observed]`-labeled (see Data Handling below)
 
 Out-of-scope:
 - Opinion pieces, "best model" rankings, or buying guides
 - Marketing or evangelism for any provider
 - Content derived from private or non-public sources (see Data Handling below)
+- Proprietary methods, novel/unpublished ideas, or practices not already in the public domain — yours or anyone else's (see Data Handling below)
 - Changes that add dependencies without clear justification
 - Scope expansion that makes a skill's one-line description require "and"
 
 ## Data Handling (Non-Negotiable)
 
-This repository contains only publicly available information. Before submitting any
-contribution, you must personally confirm that none of the following has leaked in:
+This repository contains only publicly available information. The governing question for
+every contribution is: **"Is this idea already in the public domain?"** If the knowledge is
+already public — discoverable from public sources, vendor APIs, or published literature — it
+is publishable here regardless of where you personally first encountered it. If it is not
+public — it belongs to you, an employer, a client, or any third party as IP, a proprietary
+practice, or a novel/unpublished idea — it must not ship, even abstracted, until it is
+genuinely public.
+
+Before submitting any contribution, personally confirm that none of the following has
+leaked in:
 
 - **Client, employer, or organizational information** of any kind, yours or anyone
   else's. This includes organization names, internal project names, personnel,
   business relationships, and seemingly innocuous context ("at my last company we...").
+- **Proprietary methods, novel ideas, or practices not yet in the public domain**, yours
+  or anyone else's. An unpublished technique, an original approach, or IP that is not already
+  publicly documented stays out until it is public. A well-documented general discipline that
+  you merely *adopt* (prompt engineering, color-team review, threat modeling) is already
+  public and is fine; the proprietary *application* of it to a specific business is not.
 - **Internal documentation** from any organization. Internal wikis, Slack exports,
   private Notion pages, design docs, architectural diagrams, proprietary prompts, or
   any material not published on a public URL.
@@ -64,6 +79,26 @@ contribution, you must personally confirm that none of the following has leaked 
 
 **When in doubt, exclude.** The cost of omitting an example is trivial. The cost of a
 leak is not recoverable.
+
+### Public Model Behavior Is Welcome
+
+The rules above are about *business context*, not knowledge. How a publicly available model
+behaves — its quirks, failure modes, prompt-corrections, sampling and format sensitivities,
+degradation patterns — is public-domain knowledge: anyone with API access can discover it,
+and these behavioral notes are exactly the value this repo aims to add over a plain web
+search. Such observations are welcome **even if you first noticed them during private or
+client work**, as long as you abstract them to the model's behavior and strip the task that
+surfaced them.
+
+The dividing line is business context, not the observation. Reproducibility test: *could a
+practitioner with API access and no knowledge of your business reproduce this from your
+statement?* If yes, it is publishable. If the note only makes sense with the client, the
+data, or the purpose attached, that is a business claim — leave it out or abstract harder.
+Do not launder business context into a "behavior" note.
+
+Flag first-party observations the vendor does not document as `[field-observed]`, give a
+range with a sample-size caveat (e.g., N=1-2), and never state them as fixed vendor-grade
+numbers. See [`SCHEMA.md`](./prompt-engineering-skill/SCHEMA.md) for the marker.
 
 ### If You Realize Something Slipped Through
 
@@ -147,6 +182,11 @@ Before marking a PR ready for review, confirm every item:
 - [ ] No non-public information is included. I have reviewed every changed file for
       client names, employer references, internal paths, real credentials, PII, and
       context from private conversations.
+- [ ] No proprietary methods, novel/unpublished ideas, or not-yet-public practices —
+      mine or anyone else's. Everything submitted is already in the public domain.
+- [ ] Any model-behavior observation is abstracted to public-model behavior with the task
+      context stripped, and first-party undocumented observations are labeled
+      `[field-observed]` with a range and sample-size caveat.
 - [ ] Every factual claim has inline provenance pointing to a Tier 1 or Tier 2 source.
 - [ ] Tier 2 (community-reported) claims are explicitly flagged as such.
 - [ ] No Tier 3 sources (SEO content mills, AI-generated review sites) are cited.
@@ -168,6 +208,7 @@ Before marking a PR ready for review, confirm every item:
 Reviewers apply the maintainer checklist from `CLAUDE.md`:
 
 - No non-public data
+- No proprietary or not-yet-public ideas, methods, or practices (the public-domain test)
 - No AI-slop language
 - Provenance on factual claims
 - Retrieval dates current
@@ -197,6 +238,7 @@ on the PR is welcome.
 
 Reasons a PR may be closed:
 - Contains non-public information (remove and resubmit from a clean branch)
+- Contains proprietary or not-yet-public IP, methods, or ideas (resubmit once genuinely public)
 - Relies on sources excluded by the tier policy
 - Scope is larger than a single logical change (split into multiple PRs)
 - Appears to be unverified AI-generated content
