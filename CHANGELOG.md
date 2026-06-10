@@ -12,6 +12,45 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.3.0 — 2026-06-10
+
+Claude Fable 5 launch coverage (`retrieved: 2026-06-10` on the two Claude reference
+files; other families untouched). Contract-version unchanged (2026-04-18).
+
+### Claude — new flagship: Claude Fable 5 (`claude-fable-5`, GA 2026-06-09)
+
+- **`claude-prompt.md`** — Fable 5 added as the model-selection top row ($10/$50 per
+  MTok, 1M ctx, 128K output, knowledge cutoff Jan 2026); Mythos 5 noted as the
+  same-weights limited-release variant (Project Glasswing, successor to Mythos
+  Preview). New instruction patterns from Anthropic's Fable prompting guide: brief
+  steering instructions over per-behavior enumeration, give-the-reason framing,
+  anti-overplanning, and tool-result-grounded progress claims. Behavioral-quirks
+  block covers longer turns by default, effort guidance, over-elaboration at higher
+  effort, unrequested actions, parallel-subagent readiness, memory-system uplift,
+  rare early stopping, context-budget anxiety on visible token countdowns, long-run
+  readability degradation, and the send-to-user-tool pattern. System-card failure
+  clusters (886-use sample) and the strategic-deference finding included with
+  provenance. New anti-patterns: no reasoning-echo instructions
+  (`reasoning_extraction` refusals), no token countdowns, no wholesale carry-over of
+  prior-model skills, no simple-workload-only evaluation.
+- **`claude-prompt-api.md`** — Fable 5 platform IDs (Claude API, Bedrock incl.
+  geo/global inference IDs and `bedrock-mantle`; Vertex/Foundry available but IDs
+  unpinned); Covered-Model data-retention constraint (30-day, no ZDR; Bedrock
+  `provider_data_share` opt-in). Thinking semantics: adaptive always on, `disabled`
+  unsupported, `display` defaults `"omitted"`, raw chain of thought never returned.
+  Sampling bounds per the Bedrock model card. New §2 subsection documenting the
+  refusal response shape (`stop_reason: "refusal"`, `stop_details` categories
+  cyber/bio/reasoning_extraction), billing, server-side `fallbacks` parameter (beta
+  `server-side-fallback-2026-06-01`), fallback content blocks and `usage.iterations`,
+  echo rules, streaming semantics, SDK refusal-fallback middleware, and fallback
+  credit (`fallback-credit-2026-06-01`). Beta-header table and breaking-changes
+  section extended; new testable IDs for thinking-disabled rejection, omitted-display
+  default, and sampling rejection. Gaps declared for prefill handling, first-party
+  cache minimum, Vertex/Foundry IDs, `allowed_fallback_models`, sticky-routing/billing
+  subsections, and `effort: "max"` availability.
+- **`SKILL.md`** — Claude coverage row and cross-family thinking-controls line
+  updated for Fable 5; version bumped to 0.3.0.
+
 ## prompt-engineering-skill 0.2.0 — 2026-06-01
 
 Family-lineup refresh against live primary sources (`retrieved: 2026-06-01`) plus a

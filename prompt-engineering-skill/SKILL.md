@@ -1,7 +1,7 @@
 ---
 name: prompt-engineering-skill
 description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, configures a hosted deep-research or agent-orchestration surface, calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology (use prompt-engineering-architect) and for questions about how this current Claude session should respond.
-version: 0.2.0
+version: 0.3.0
 contract-version: 2026-04-18
 ---
 
@@ -57,7 +57,7 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 
 | Family  | Prompt-layer | API-layer | Notes              |
 |---------|--------------|-----------|--------------------|
-| Claude  | published    | published | Opus 4.8 flagship (GA 2026-05-28) + Opus 4.7 still Active + Sonnet 4.6 + Haiku 4.5, as of 2026-06-01. Adaptive-only thinking on 4.7/4.8; Opus 4 / Sonnet 4 retire 2026-06-15 |
+| Claude  | published    | published | Fable 5 flagship (`claude-fable-5`, GA 2026-06-09) + Opus 4.8/4.7 Active + Sonnet 4.6 + Haiku 4.5, as of 2026-06-10. Fable 5: always-on adaptive thinking, summarized-only thinking output, classifier refusals + fallback surface; adaptive-only thinking on 4.7/4.8; Opus 4 / Sonnet 4 retire 2026-06-15 |
 | OpenAI  | published    | published | GPT-5.5 flagship + 5.5-pro + 5.4 (cheaper tier) /mini/nano + 5.3-codex, as of 2026-06-01. Responses API primary; Assistants removed 2026-08-26 (→ Responses + Conversations); o*-deep-research IDs shut down 2026-07-23 |
 | Gemini  | published    | published | 3.5 Flash GA + 3.1 Flash-Lite GA + 3.1 Pro Preview, as of 2026-06-01. thinkingLevel replaces thinkingBudget on Gemini 3; 2.0 GA shut down 2026-06-01, 2.5 GA sunsets 2026-10-16 |
 | Gemma   | published    | published | Open weights, Apache 2.0. Gemma 4 E2B / E4B / 26B-A4B / 31B, re-verified 2026-06-01. 128K/256K context split; per-size dedicated draft model |
@@ -100,7 +100,7 @@ Applies to every loaded reference.
 
 When porting a prompt or integration between families, these are the points where assumptions break. This list is the meta-map; each family file has the specifics. Consult the target family file before reusing a pattern.
 
-- **Reasoning / thinking controls are not portable.** Parameter names, accepted values, and semantics all differ: `reasoning.effort` {none,low,medium,high,xhigh} (OpenAI); `thinking.type: "adaptive"` + `output_config.effort` (Claude — adaptive-only on Opus 4.7/4.8, manual budgets rejected); `thinkingLevel` {minimal,low,medium,high} on Gemini 3 or `thinkingBudget` on Gemini 2.5; `enable_thinking` + `preserve_thinking` (Qwen); `<|think|>` token (Gemma); tri-state `thinking: {type:"enabled"|"disabled"}` or `reasoning_effort: "high" | "max"` (DeepSeek V4); binary `reasoning_effort: "high" | "none"` (Mistral, chat endpoint); `reasoning_effort` {none,low,medium,high}, default `low` (Grok grok-4.3); nothing at all (Llama). Treat `reasoning_effort` as a family-scoped name, not a universal knob — even where the name is shared, the accepted value set differs.
+- **Reasoning / thinking controls are not portable.** Parameter names, accepted values, and semantics all differ: `reasoning.effort` {none,low,medium,high,xhigh} (OpenAI); `thinking.type: "adaptive"` + `output_config.effort` (Claude — adaptive-only on Opus 4.7/4.8 and Fable 5; on Fable 5 thinking is always on and `disabled` is unsupported; manual budgets rejected); `thinkingLevel` {minimal,low,medium,high} on Gemini 3 or `thinkingBudget` on Gemini 2.5; `enable_thinking` + `preserve_thinking` (Qwen); `<|think|>` token (Gemma); tri-state `thinking: {type:"enabled"|"disabled"}` or `reasoning_effort: "high" | "max"` (DeepSeek V4); binary `reasoning_effort: "high" | "none"` (Mistral, chat endpoint); `reasoning_effort` {none,low,medium,high}, default `low` (Grok grok-4.3); nothing at all (Llama). Treat `reasoning_effort` as a family-scoped name, not a universal knob — even where the name is shared, the accepted value set differs.
 
 - **Reasoning-artifact multi-turn handling actively contradicts between families.**
   - Claude: `thinking` blocks **must** be preserved unchanged in tool-use multi-turn.
