@@ -12,6 +12,184 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.4.0 — 2026-07-19
+
+Round-3 refinement pass. `SKILL.md` bumped to `0.4.0`; contract-version
+unchanged (2026-04-18). Tier-1 point facts re-verified against live vendor docs
+on 2026-07-18 (firecrawl scrapes of platform.claude.com, ai.google.dev, and
+developers.openai.com). Field-observed additions are abstracted public-model
+behavior per repo Directive 2, carry `[field-observed]` markers with N=1-2 (N=15
+for the grammar-decoding note), and state ranges not fixed numbers. Deferred
+items (generational briefs F1/F2/F3/F11/F12/F30/F31/F32 and test-gated F10) are
+NOT in this draft.
+
+### Claude (`claude-prompt.md`, `claude-prompt-api.md`) — Tier-1
+
+- **Prompt-cache minimums corrected** (F25): Opus 4.7 4096→2048, Sonnet 4.6
+  2048→1024; added Opus 4.8=1024, Sonnet 5=1024, Fable 5 / Mythos 5=512 (1024 on
+  Bedrock). Closed the §10 gap on the Fable 5 first-party minimum.
+- **`frontier_llm` refusal category** (F26): the invisible-safeguards prose is
+  replaced by the now-documented visible refusal category (cyber / bio /
+  frontier_llm / reasoning_extraction), all fallback-eligible; updated in both
+  files' §6/§9 and the §2 category list.
+- **Per-model tool-use overhead table** (F27): the flat 346/313 figure (matching
+  no current model) replaced with the per-model table (Opus 4.8 290/410, Opus 4.7
+  675/804, Sonnet 5 354/474, etc.).
+- **Deprecation/tense fixes** (F28): Opus 4 / Sonnet 4 retired 2026-06-15
+  (completed); Opus 4.1 now Deprecated (retires 2026-08-05); Mythos Preview
+  retires 2026-07-21; web_search now `web_search_20260318` (response_inclusion);
+  Fable 5 `max` effort confirmed available; Vertex AI structured-outputs now GA
+  including Mythos Preview (prior "Vertex does not support Mythos Preview" claim
+  corrected).
+- **Anti-pattern / placeholder** (F18a, F19): CAPS-emphasis anti-pattern
+  generalized beyond the single tool-command string (behavioral breadth
+  test-gated with a `[testable]` marker); §2 gains a fill-in-placeholder
+  convention note (`{{value}}` / `[VALUE]` / backtick-wrap over bare
+  `<angle-bracket>`).
+
+### Gemini (`gemini-prompt.md`, `gemini-prompt-api.md`) — Tier-1
+
+- **Implicit-caching floors corrected** (F29): 3.5 Flash 1024→4096, 2.5 Flash
+  1024→2048, 2.5 Pro 4096→2048 (3.1 Pro unchanged at 4096); fixed both the API
+  table and the prose "Flash=1024/Pro=4096" split.
+- **gemini-3.5-flash context window** published (F34): 1,048,576 in / 65,536 out
+  (partially closes the declared gap).
+- **gemini-3.1-flash-lite shutdown** 2027-05-07 added (F28g).
+- **Deep Research cross-reference** (F6): `gemini-prompt.md` gains a short DR
+  subsection (enumeration-bucket fix + pointer to `deep-research-agents.md`).
+
+### Deep Research (`deep-research-agents.md`) — field-observed (Gemini DR)
+
+New "Field-observed behavior (Gemini Deep Research)" subsection plus inline
+refinements: dual citation schema with `grounding-api-redirect` wrapper URLs
+(F4); structural/suppression-honored vs inline-markup-ignored compliance split
+(F5); enumeration bucket fix (F6); non-terminal failure modes — silent
+400-zombie plus steps-hidden-until-terminal; the earlier bare-domain-literal
+wedging correlation was refuted by controlled matched-pair testing 2026-07-19
+and is withdrawn (F7, revised); observed usage-schema divergence, shown NOT
+Api-Revision-dependent (F13, revised); realized Max cost ~$40 (F14); ~5-job
+concurrency cap (F15); terminal `outputs` schema (F20); narrow source pool (F21);
+adjacent-entity substitution + unreachable-source padding (F22); latency
+re-measured 3.6-8.9 min narrow/standard N=11, prior 39-50 min attributed to
+observation lag + scope/tier (F23, revised); integration facts (F24);
+seed-suppresses-fabrication (F35).
+OpenAI o*-deep-research shutdown tightened to imminent (F33, 5 days out); the
+Anthropic web-search version refreshed to `web_search_20260318`.
+
+### Qwen / OpenAI-compat (`qwen-prompt-api.md`, `openai-compatibility-surface.md`)
+
+- **Grammar-constrained-decoding traps** (F8): §6 gains a `[field-observed]`
+  (N=15) note — a grammar constrains emitted, not read, tokens (enum values must
+  also appear in the prompt); a closed enum with no fallback member cannot fail
+  safe (~10/15 confident near-miss). Recommends an explicit fallback member plus
+  an open free-text companion field; carries a `[testable]` marker.
+  Cross-referenced from the openai-compat vLLM/llama.cpp rows.
+
+### Routing (`SKILL.md`)
+
+- Same-family-consumer tie-breaker (F9); agent-orchestration trigger scoped to
+  hosted vendor endpoints with a local/CLI-runner exclusion (F16); reuse clause
+  extended to re-check `[applies-to]` version-scope, not just `retrieved:`
+  freshness (F17); coverage-table Claude row refreshed for the deprecation/tense
+  and refusal-category changes.
+
+### Family expansion — 2026-07-19 (three new families, two updated, one disambiguated)
+
+Six family lanes landed against live vendor docs retrieved 2026-07-19. Three new
+families join the skill; two existing families take flagship/lineup updates; one
+existing family gains a scope-disambiguation note. `SKILL.md` stays at
+`0.4.0`; contract-version unchanged (2026-04-18). New provider sections in
+`openai-compatibility-surface.md` carry their own 2026-07-19 sources, so that
+file's top-level `retrieved:` (the 2026-06-01 sweep) is unchanged.
+
+**New — GLM (Z.ai / zai-org).** New `resources/glm-prompt.md` and
+`resources/glm-prompt-api.md` covering GLM-5.2 (753B MoE, IndexShare sparse
+attention, 1M context, MIT open weights) plus GLM-5.1 / GLM-5-Turbo / GLM-4.7.
+Documents the seven-value `reasoning_effort` ladder and its documented shim onto
+two thinking tiers (low/medium→high, xhigh→max, none/minimal→skip), the
+`thinking.type` toggle, dynamic-vs-forced-thinking split, XML tool-call wire
+format, the dual `stream`+`tool_stream` streaming requirement, three-stream
+deltas, the `clear_thinking` multi-turn contract with its endpoint-dependent
+default, automatic prefix caching, Tier-1 pricing, and the Anthropic-compatible
+endpoint (`api.z.ai/api/anthropic`) as a Claude Code drop-in. GLM-5.2 max output
+carried as a documented doc-surface disagreement (docs.z.ai 128K vs HF card
+163,840). Parallel tool calls and a cache-block minimum recorded as confirmed
+documentation absences; the `glm-5.2[1m]` alias and specific
+`ANTHROPIC_DEFAULT_OPUS_MODEL` / `CLAUDE_CODE_AUTO_COMPACT_WINDOW` values declared
+as gaps pending canonical vendor confirmation.
+
+**New — MiniMax.** New `resources/minimax-prompt.md` and
+`resources/minimax-prompt-api.md` covering MiniMax-M3 (1M context, ~428B-total /
+~23B-active MoE with Multi-Scale Attention, multimodal), the M2.7 / M2.5 / M2.1 /
+M2 line (204,800 context, text + tool-call), and the `M2-her` chat model (64K). M3
+open weights are published on HuggingFace under the MiniMax Community License
+(non-commercial by default) — the marketing page's "coming soon" copy is stale.
+API guidance centers on the vendor-recommended Anthropic-compatible
+`/anthropic/v1/messages` path, with the OpenAI-compatible and legacy native
+`chatcompletion_v2` surfaces documented secondarily. Covers thinking off-by-default
+on M3 vs un-disable-able on M2.x, the multi-turn reasoning-preservation contract,
+MSA 1M context with the 512K pricing-tier / guaranteed-floor semantics, and
+automatic (passive) caching on M3 vs explicit `cache_control` on M2.x.
+
+**New — Kimi (Moonshot AI).** New `resources/kimi-prompt.md` and
+`resources/kimi-prompt-api.md` covering Kimi K3 (`kimi-k3`), three days post-launch:
+2.8T-param KDA architecture, 1M context, always-on reasoning via `reasoning_effort`
+(only `max` accepted today, "more levels coming soon"), five fixed sampling
+parameters that error on deviation, the multi-turn complete-assistant-message
+replay contract, `response_format` JSON Schema (MFJS) structured output, partial
+(prefix-continuation) mode, K3-only dynamic tool loading (content-less `system`
+message), the official tool set, and deprecations vs K2.x (K2.5 / moonshot-v1
+sunset 2026-08-31, k2 previews discontinued 2026-05-25). OpenAI-compatible
+(`api.moonshot.ai/v1`) and Anthropic-compatible (`api.moonshot.ai/anthropic`,
+`kimi-k3[1m]`) surfaces; Kimi Code (`api.kimi.com/coding`) kept distinct as a
+separate product. Open-weights sections (chat template, special tokens, license,
+inference-stack flags) declared as gaps — weights announced for release by
+2026-07-27, not yet published.
+
+**Updated — Gemma.** Added the fifth Gemma 4 size, **12B Unified**
+(`google/gemma-4-12B` / `-it`): dense, encoder-free multimodal, 11.95B total, 256K
+context, added 2026-06-03. Now in the front-matter `versions:` list, the
+model-selection table, and every size enumeration in both `gemma-prompt.md` and
+`gemma-prompt-api.md`. Corrected the family-wide "audio is E-series only" claim:
+audio-capable sizes are now E2B, E4B, **and 12B Unified**; 26B-A4B and 31B remain
+text/image/video only. Added the encoder-free multimodal ingestion pipeline
+(Tier-2, HF Transformers docs), tightened the empty-thinking-token stabilizer claim
+to the exact instruction-tuned IDs, and added the `skip_special_tokens=False`
+decode mandate (Tier-1). Resolved the exact-release-date gap (original four sizes
+2026-03-31; 12B Unified 2026-06-03); declared new gaps (12B Unified decoder layer
+count / vocab size; whether it ships a dedicated speculative-decoding draft model).
+`retrieved:` bumped to 2026-07-19.
+
+**Updated — Grok.** grok-4.5 (500K context) supersedes grok-4.3 as flagship
+(grok-4.3 demoted to prior-gen, still live). Reasoning defaults inverted and split
+by model: grok-4.5 `reasoning_effort` ∈ {low, medium, high}, default `high`, `none`
+removed (reasoning cannot be disabled); grok-4.3 retains {none, low, medium, high},
+default `low`. Every reasoning statement scoped per model. Flagged the
+counterintuitive context regression (grok-4.5 500K < grok-4.3 1M). Scoped the
+`grok.reasoning-effort-none-disables.v1` testable to grok-4.3 and added
+`grok.reasoning-effort-none-rejected-45.v1` (grok-4.5 rejects
+`reasoning_effort:"none"`). Added bifurcated pricing and the 200K repricing cliff,
+the `prompt_cache_key` / `x-grok-conv-id` cache-pin split, corrected 2026-05-15
+retirement redirect targets, and recorded the grok-4.5 knowledge-cutoff conflict
+(models page Feb 1 2026 vs system card Jan 2026). SKILL.md Grok row + reasoning-
+portability line and the `openai-compatibility-surface.md` Grok section updated.
+`retrieved:` bumped to 2026-07-19.
+
+**Disambiguated — Llama.** Added a Muse Spark scope note to `llama-prompt.md` and
+`llama-prompt-api.md`. Muse Spark (Muse Spark 1.1, Meta Model API public preview
+2026-07-09) is Meta Superintelligence Labs' current closed-weight, API-only
+flagship — a separate brand/distribution track from the open-weight Llama line — and
+is explicitly out of scope for the Llama files. No Muse family file created. No
+Llama 4 factual changes: Scout / Maverick lineup, specs, license, and architecture
+re-confirmed live 2026-07-19; `retrieved:` bumped to 2026-07-19 on both files.
+
+**Shared-file integration.** `SKILL.md` gained coverage rows for GLM, Kimi, and
+MiniMax; the Gemma / Grok / Llama rows and the reasoning-controls portability line
+were updated to match the lane changes; the description-line family enumeration
+gained GLM, MiniMax, Kimi. `openai-compatibility-surface.md` gained MiniMax, GLM,
+and Kimi provider sections plus quick-matrix rows, and its Grok reasoning-control
+line was split by generation.
+
 ## prompt-engineering-skill 0.3.0 — 2026-06-10
 
 Claude Fable 5 launch coverage (`retrieved: 2026-06-10` on the two Claude reference

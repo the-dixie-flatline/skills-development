@@ -1,7 +1,7 @@
 ---
 family: cross-family
 scope: openai-compatibility
-families: [grok, deepseek, gemini, qwen, mistral, vllm, llamacpp]
+families: [grok, deepseek, gemini, qwen, mistral, vllm, llamacpp, minimax, glm, kimi]
 retrieved: 2026-06-01
 primary_sources:
   - https://docs.x.ai/llms.txt
@@ -32,7 +32,13 @@ maturity_note: |
   path all diverge per provider. Some divergences return HTTP 400; others
   misbehave silently. Field paths and version-gated behaviors below are
   volatile — re-verify against the cited primary sources before relying on
-  any single field path.
+  any single field path. A 2026-07-18 pass added a `[field-observed]` (N=15)
+  grammar-decoding cross-reference to the vLLM/llama.cpp rows; no Tier-1 claim
+  changed, so the retrieval date is unchanged. A 2026-07-19 pass added MiniMax,
+  GLM, and Kimi provider sections and split the Grok reasoning-control line by
+  generation (grok-4.5 vs grok-4.3); those additions carry their own dated
+  sources, so the file-level `retrieved:` (which represents the 2026-06-01
+  sweep of the original seven providers) is unchanged.
 ---
 
 # OpenAI Compatibility Surface — Cross-Family Reference
@@ -81,6 +87,9 @@ routing index only.
 | Mistral | `https://api.mistral.ai/v1` | not documented here | n/a (see field-rename note) | `prompt_cache_key` |
 | vLLM (self-host) | server-defined | `reasoning` (renamed from `reasoning_content`) | n/a | prefix cache (`enable_prefix_caching`) |
 | llama.cpp (self-host) | server-defined | `message.reasoning_content` (mode-dependent) | n/a | `cache_prompt` |
+| MiniMax | `https://api.minimax.io/v1` | inline in `content` (split via `reasoning_split` → `reasoning_details`) | `top_k`/`stop_sequences` ignored; `max_tokens` accepted | `usage.prompt_tokens_details.cached_tokens` |
+| GLM (Z.ai) | see Gaps (native path not quoted) | `reasoning_content` (separate delta stream) | not documented | automatic prefix caching |
+| Kimi (Moonshot) | `https://api.moonshot.ai/v1` | `reasoning_content` | five sampling params fixed, ERROR on deviation | not documented (see section) |
 
 ---
 
@@ -99,11 +108,18 @@ routing index only.
   `response.reasoning_summary_text.delta` SSE event (Responses API). Encrypted
   full reasoning is opt-in via `include: ["reasoning.encrypted_content"]`
   (Responses API only).
-- **Reasoning control:** `reasoning_effort` ∈ {none, low, medium, high},
-  default `low`.
+- **Reasoning control (per generation):** grok-4.5 (flagship) — `reasoning_effort`
+  ∈ {low, medium, high}, default `high`; `none` removed, reasoning cannot be
+  disabled. grok-4.3 (prior gen, still live) — `reasoning_effort` ∈ {none, low,
+  medium, high}, default `low`. Any row asserting a portable `none` for Grok is
+  stale for the flagship.
+  [source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-07-19]
 - **Rejected / no-op params:** `presencePenalty` / `frequencyPenalty` / `stop`
-  cannot be used with reasoning models and return an error. `logprobs` /
-  `top_logprobs` are silently ignored on grok-4.20 and newer.
+  cannot be used with reasoning models and return an error. Because grok-4.5 is a
+  reasoning model on EVERY request (reasoning cannot be disabled), penalties and
+  `stop` are rejected unconditionally on grok-4.5; on grok-4.3 they are rejected
+  only when `reasoning_effort` ≠ `none`. `logprobs` / `top_logprobs` are silently
+  ignored on grok-4.20 and newer.
 - **Cache field:** `usage.prompt_tokens_details.cached_tokens` (Chat
   Completions) / `usage.input_tokens_details.cached_tokens` (Responses API).
 - **Multi-turn reasoning round-trip:** not separately documented as a hard rule
@@ -231,6 +247,14 @@ routing index only.
   `--structured-outputs-config.backend` (default auto). Reasoning + structured
   outputs may need `--structured-outputs-config.enable_in_reasoning=True`
   (Qwen3 Coder, v0.11.2+).
+- **Grammar-decoding behavioral traps** (applies to `choice`/`regex`/`json`/`grammar`
+  on this server and to llama.cpp grammars below): a grammar constrains *emitted*
+  tokens but is not *read* by the model — allowed enum values must also appear in
+  the prompt text — and a closed enum with no fallback member cannot fail safe, so
+  an out-of-vocabulary input is forced into a confident near-miss. Add an explicit
+  fallback member plus an open free-text companion field when the value space is
+  not genuinely finite. Detail and sample size in `resources/qwen-prompt-api.md` §6.
+  [field-observed, N=15]
 
 ---
 
@@ -258,6 +282,101 @@ routing index only.
 - **Caching:** `cache_prompt` reuses KV cache from a previous request's common
   prefix; enabling it CAN cause nondeterministic results.
 - **Multimodal:** projector via `-mm` / `--mmproj`.
+
+---
+
+## MiniMax (OpenAI-compat surface)
+
+[source: https://platform.minimax.io/docs/guides/text-generation, retrieved 2026-07-19]
+[source: https://platform.minimax.io/docs/api-reference/text-anthropic-api, retrieved 2026-07-19]
+[source: https://platform.minimax.io/docs/api-reference/text-prompt-caching, retrieved 2026-07-19]
+
+- **Base URL:** `https://api.minimax.io/v1` (CN: `https://api.minimaxi.com/v1`);
+  endpoint `POST /v1/chat/completions`. The vendor recommends the
+  Anthropic-compatible `/anthropic` path over this one.
+- **Reasoning field (response):** inline in `content` by default;
+  `extra_body={"reasoning_split": True}` splits thinking into a
+  `reasoning_details` field (first-party field, not an OpenAI standard field).
+- **Reasoning control (differs by model, not param):** M3 is OFF-by-default —
+  opt in via `thinking:{"type":"adaptive"}`; M2.x cannot disable thinking.
+- **Rejected / no-op params:** `top_k` (a local-inference vLLM suggestion only)
+  and `stop_sequences` are ignored. `max_tokens` is accepted (not deprecated).
+- **Cache field:** `usage.prompt_tokens_details.cached_tokens` (OpenAI path);
+  the Anthropic path reports `usage.cache_read_input_tokens` /
+  `usage.cache_creation_input_tokens` instead.
+- **Router divergence (Tier 2):** OpenRouter returns a hard 400 when reasoning
+  content is missing on a round-trip; the first-party MiniMax consequence of
+  omitting it is reasoning-chain degradation, not a 400. [community-reported]
+
+---
+
+## GLM (Z.ai / zai-org)
+
+[source: https://docs.z.ai/guides/overview/migrate-to-glm-new, retrieved 2026-07-19]
+[source: https://docs.z.ai/guides/capabilities/thinking, retrieved 2026-07-19]
+[source: https://docs.z.ai/guides/capabilities/thinking-mode, retrieved 2026-07-19]
+[source: https://docs.z.ai/devpack/quick-start, retrieved 2026-07-19]
+
+- **Reasoning field (response):** chain-of-thought surfaces as
+  `reasoning_content`, a separate delta stream alongside `content` and
+  `tool_calls[*].function.arguments`. The client concatenates each stream
+  independently.
+- **Reasoning control (family-scoped, not OpenAI-equivalent):** seven values
+  {none, minimal, low, medium, high, xhigh, max} (`max` default), GLM-5.2-and-
+  above only, shimmed onto two real tiers — none/minimal → skip thinking,
+  low/medium → high, xhigh → max. The same value names carry different semantics
+  than on an OpenAI reasoning model.
+- **Streaming tool arguments require a second flag:** incremental tool-argument
+  emission needs BOTH `stream=true` AND `tool_stream=true`; `stream` alone does
+  not stream tool-call arguments.
+- **Parallel tool calls:** confirmed documentation absence — not documented on
+  the first-party API; the streaming contract describes single-accumulation
+  `tool_calls[*]`.
+- **Multi-turn reasoning round-trip:** `clear_thinking: false` preserves
+  prior-turn thinking; its default differs by endpoint (cleared on the Coding
+  Plan endpoint, preserved on the standard API). Preserved `reasoning_content`
+  must be returned complete, unmodified, and in original order or performance and
+  cache-hit rates degrade.
+- **Separate Anthropic-compatible endpoint:** `https://api.z.ai/api/anthropic`
+  accepts Anthropic-Messages requests (Claude Code drop-in via
+  `ANTHROPIC_BASE_URL` / `ANTHROPIC_AUTH_TOKEN`), distinct from the OpenAI-shaped
+  surface.
+- **Gap:** the exact native OpenAI base-URL path is not quoted in the retrieved
+  primary sources (checked 2026-07-19).
+
+---
+
+## Kimi (Moonshot AI, OpenAI-compat layer)
+
+[source: https://platform.kimi.ai/docs/api/models-overview, retrieved 2026-07-19]
+[source: https://platform.kimi.ai/docs/guide/use-thinking-effort, retrieved 2026-07-19]
+[source: https://platform.kimi.ai/docs/guide/use-dynamic-tool-loading, retrieved 2026-07-19]
+[source: https://platform.kimi.ai/docs/guide/response_format, retrieved 2026-07-19]
+[source: https://platform.kimi.ai/docs/guide/claude-code-kimi, retrieved 2026-07-19]
+
+Base URL `https://api.moonshot.ai/v1`, model `kimi-k3`. Wire-compatible with
+OpenAI Chat Completions but diverges on:
+
+- **Five sampling params are fixed and error on deviation** [applies-to: kimi-k3]:
+  `temperature`=1.0, `top_p`=0.95, `n`=1, `presence_penalty`=0,
+  `frequency_penalty`=0, marked "cannot be modified". Passing a non-default value
+  returns an error; omit them. (Contrast DeepSeek, where penalties silently
+  no-op — Kimi errors.)
+- **Reasoning is always on;** field name is `reasoning_content` (same as
+  DeepSeek/Qwen), controlled by top-level `reasoning_effort`, whose default and
+  only accepted value is `max` as of 2026-07-19.
+- **Multi-turn replay:** the complete assistant message (incl. `reasoning_content`
+  + `tool_calls`) must be passed back as-is; omitting it risks errors/degradation
+  (unconditional, unlike DeepSeek's tool-call-conditional 400 rule).
+- **Dynamic tool loading** [applies-to: kimi-k3]: a `role:"system"` message
+  carrying a `tools` array must NOT carry `content` (400 "cannot be used with
+  content"); it is not server-persisted, and fails "tokenization failed" on
+  non-K3 models.
+- **Structured output:** `response_format {type:"json_schema", strict:true}`
+  under MFJS; parse only `choices[0].message.content`.
+- **Anthropic surface** (`https://api.moonshot.ai/anthropic`) uses model string
+  `kimi-k3[1m]` and does not support `ENABLE_TOOL_SEARCH`.
+- **Token cap:** `max_completion_tokens` default 131072, up to 1048576.
 
 ---
 
