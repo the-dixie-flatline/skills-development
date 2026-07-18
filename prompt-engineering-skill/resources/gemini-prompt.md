@@ -8,7 +8,7 @@ versions:
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-06-01
+retrieved: 2026-07-18
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
@@ -28,9 +28,12 @@ maturity_note: |
   `thinkingBudget` — this is the most material migration point for prompt
   engineers coming from 2.5. Deprecation pressure is high: Gemini 2.0 Flash /
   Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
-  sunset 2026-10-16. Context-window sizes and per-model pricing are not fully
-  present in the retrieved Tier 1 sources; consult the current models page at
-  integration time.
+  sunset 2026-10-16; gemini-3.1-flash-lite (GA) is scheduled to shut down
+  2027-05-07. Per-model pricing is not fully present in the retrieved Tier 1
+  sources; consult the current models page at integration time. Implicit-caching
+  floors, the gemini-3.5-flash context window, and deprecation dates were
+  re-verified 2026-07-18 and carry that date inline; other claims retain their
+  2026-06-01 date.
 ---
 
 # Gemini — Prompt-Layer Reference
@@ -71,6 +74,7 @@ A separate endpoint, `gemini-3.1-pro-preview-customtools`, is tuned to prioritiz
 
 - `gemini-2.0-flash` / `gemini-2.0-flash-lite` GA (and `-001` variants) shut down **2026-06-01**.
 - `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` GA sunset **2026-10-16**.
+- `gemini-3.1-flash-lite` (the **GA** model) has an announced shutdown date of **2027-05-07**. [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-07-18]
 - `gemini-3-pro-preview` (the **original** 3 Pro preview — superseded by `gemini-3.1-pro-preview`) shut down **2026-03-09**.
 - `gemini-3.1-flash-lite-preview` shut down **2026-05-25** (superseded by GA `gemini-3.1-flash-lite`).
 - `gemini-3-flash-preview` was the preview that `gemini-3.5-flash` replaced.
@@ -115,6 +119,10 @@ Unlike Anthropic, Google's Gemini documentation does not recommend a specific XM
 Rather than stuffing web search results into the prompt manually, enable the `googleSearch` built-in tool (see `gemini-prompt-api.md`). This is Google's recommended grounding mechanism; the model issues searches, integrates results, and you get grounded responses without a custom tool implementation.
 [source: ai.google.dev/gemini-api/docs/function-calling, retrieved 2026-04-18]
 
+### Deep Research prompting (hosted agent)
+
+The hosted Gemini Deep Research agent (Interactions API) is a separate surface with its own prompting contract; the full field-observed guidance lives in `resources/deep-research-agents.md`. One prompt-craft point worth surfacing here: on "list all X" prompts the agent tends to name a few items and collapse the rest into an explicit "others / various / unlisted" **bucket**. A single directive eliminated the bucket language entirely in before/after testing — "a bucket is a failed answer; enumerate every item individually; if an item is confirmed to exist but you cannot detail it, still list it and flag that it is undetailed." [field-observed, N=1-2; before/after on the hosted Deep Research agent] Because the agent does not honor inline per-claim markup, put load-bearing shape in structural/suppression form (see `deep-research-agents.md`).
+
 ### Thought signatures in multi-turn + tool use
 
 [applies-to: gemini-3.5-flash, gemini-3.1-flash-lite, gemini-3.1-pro-preview]
@@ -129,12 +137,12 @@ Use `responseMimeType: "application/json"` with `responseSchema` to force JSON s
 
 ## 4. Context Window Practical Guidance
 
-Context-window sizes per-model are not fully listed in the retrieved Tier 1 sources. Gemini 2.5 Pro and Gemini 2.0 Flash have historically advertised 1M to 2M windows; Gemini 3 Pro and 3 Flash are large-context models in the same generational lineage. Confirm the current number on the models page before budgeting.
+`gemini-3.5-flash` is published at **1,048,576 input tokens / 65,536 output tokens**. [source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-07-18] Context-window sizes for `gemini-3.1-pro-preview` and `gemini-3.1-flash-lite` are still not fully listed in the retrieved Tier 1 sources; Gemini 2.5 Pro and Gemini 2.0 Flash historically advertised 1M to 2M windows and the 3.x line is in the same large-context lineage. Confirm the remaining numbers on the models page before budgeting.
 
 Practical guidance that is sourced:
 
-- **Implicit caching kicks in automatically** above per-model token floors (1024 tokens for Flash tier, 4096 for Pro tier). Long prompts that repeat benefit from caching without code changes — the savings are best-effort, not guaranteed, on implicit caching.
-[source: ai.google.dev/gemini-api/docs/caching, retrieved 2026-04-18]
+- **Implicit caching kicks in automatically** above per-model token floors. The floors are per-model, not a clean Flash-vs-Pro split: `gemini-3.5-flash` = **4096**, `gemini-3.1-pro-preview` = **4096**, `gemini-2.5-flash` = **2048**, `gemini-2.5-pro` = **2048**. Long prompts that repeat benefit from caching without code changes — the savings are best-effort, not guaranteed, on implicit caching.
+[source: ai.google.dev/gemini-api/docs/caching, retrieved 2026-07-18]
 
 - **For cost-predictable caching** of long prompts, use explicit caching and reference the cache via `cachedContent` — see the API file. Discounts are substantial on Gemini 2.5+ (the caching page references significant savings on cache hit; exact percentage is in Gaps).
 [source: ai.google.dev/gemini-api/docs/caching, retrieved 2026-04-18]
@@ -190,7 +198,7 @@ A common convention: place multimodal inputs **before** the text instructions th
 
 ## 8. Gaps
 
-- **Context-window sizes per current model** are not listed in the retrieved primary source excerpts. Legacy pages document the 2.x series; authoritative Gemini 3 context-window numbers need a separate fetch or direct consult of the models page at integration time.
+- **Context-window sizes per current model** are partially closed: `gemini-3.5-flash` is published at 1,048,576 in / 65,536 out (§4). `gemini-3.1-pro-preview` and `gemini-3.1-flash-lite` windows still need a direct consult of the models page at integration time.
 - **Exact cache-hit discount percentage** for explicit caching is referenced but not quoted numerically in the retrieved Tier 1 caching excerpt. Earlier community reporting cites 90% on Gemini 2.5+ but this is not replicated verbatim in the current primary page.
 - **Vertex AI vs Gemini API prompt-level behavioral differences** (if any) are not covered here; the two platforms share model IDs but have distinct control planes.
 - **Live API prompting conventions** (bidirectional audio, VAD, end-of-turn signals) are not covered here; the Live API is a distinct surface with its own prompting discipline.

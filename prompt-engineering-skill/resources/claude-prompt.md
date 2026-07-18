@@ -8,7 +8,7 @@ versions:
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-06-10
+retrieved: 2026-07-18
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5
@@ -35,7 +35,8 @@ maturity_note: |
   Glasswing). Opus 4.8 and 4.7 remain Active; both reject sampling
   parameters and manual thinking budgets. Sonnet 4.6 and Haiku 4.5 are the
   stable mid-tier and fast-tier models. Fable 5 facts added 2026-06-10;
-  4.x-generation facts last re-verified 2026-06-01.
+  4.x-generation facts last re-verified 2026-06-01. Model-deprecation states
+  and the `frontier_llm` refusal category re-verified 2026-07-18 (see §1 / §6).
 ---
 
 # Claude — Prompt-Layer Reference
@@ -75,8 +76,8 @@ Opus 4.8 is a hybrid reasoning model; its adaptive thinking automatically adjust
 [source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
 [source: anthropic.com/transparency, retrieved 2026-06-01]
 
-Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5, Opus 4.1) remain available for pinned workloads. Claude Sonnet 4 and Claude Opus 4 (deprecated 2026-04-14) retire **2026-06-15** — replacements `claude-sonnet-4-6` and `claude-opus-4-8` respectively. Claude Haiku 3 (`claude-3-haiku-20240307`) is **already Retired** (retirement date April 20, 2026; replacement `claude-haiku-4-5-20251001`). Migrate before remaining retirement dates.
-[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
+Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5) remain available for pinned workloads. Claude Opus 4.1 is now **Deprecated** (deprecated 2026-06-05) and retires **2026-08-05** (replacement `claude-opus-4-8`). Claude Sonnet 4 and Claude Opus 4 (deprecated 2026-04-14) were **retired 2026-06-15** (completed) — replacements `claude-sonnet-4-6` and `claude-opus-4-8`. Claude Mythos Preview retires **2026-07-21** (imminent as of 2026-07-18; replacement `claude-mythos-5`). Claude Haiku 3 (`claude-3-haiku-20240307`) is **Retired** (retirement date April 20, 2026; replacement `claude-haiku-4-5-20251001`). Migrate before remaining retirement dates.
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-07-18]
 
 Vision is supported on all three current models. Claude Opus 4.7 accepts images up to 2576 px / 3.75 MP — roughly 3× Opus 4.6's 1568 px / 1.15 MP ceiling — and maps model coordinates 1:1 to pixels (no scale-factor math for computer-use workflows).
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
@@ -91,6 +92,8 @@ Message roles are `user` and `assistant`, alternating. There is no `tool` role a
 
 Anthropic's own best-practices guide recommends XML tags to segment complex prompts. Conventional tags include `<instructions>`, `<context>`, `<input>`, `<example>`, `<examples>`, `<document>`, `<documents>`, `<document_content>`, `<source>`, `<thinking>`, `<answer>`, `<quotes>`, `<info>`. Tags are not a required protocol — they are parse hints. Use consistent names; nest when content has a natural hierarchy.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
+
+When an authored prompt needs fill-in **placeholder** tokens, do not use a bare single-token angle-bracket value (`<username>`, `<user>@example.com`). It collides with the XML parse-hint convention above and reads as an unclosed tag to downstream tooling (linters, template validators) and, plausibly, to the model's own tag parser. Prefer a non-angle-bracket convention — double-brace `{{value}}` or bracketed-caps `[VALUE]` — or backtick-wrap the token (`` `<username>` ``) so it is unambiguously literal.
 
 ### Ordering rule for long-context prompts
 
@@ -236,11 +239,12 @@ Videos are processed as frame sequences; the current Claude generation does not 
 
 ### Safety classifiers and refusals
 
-[applies-to: claude-fable-5] Fable 5 runs blocking classifiers targeting offensive cybersecurity (exploits, malware, attack tooling), biology and life sciences (lab methods, molecular mechanisms), and extraction of the model's reasoning. **Benign cybersecurity work and beneficial life-sciences tasks may also trigger them**, and refusal rates "are materially higher than on previous Claude models" (Bedrock model card). A declined request returns a normal HTTP 200 with `stop_reason: "refusal"` — handle it as a primary response path, and configure fallback to Opus 4.8 (server-side or client-side; mechanics in `claude-prompt-api.md`). Prompt-layer consequences:
+[applies-to: claude-fable-5] Fable 5 runs blocking classifiers whose documented `stop_details.category` values are `cyber` (offensive cybersecurity: exploits, malware, attack tooling), `bio` (biology and life sciences: lab methods, molecular mechanisms), `frontier_llm` (requests that could assist development of a competing AI model, restricted under Anthropic's commercial terms), and `reasoning_extraction` (requests to reproduce the model's internal reasoning as response text). **Benign cybersecurity work and beneficial life-sciences tasks may also trigger `cyber`/`bio`**, and refusal rates "are materially higher than on previous Claude models" (Bedrock model card). A declined request returns a normal HTTP 200 with `stop_reason: "refusal"` — handle it as a primary response path, and configure fallback to Opus 4.8 (server-side or client-side; mechanics in `claude-prompt-api.md`). All four categories are fallback-eligible. Prompt-layer consequences:
 
 - **Do not instruct the model to echo, transcribe, or explain its internal reasoning as response text.** This can trigger the `reasoning_extraction` refusal category and elevate fallbacks. Audit existing skills and system prompts for "show your thinking" / reflection instructions when migrating. If the application needs reasoning visibility, read structured `thinking` blocks (summarized) instead, and use a send-to-user tool for progress.
-- Per the system card, a separate class of invisible safeguards targets frontier-LLM-development requests: no refusal or fallback is surfaced; effectiveness is limited through methods such as prompt modification, steering vectors, or parameter-efficient fine-tuning. Anthropic estimates ~0.03% of traffic affected, concentrated in fewer than 0.1% of organizations. A practitioner in that niche may see quietly degraded output with no error.
+- **Frontier-LLM-development requests are now a visible, documented refusal category.** `frontier_llm` fires when a request could assist development of a competing AI model; like the other three categories it returns HTTP 200 with `stop_reason: "refusal"` and is fallback-eligible. This supersedes the earlier framing in which such requests were handled only by non-surfaced safeguards. The system card additionally describes non-surfaced mitigations (prompt modification, steering vectors, or parameter-efficient fine-tuning) applied to a small traffic fraction (~0.03% of traffic, concentrated in fewer than 0.1% of organizations) where no refusal is raised; a practitioner in that niche may still see quietly degraded output with no error, distinct from the visible `frontier_llm` refusal.
 
+[source: platform.claude.com/docs/en/build-with-claude/refusals-and-fallback, retrieved 2026-07-18]
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5, retrieved 2026-06-10]
 [source: docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-fable-5.html, retrieved 2026-06-10]
 [source: www-cdn.anthropic.com/d00db56fa754a1b115b6dd7cb2e3c342ee809620.pdf, system card 2026-06-09, retrieved 2026-06-10]
@@ -275,7 +279,7 @@ Videos are processed as frame sequences; the current Claude generation does not 
 - **Do not prefill the last assistant turn** on Claude 4.6 or later models. It is deprecated; Mythos Preview rejects it with 400. Use Structured Outputs, XML-tag instructions, or system-prompt directives instead.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
 
-- **Do not use CAPS-and-emphasis prompt language** ("CRITICAL: You MUST") on 4.5+ models. It causes overtriggering. Write normal imperatives.
+- **Do not saturate prompts with emphatic full-caps or bold-imperative emphasis** on 4.5+ models. The documented, sourced failure is tool/skill overtriggering from aggressive command strings ("CRITICAL: You MUST use this tool when..."). The concern is the emphatic register generally, not only that one canonical phrase: pervasive narrative or epistemic CAPS+bold across a long handoff document ("STOP", "READ THIS FIRST", "URGENT") is the same register and a plausible overtrigger surface on the same models. Write normal imperatives; reserve emphasis for the rare genuinely load-bearing constraint. Whether pervasive narrative emphasis (beyond tool-command directives) overtriggers on Fable 5 / Opus 4.8 the way tool-command emphasis does is not yet confirmed. [testable: id=claude.narrative-caps-overtrigger.v1, expected=a long system prompt saturated with narrative CAPS+bold measurably shifts behavior on Fable 5 / Opus 4.8 versus the same prompt rewritten in plain imperatives]
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
 
 - **Do not carry over Opus 4.5 anti-laziness scaffolding** to 4.6+ models. It leads to overtriggering on tools and skills. Tune back aggressive "if in doubt, use X" guidance.

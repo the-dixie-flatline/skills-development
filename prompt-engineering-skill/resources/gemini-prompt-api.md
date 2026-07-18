@@ -8,7 +8,7 @@ versions:
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-06-01
+retrieved: 2026-07-18
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
@@ -21,6 +21,7 @@ primary_sources:
   - https://ai.google.dev/gemini-api/docs/openai
   - https://ai.google.dev/gemini-api/docs/thought-signatures
   - https://ai.google.dev/gemini-api/docs/deprecations
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
 maturity_note: |
   Gemini 3.5 Flash reached GA on 2026-05-19 and Gemini 3.1 Flash-Lite reached
   GA on 2026-05-07; Gemini 3.1 Pro remains Preview. Field paths differ between
@@ -28,9 +29,11 @@ maturity_note: |
   flags SDK aliases inline. The Gemini 3 line uses `thinkingLevel`, replacing
   the 2.5-era `thinkingBudget`. Deprecation pressure is high: Gemini 2.0 Flash /
   Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
-  sunset 2026-10-16. Cache discount percentages, per-model context windows, and
-  several rate-limit specifics are partial in the retrieved sources and appear
-  in Gaps.
+  sunset 2026-10-16. Cache discount percentages and several rate-limit specifics
+  are partial in the retrieved sources and appear in Gaps. Most claims carry a
+  2026-06-01 retrieval date; implicit-caching floors, the gemini-3.5-flash
+  context window, and deprecation dates were re-verified 2026-07-18 and carry
+  that date inline.
 ---
 
 # Gemini — API-Layer Reference
@@ -379,10 +382,13 @@ Two tiers:
 
 | Model                     | Minimum cacheable tokens |
 |---------------------------|--------------------------|
-| `gemini-3.5-flash`        | 1024                     |
+| `gemini-3.5-flash`        | 4096                     |
 | `gemini-3.1-pro-preview`  | 4096                     |
-| `gemini-2.5-flash`        | 1024                     |
-| `gemini-2.5-pro`          | 4096                     |
+| `gemini-2.5-flash`        | 2048                     |
+| `gemini-2.5-pro`          | 2048                     |
+
+The floors are per-model, not a clean Flash-vs-Pro split: `gemini-3.5-flash` rose 1024→4096, `gemini-2.5-flash` rose 1024→2048, and `gemini-2.5-pro` dropped 4096→2048 from the prior figures.
+[source: ai.google.dev/gemini-api/docs/caching, retrieved 2026-07-18]
 
 **Explicit caching** — manually created caches with predictable savings.
 
@@ -468,7 +474,7 @@ Gemini 3 responses carry a unique `id` on every `functionCall`. Code from the Ge
 
 ## 10. Gaps
 
-- **Exact per-model context window sizes** for the Gemini 3 Preview family are not quoted in the retrieved models-page excerpt. Confirm at integration time.
+- **Per-model context window sizes** — `gemini-3.5-flash` is now published at **1,048,576 input tokens / 65,536 output tokens**. [source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-07-18] The `gemini-3.1-pro-preview` and `gemini-3.1-flash-lite` windows are still not quoted in the retrieved model-page excerpts; confirm those at integration time.
 - **Explicit-cache discount percentage** (often cited as 90% on Gemini 2.5+) is not replicated verbatim in the current caching-page primary excerpt; treat the percentage as community-reported until re-verified.
 - **Vertex AI batch API parameter shape** is not covered here.
 - **Live API** bi-directional audio protocol — session setup, VAD, turn-detection signals, interruption handling — is out of scope.

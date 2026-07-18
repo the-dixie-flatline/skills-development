@@ -8,7 +8,7 @@ versions:
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-06-10
+retrieved: 2026-07-18
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5
   - https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback
@@ -38,7 +38,12 @@ maturity_note: |
   and SDK-middleware fallback mechanisms. Opus 4.8 and 4.7 remain Active and
   reject sampling parameters and manual thinking budgets. Files API,
   Citations, MCP connector are out of scope; see Anthropic docs. Fable 5
-  facts added 2026-06-10; 4.x facts last re-verified 2026-06-01.
+  facts added 2026-06-10; 4.x facts last re-verified 2026-06-01. A 2026-07-18
+  Tier-1 re-verification pass updated the prompt-cache minimums, the per-model
+  tool-use overhead table, the `frontier_llm` refusal category, the current
+  web-search tool version, Fable 5 `max` effort availability, Vertex structured-
+  outputs support, and model-deprecation states/tenses; those claims carry a
+  2026-07-18 retrieval date inline.
 ---
 
 # Claude — API-Layer Reference
@@ -131,7 +136,8 @@ Prefilled content on the **last** assistant turn is **deprecated on Claude 4.6 a
 }
 ```
 
-- `stop_details.category` values: `"cyber"`, `"bio"`, `"reasoning_extraction"` (the last fires when the request asks the model to reproduce its internal reasoning in response text). Benign cybersecurity and beneficial life-sciences work can also trigger `cyber`/`bio`.
+- `stop_details.category` values (documented order): `"cyber"`, `"bio"`, `"frontier_llm"`, `"reasoning_extraction"`. `frontier_llm` fires when the request could assist the development of a competing AI model (restricted under Anthropic's commercial terms); `reasoning_extraction` fires when the request asks the model to reproduce its internal reasoning in response text. All four categories are eligible for the same fallback handling (§2 server-side / SDK). Benign cybersecurity and beneficial life-sciences work can also trigger `cyber`/`bio`.
+[source: platform.claude.com/docs/en/build-with-claude/refusals-and-fallback, retrieved 2026-07-18]
 - `category` and `explanation` are both `null` when the refusal maps to no named category — `null` is a normal permanent value, not a placeholder. `stop_details` itself is `null` for every other stop reason. **Branch on `stop_reason == "refusal"`, never on `stop_details` or `content`.** `explanation` text is not stable; display it, do not parse it.
 - A refusal can arrive before any output or mid-stream after partial output; treat partial output as incomplete and discard it.
 - **Billing:** a refusal before any output is not billed and does not count against rate limits. A mid-stream refusal bills input plus the output already streamed.
@@ -218,7 +224,7 @@ Per the Bedrock model card: `temperature` must be **1.0 or unset**; `top_p` must
 
 | Level   | Availability                                               | Guidance                                                                                 |
 |---------|------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| `max`   | Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 4.6             | Frontier problems only; often overthinks on structured tasks                             |
+| `max`   | Fable 5, Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 4.6    | Frontier problems only; often overthinks on structured tasks                             |
 | `xhigh` | Opus 4.7                                                   | Recommended starting point for coding and agentic workloads on Opus 4.7                  |
 | `high`  | All models supporting effort; API default                  | Strong quality balance; Opus 4.7 recommendation for intelligence-sensitive workloads      |
 | `medium`| All models supporting effort                               | Cost-sensitive workloads; recommended default for Sonnet 4.6                             |
@@ -232,8 +238,9 @@ Setting `effort: "high"` is identical to omitting the parameter. At `high` and a
 Opus 4.8 uses the same reasoning-control model as Opus 4.7: adaptive thinking only (manual budgets rejected) with `output_config.effort` as the lever. Per-effort-level availability and token multipliers for Opus 4.8 were not pinned in the retrieved primary sources; do not assume the Opus 4.7 availability rows transfer level-for-level. Measure on your own evals.
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
 
-[applies-to: claude-fable-5] Effort is the primary control for the intelligence/latency/cost trade-off on Fable 5 (thinking cannot be disabled, so there is no off switch — only depth). Documented guidance: `high` as the default for most tasks, `xhigh` for the most capability-sensitive workloads, `medium`/`low` for routine work; lower effort settings still perform well and often exceed `xhigh` on prior models. Whether `max` is available on Fable 5 was not pinned in the retrieved sources.
+[applies-to: claude-fable-5] Effort is the primary control for the intelligence/latency/cost trade-off on Fable 5 (thinking cannot be disabled, so there is no off switch — only depth). Documented guidance: `high` as the default for most tasks, `xhigh` for the most capability-sensitive workloads, `medium`/`low` for routine work; lower effort settings still perform well and often exceed `xhigh` on prior models. The effort doc lists the full `max` / `xhigh` / `high` / `medium` / `low` ladder as available on Fable 5 — `max` **is** available (the Fable prompting guide simply omits it from its worked examples).
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5, retrieved 2026-06-10]
+[source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-07-18]
 
 ### `output_config.task_budget` (beta)
 
@@ -336,18 +343,26 @@ All current 4.x models emit multiple `tool_use` blocks in a single assistant tur
 
 [source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-04-18]
 
-For the web search server tool specifically, the latest type is `web_search_20260209` (adds dynamic filtering; requires the code-execution tool enabled); the previous `web_search_20250305` remains available. Citations are always on, returned as `web_search_result_location` blocks (url, title, cited_text up to 150 chars). Pricing is $10 per 1,000 searches. An organization admin must enable the tool in the Console before use.
-[source: platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-06-01]
+For the web search server tool specifically, the current latest type is `web_search_20260318` (adds a `response_inclusion` parameter); the earlier `web_search_20260209` (adds dynamic filtering; requires the code-execution tool enabled) and `web_search_20250305` remain available. Citations are always on, returned as `web_search_result_location` blocks (url, title, cited_text up to 150 chars). Pricing is $10 per 1,000 searches. An organization admin must enable the tool in the Console before use.
+[source: platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-07-18]
 
 ### Tool-use system-prompt overhead
 
-When a request includes `tools`, a tool-use system prompt is added automatically. Token cost (current 4.x models):
+When a request includes `tools`, a tool-use system prompt is added automatically. The overhead is **per-model**, not a flat figure (the previous 346/313 figure this file carried matched no current model):
 
-- `tool_choice: auto | none` → **346 tokens**
-- `tool_choice: any | tool` → **313 tokens**
+| Model      | `tool_choice: auto \| none` | `tool_choice: any \| tool` |
+|------------|-----------------------------|----------------------------|
+| Opus 4.8   | 290                         | 410                        |
+| Opus 4.7   | 675                         | 804                        |
+| Opus 4.6   | 497                         | 589                        |
+| Opus 4.5   | 496                         | 588                        |
+| Sonnet 5   | 354                         | 474                        |
+| Sonnet 4.6 | 497                         | 589                        |
+| Sonnet 4.5 | 496                         | 588                        |
+| Haiku 4.5  | 496                         | 588                        |
 
-No `tools` field + `tool_choice: none` → 0 additional tokens.
-[source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-04-18]
+No `tools` field + `tool_choice: none` → 0 additional tokens. Fable 5 is not a separate row in the current table; fetch the tool-use overview at integration time for the exact row of the model you are calling, since these values drift per model revision.
+[source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-07-18]
 
 ## 6. Structured Outputs
 
@@ -367,8 +382,9 @@ No `tools` field + `tool_choice: none` → 0 additional tokens.
 
 - **Parameter:** `output_config.format`. (The earlier `output_format` parameter and `structured-outputs-2025-11-13` beta header are deprecated but still accepted during transition.)
 - **Required schema constraint:** `additionalProperties: false` on every object.
-- **Supported models:** Opus 4.7, Opus 4.6, Sonnet 4.6, Sonnet 4.5, Opus 4.5, Haiku 4.5, Mythos Preview (Claude API). No beta header required.
-- **Platform support:** Claude API full; Bedrock supports 4.6 and earlier current-gen directly, Opus 4.7 via Messages-API Bedrock endpoint; Microsoft Foundry beta; Vertex AI does not support Mythos Preview.
+- **Supported models:** Fable 5, Mythos 5, Opus 4.8, Opus 4.7, Opus 4.6, Sonnet 5, Sonnet 4.6, Sonnet 4.5, Opus 4.5, Haiku 4.5, Mythos Preview (Claude API). No beta header required.
+- **Platform support:** Claude API GA across the current-gen set (incl. Fable 5, Opus 4.8, Sonnet 5, Mythos Preview). Google Cloud Vertex AI is now GA for the same set, **including Mythos Preview** (the earlier "Vertex does not support Mythos Preview" claim is corrected). Amazon Bedrock supports 4.6 and earlier current-gen plus Opus 4.7 / Sonnet 5 / Mythos Preview. Microsoft Foundry: 4.6 and earlier GA; Sonnet 5 / Opus 4.7 / Mythos Preview require the Hosted-on-Anthropic deployment.
+[source: platform.claude.com/docs/en/build-with-claude/structured-outputs, retrieved 2026-07-18]
 - **Combined with tool use:** Max 20 strict tools per request, 24 optional parameters total across schemas, 16 parameters with `anyOf` unions.
 - **Schema violation:** returns HTTP 400 (rare due to constrained decoding). Safety refusals return `stop_reason: "refusal"` with status 200; output may not match schema in that case. `stop_reason: "max_tokens"` truncation may also produce non-conforming output.
 
@@ -390,7 +406,8 @@ Not supported: recursive schemas, complex enum types, external `$ref` URLs, nume
 ```
 
 - **Placement:** on individual blocks in `tools`, `system`, or `messages[].content`; or at request level for automatic caching.
-- **Minimum cacheable tokens:** Opus 4.7, Opus 4.6, Opus 4.5 = **4096**; Sonnet 4.6 = **2048**; Sonnet 4.5, Sonnet 3.7, earlier Sonnet 4.x = **1024**; Haiku 4.5 = **4096**; Haiku 3.5 / 3 = 2048.
+- **Minimum cacheable tokens:** Fable 5 / Mythos 5 = **512** (Claude API; **1024** on Amazon Bedrock); Opus 4.8 = **1024**; Opus 4.7 = **2048**; Opus 4.6 / Opus 4.5 = **4096**; Sonnet 5 / Sonnet 4.6 / Sonnet 4.5 = **1024**; Haiku 4.5 = **4096**; Haiku 3.5 / 3 = 2048. (Opus 4.7 dropped 4096→2048 and Sonnet 4.6 dropped 2048→1024 from the prior figures.)
+  [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-18]
 - **Breakpoints:** max 4 explicit per request (1 slot consumed by automatic caching if used together).
 - **Cost model:** cache write = 1.25× base input (5m TTL) or 2.0× base input (1h TTL). Cache read = 0.1× base input for both TTLs.
 - **Thinking blocks** cannot carry explicit `cache_control` but are cached alongside content in tool-use loops; they count as input tokens on cache read.
@@ -399,7 +416,8 @@ Not supported: recursive schemas, complex enum types, external `$ref` URLs, nume
 
 [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-04-18]
 
-[applies-to: claude-fable-5] On Amazon Bedrock, Fable 5 prompt caching is supported with a **1,024-token minimum per cache checkpoint**, max 4 checkpoints per request, 5-minute and 1-hour TTLs, on `system`, `messages`, and `tools`. The first-party Claude API minimum for Fable 5 was not re-verified in this pass (see §10 Gaps).
+[applies-to: claude-fable-5] On the first-party Claude API the Fable 5 (and Mythos 5) minimum is **512 tokens** per checkpoint; on Amazon Bedrock it is **1,024 tokens** per cache checkpoint. Both surfaces allow max 4 checkpoints per request, 5-minute and 1-hour TTLs, on `system`, `messages`, and `tools`.
+[source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-18]
 [source: docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-fable-5.html, retrieved 2026-06-10]
 
 [applies-to: claude-fable-5] **Fallback credit.** When a Fable 5 request is refused and retried on another model, fallback credit refunds the prompt-cache cost of switching. Server-side fallback and the SDK middleware apply it automatically; manual retries opt in with the `fallback-credit-2026-06-01` beta header. See §2 for the fallback mechanics.
@@ -481,7 +499,7 @@ Vertex AI: choose **global**, **multi-region** (within a geographic area), or **
 
 - **Thinking cannot be disabled.** Adaptive thinking applies whenever `thinking` is unset; `thinking: {"type": "disabled"}` is not supported. Code that explicitly disables thinking must drop the field and tune `output_config.effort` instead.
 - **Raw thinking is never returned.** `display` defaults to `"omitted"` (empty `thinking` fields); `"summarized"` is the maximum visibility. Any pipeline depending on raw chain-of-thought has no Fable 5 path.
-- **Refusals become a primary response path.** Safety classifiers (cyber, bio, reasoning-extraction) decline requests as HTTP 200 with `stop_reason: "refusal"`; refusal rates are materially higher than on previous Claude models. Code that only handles `end_turn` / `tool_use` / `max_tokens` will mis-handle these. Configure fallback (§2) and instrument refusals as their own monitoring signal.
+- **Refusals become a primary response path.** Safety classifiers (`cyber`, `bio`, `frontier_llm`, `reasoning_extraction`) decline requests as HTTP 200 with `stop_reason: "refusal"`; refusal rates are materially higher than on previous Claude models. Code that only handles `end_turn` / `tool_use` / `max_tokens` will mis-handle these. Configure fallback (§2) and instrument refusals as their own monitoring signal.
 - **Batches:** a refused batch item returns `result.type: "succeeded"` with `stop_reason: "refusal"`, and `stop_details` may be `null` on batch results — detect by `stop_reason` alone. The `fallbacks` parameter is rejected on the Batches API; collect refused items, strip Fable 5 thinking blocks from multi-turn histories, and resubmit on a fallback model.
 - **Sampling:** non-default `temperature`/`top_p` and any `top_k` rejected (carried over from Opus 4.7/4.8 — see §3 for the exact Bedrock-documented bounds).
 - **Data retention:** Covered Model — 30-day retention, no ZDR (§1).
@@ -516,20 +534,20 @@ Opus 4.8 carries the same three hard API-rejection changes as Opus 4.7 (sampling
 
 ### Model retirements
 
-- **Claude Sonnet 4** (`claude-sonnet-4-20250514`), deprecated 2026-04-14, retires **2026-06-15**. Replacement `claude-sonnet-4-6`.
-- **Claude Opus 4** (`claude-opus-4-20250514`), deprecated 2026-04-14, retires **2026-06-15**. Replacement `claude-opus-4-8`.
-- **Claude Haiku 3** (`claude-3-haiku-20240307`) is **already Retired** — retirement date **April 20, 2026** (in the past as of 2026-06-01). Replacement `claude-haiku-4-5-20251001`.
+- **Claude Sonnet 4** (`claude-sonnet-4-20250514`), deprecated 2026-04-14, was **retired 2026-06-15** (completed). Replacement `claude-sonnet-4-6`.
+- **Claude Opus 4** (`claude-opus-4-20250514`), deprecated 2026-04-14, was **retired 2026-06-15** (completed). Replacement `claude-opus-4-8`.
+- **Claude Opus 4.1** (`claude-opus-4-1-20250805`) is now **Deprecated** (deprecated 2026-06-05), retiring **2026-08-05**. Replacement `claude-opus-4-8`.
+- **Claude Mythos Preview** (`claude-mythos-preview`) retires **2026-07-21** (imminent as of 2026-07-18 — 3 days out). Replacement `claude-mythos-5`.
+- **Claude Haiku 3** (`claude-3-haiku-20240307`) is **Retired** — retirement date **April 20, 2026**. Replacement `claude-haiku-4-5-20251001`.
 
-[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
+[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-07-18]
 
 ## 10. Gaps
 
 - **Fable 5 last-turn prefill handling** was not pinned in the retrieved launch sources. Treat prefills as unavailable on Fable 5 pending re-verification.
-- **Fable 5 first-party prompt-caching minimum** (tokens per checkpoint on the Claude API, as opposed to Bedrock's documented 1,024) was not re-verified in this pass.
 - **Fable 5 Vertex AI and Microsoft Foundry ID strings** were not pinned; availability is documented, the exact IDs are not. Fetch the respective catalogs at integration time.
 - **`allowed_fallback_models` contents** for `claude-fable-5` (which models are permitted fallback targets beyond the documented Opus 4.8 example) must be read live from the Models API with the `server-side-fallback-2026-06-01` header set.
 - **Server-side fallback sticky-routing and billing subsections** of the refusals-and-fallback doc were not captured in the retrieval pass; consult the live page before building billing-sensitive fallback logic.
-- **Whether `effort: "max"` is available on Fable 5** was not pinned; the Fable prompting guide names `low`/`medium`/`high`/`xhigh` only.
 - **Files API, PDF support, Citations, MCP connector, Claude Code–specific API behaviors** are all real product surfaces but out of scope here. See Anthropic's per-feature docs.
 - **Claude Managed Agents and the web-search-tool research pattern** are documented in `resources/agent-orchestration-surfaces.md` and `resources/deep-research-agents.md`.
 - **`redacted_thinking` content-block type** is referenced in some primary sources for safety-redacted reasoning; the retrieval pass did not pin down its exact semantics or trigger conditions. Treat as partial until re-verified.

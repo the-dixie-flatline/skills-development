@@ -2,7 +2,7 @@
 family: cross-family
 scope: deep-research-agents
 families: [gemini, openai, perplexity, anthropic, grok]
-retrieved: 2026-06-01
+retrieved: 2026-07-18
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/interactions/deep-research
   - https://ai.google.dev/gemini-api/docs/interactions
@@ -25,6 +25,12 @@ maturity_note: |
   2026-06-02) records recurring Tier-2 (academic/community) behaviors that span
   agents; those claims carry their own [community-reported] markers and
   2026-06-02 retrieval dates, distinct from the Tier-1 vendor facts above.
+  Vendor Tier-1 facts are dated 2026-06-01 unless a later inline date appears;
+  a 2026-07-18 pass added a "Field-observed behavior (Gemini Deep Research)"
+  subsection (N=1-2 first-party observations of the public hosted agent,
+  abstracted to model/API behavior, carrying [field-observed] markers and
+  sample-size caveats), refreshed the Anthropic web-search tool version, and
+  tightened the OpenAI deep-research shutdown proximity.
 ---
 
 # Deep Research Agents — Cross-Family Reference
@@ -61,8 +67,14 @@ Pick the shape first. The integration code, latency profile, and citation surfac
 **Structured outputs.** Not supported — "The Deep Research Agent currently doesn't support structured outputs." Steer output shape with formatting instructions in the prompt, not a schema.
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
 
+Instruction compliance splits by class: **structural** and **suppression** instructions are honored — a "no charts/images" instruction zeroed a default embedded PNG, and section layout / negative-result reporting followed — but **inline per-claim machine-readable markup** (e.g. "tag every claim `[primary]`/`[secondary]`") is NOT honored (zero literal tags emitted). Put load-bearing shape in structural or suppression form; treat inline per-claim markup as best-effort only. [field-observed, N=2 before/after; hosted Gemini Deep Research]
+
 **Usage and cost.** The response carries a `usage` object with token statistics: `total_tokens`, `total_input_tokens`, `total_output_tokens`, `total_thought_tokens`, `total_tool_use_tokens`, `cached_tokens_by_modality`, and `grounding_tool_count`. There is no monetary cost field in the response; cost is a narrative estimate only — roughly $1–3 per task for Deep Research and roughly $3–7 per task for Deep Research Max.
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
+
+The **observed GET-time usage schema diverges from the documented field list and is NOT `Api-Revision`-dependent.** Controlled re-GETs of terminal interactions with and without the header returned an identical 8-key `usage` object — `total_cached_tokens`, `input_tokens_by_modality` / `output_tokens_by_modality`, and the `total_*` counters — while the documented `cached_tokens_by_modality` / `grounding_tool_count` fields were absent in both cases. Do not hard-code the documented field names; parse the `usage` object defensively. [field-observed, N=2 controlled re-GETs, 2026-07-19, superseding an earlier N=2 header-dependence reading]
+
+Realized cost can run **far above the nominal band.** One Max-tier task realized roughly **$40** (~17M tokens), versus the $3–7 narrative estimate. Budget from measured end-to-end token usage, not the headline band. [field-observed, N=1]
 
 **Tools.** When `tools` is omitted the defaults are `google_search`, `url_context`, and `code_execution`. Optional additions: `mcp_server` and `file_search`. Custom function-calling tools are not supported — remote MCP only.
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
@@ -76,14 +88,38 @@ Pick the shape first. The integration code, latency profile, and citation surfac
 
 Do not assert an output-token cap for Gemini Deep Research. The 65,536-token cap that circulates for Gemini agents belongs to the separate Antigravity Agent, documented in `resources/agent-orchestration-surfaces.md`, not to Deep Research. See Gaps.
 
+#### Field-observed behavior (Gemini Deep Research)
+
+First-party observations of the public hosted agent, abstracted to model/API behavior. All are `[field-observed]`, N=1-2 unless noted; treat as ranges, not vendor-grade numbers. Naming the behavior is in scope here; detection/mitigation methodology routes to the `prompt-engineering-architect` skill.
+
+- **Citation surface (dual schema).** Span-aware `url_citation` annotations `{start_index, end_index, url}` appear **only on the lead segment** of the report; the annotation objects carry **no `title`** (unlike the documented OpenAI shape). Every annotation `url` is an opaque `vertexaisearch.cloud.google.com/grounding-api-redirect/...` wrapper (observed 92/92 and 126/126 across two completions), never a direct source URL — it must be **dereferenced** before verification. The remaining ~73% of body length cites via inline `[cite: N]` markers with no annotation objects and no in-band N→source mapping. An annotations-only parser silently drops most citations. [field-observed, N=2]
+
+- **Enumeration "bucket" failure is prompt-correctable.** On "list all X" prompts the agent names a few items and collapses the rest into an explicit "others / various / unlisted" bucket. One directive eliminated bucket language entirely in before/after runs: "a bucket is a failed answer; enumerate every item individually; if an item is confirmed to exist but cannot be detailed, still list it and flag it as undetailed." [field-observed, N=1-2 before/after]
+
+- **Non-terminal failure modes (two known).** (1) *Silent worker death:* roughly 3 minutes after submission the interaction's GET begins returning an opaque `400 invalid_request` permanently; no terminal status is ever reachable, though `DELETE` still returns 200. Observed in 2 of 6 batched submissions on one day (0 of 7 solo); prompt-content-independent. Poll loops must treat a persistent 4xx on a previously-readable interaction as terminal-equivalent, or they will wait forever while holding a concurrency slot. (2) *Apparent stalls are a client-side misread:* the `steps` array exposes **no model steps until the job is terminal**, so "no model progress after T minutes" is not a liveness signal — a stall-kill heuristic with T below the job's natural runtime kills healthy jobs deterministically. An earlier observed correlation between bare domain/URL literals in exclusion lists and wedging did **not** survive controlled matched-pair testing (3 URL/prose pairs plus the original wedge-correlated prompt verbatim: 7/7 completed when submitted solo through an independent path) and is withdrawn. [field-observed, N=13 controlled + 6 historical, 2026-07-19]
+
+- **~5-job account concurrency cap.** Roughly five concurrent jobs per account; over-cap jobs park rather than queueing cleanly, and neither `status` nor step content is a liveness signal (steps appear only at terminal state; a parked job reports non-terminal indefinitely). Batched submission *at* the cap showed no latency penalty versus solo (N=4 vs N=7). Issuing `DELETE` on an interaction frees a slot. [field-observed, N=1-2 for the cap itself]
+
+- **Terminal response schema differs from the streaming shape.** The completed interaction returns a flat `outputs` list (text records plus base64-image records) rather than the streaming `steps` deltas. Parse the terminal payload from `outputs`, not by replaying step deltas. [field-observed, N=1-2]
+
+- **Narrow source pool.** The agent deep-exploits a small set (~5 sources observed) where a competitor system reached ~17 on the same prompt — strong authority, weak recall. Do not treat a Gemini DR report as an exhaustive sweep; pair it with a broader-recall pass when coverage matters. [field-observed, N=1-2]
+
+- **Adjacent/successor-entity substitution and unreachable-source padding.** Observed substituting an adjacent or successor entity for the asked-about one, and padding an unreachable citation with a different (wrong) source rather than reporting the gap. Verify entity identity and dereference every cited source before relying on a claim. [field-observed, N=1-2]
+
+- **Latency is scope- and tier-dependent; measure with continuous polling.** Narrow single-table prompts on the standard agent completed in **3.6–8.9 minutes** end-to-end (N=11, continuous ~20 s polling), identical solo and batched four-wide at the ~5-job concurrency cap. A previously recorded 39–50 minute envelope (N=2, Max agent, broad multi-part prompts) was not reproduced and included polling-observation lag — completion timestamps were recorded at the next poll pass, not at service completion. Treat the vendor's "~20 min typical" as scope- and tier-dependent, not a bound in either direction. [field-observed, N=11, 2026-07-19]
+
+- **Integration facts.** Auth via `x-goog-api-key` header; poll cadence ~20s; interaction ids are resumable; `agent_config.type` selects the agent; omitting `store` succeeds and defaults it to `true`; the `Api-Revision` header is accepted and documented as schema-pinning, but omitting it produced no observable difference at terminal GET (see the usage-object note above); completed interactions remained GET-able ≥ 30 minutes post-completion. [field-observed, N=1-2, corroborated against the interactions-API docs]
+
+- **Seeding pre-verified facts suppresses a recurring fabrication.** Supplying already-verified facts as fixed inputs suppressed a recurring fabrication and improved recall on the seeded entities. DR fabrications are **run-variable** — absence in one run is not a safety guarantee. (The generic verify / quote-or-abstain discipline is methodology and routes to `prompt-engineering-architect`; only the model-behavior half is recorded here.) [field-observed, N=1-2]
+
 ### OpenAI Deep Research
 
 **Models and invocation.** `o3-deep-research` and `o4-mini-deep-research`, called through the Responses API in background mode. Configure a webhook to be notified on completion rather than polling indefinitely.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
 
-**Near-term ID mismatch — flag this.** The `o3-deep-research` / `o4-mini-deep-research` IDs are scheduled to shut down 2026-07-23, with `gpt-5.5-pro` named as the replacement. As of 2026-06-01 the deep-research guide still documents the `o*-deep-research` IDs as the invocation. Code written today against the documented IDs will need migration before the shutdown; verify the current guide before building.
+**Imminent shutdown — flag this.** The `o3-deep-research` / `o4-mini-deep-research` IDs shut down **2026-07-23**, with `gpt-5.5-pro` named as the replacement — that is **5 days out as of 2026-07-18**, and the deep-research guide's own samples still reference the retiring IDs. Do not build against `o*-deep-research` now; verify the successor invocation (`gpt-5.5-pro` via the Responses API) against the current guide before writing any new integration.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
-[source: https://developers.openai.com/api/docs/deprecations, retrieved 2026-06-01]
+[source: https://developers.openai.com/api/docs/deprecations, retrieved 2026-07-18]
 
 **Data source requirement.** At least one data source is required: web search, remote MCP servers, or file search backed by vector stores. Supported tools: web search, file search, remote MCP, and code interpreter. Function calling is not supported.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
@@ -141,8 +177,8 @@ These are synchronous server-side tools, not async agent resources. The model it
 There is no separately branded async "Research" API agent. Agentic web research is delivered through the `web_search` server tool: Claude decides when to search, the API runs the searches, and the loop may iterate within a single Messages request. The optional code-execution tool enables dynamic filtering. For long-running managed work, Managed Agents include a built-in web search and fetch tool, documented in `resources/agent-orchestration-surfaces.md`.
 [source: https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-06-01]
 
-**Tool types.** `web_search_20260209` (supports dynamic filtering; requires the code-execution tool) and `web_search_20250305`. Citations are always on, returned as `web_search_result_location` blocks with `url`, `title`, and `cited_text` up to 150 characters. Pricing is $10 per 1,000 searches. An org admin must enable the tool in the Console before use.
-[source: https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-06-01]
+**Tool types.** Current latest is `web_search_20260318` (adds a `response_inclusion` parameter); `web_search_20260209` (supports dynamic filtering; requires the code-execution tool) and `web_search_20250305` remain available. Citations are always on, returned as `web_search_result_location` blocks with `url`, `title`, and `cited_text` up to 150 characters. Pricing is $10 per 1,000 searches. An org admin must enable the tool in the Console before use.
+[source: https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool, retrieved 2026-07-18]
 
 ### xAI Grok
 
@@ -158,7 +194,7 @@ Do not assert "DeeperSearch" as a distinct named developer feature. It is not do
 
 | Provider   | Shape | Entry point                                    | Completion model        | Citation surface                  |
 |------------|-------|------------------------------------------------|-------------------------|-----------------------------------|
-| Gemini     | A     | `POST /v1beta/interactions` (`background=true`)| Poll `.status`          | grounding via default tools       |
+| Gemini     | A     | `POST /v1beta/interactions` (`background=true`)| Poll `.status`          | `url_citation` annotations (lead segment only; `grounding-api-redirect` wrapper URLs) + inline `[cite: N]` in the body — see field-observed |
 | OpenAI     | A     | Responses API, background mode                 | Webhook on completion   | `annotations` on `output_text`    |
 | Perplexity | A     | `/v1/async/sonar` (or sync `/v1/sonar`)        | Poll `{request_id}`     | `citations` + `search_results`    |
 | Anthropic  | B     | `web_search` server tool in Messages request   | Synchronous, in-request | `web_search_result_location`      |

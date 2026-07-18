@@ -27,6 +27,9 @@ maturity_note: |
   open-weights template and sampling detail below retains its 2026-04-18
   retrieval date and has not been re-verified in this pass. For the cross-family
   OpenAI-compat hazard matrix, see `resources/openai-compatibility-surface.md`.
+  A 2026-07-18 pass added a `[field-observed]` grammar-constrained-decoding note
+  to §6 (N=15; a general grammar-backend behavior, not Qwen-specific); no Tier-1
+  claim changed.
 ---
 
 # Qwen — API-Layer Reference
@@ -346,6 +349,14 @@ The retrieved primary sources do not give a definitive structured-output recipe 
 [unverified] A Qwen-specific `json_object` or equivalent strict-JSON flag distinct from the generic vLLM/SGLang constraint is not documented in the retrieved sources.
 
 For production JSON use: prefer grammar-constrained decoding via the inference server over in-prompt "respond only in JSON" instructions, which do not guarantee structure. Benchmark against a known-good schema; Qwen does not emit a model-level JSON-mode guarantee.
+
+### Grammar-constrained decoding: two behavioral traps
+
+These apply to any grammar backend (the generic vLLM / SGLang / llama.cpp `choice`/`regex`/`json`/`grammar` facilities cross-referenced in `resources/openai-compatibility-surface.md`), not to Qwen specifically, but they bite hardest on the classifier-style closed-enum outputs people build on this stack.
+
+- **A grammar constrains which tokens may be *emitted*; it is not text the model *reads*.** An enum whose members appear only in the grammar (absent from the prompt) yields near-floor accuracy — the model cannot select values it never saw. Put the allowed enum values in the prompt text as well, not only in the grammar. [field-observed, N=15]
+- **A closed enum with no out-of-vocabulary / fallback member cannot fail safe.** When the true value lies outside the enum, the constraint cannot express "not in vocabulary" and forces a plausible near-miss. Observed ~10/15 cases produced a confidently-wrong enum value rather than the available safe fallback. Whenever the value space is not genuinely finite, include an explicit fallback member (e.g. `"unknown"` / `"other"`) **and** an open free-text companion field so the model can route out-of-vocabulary inputs instead of guessing. [field-observed, N=15]
+[testable: id=qwen.closed-enum-no-fallback-nearmiss.v1, expected=a grammar-constrained closed enum with no fallback member, given inputs whose true label is outside the enum, emits a confidently-wrong in-vocabulary value at a materially higher rate than the same enum with an explicit fallback member present]
 
 ## 7. Caching, Batch, Streaming
 

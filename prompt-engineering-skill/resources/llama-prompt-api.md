@@ -4,7 +4,7 @@ scope: api
 versions:
   - meta-llama/Llama-4-Scout-17B-16E-Instruct
   - meta-llama/Llama-4-Maverick-17B-128E-Instruct
-retrieved: 2026-06-01
+retrieved: 2026-07-19
 primary_sources:
   - https://www.llama.com/models/llama-4/
   - https://www.llama.com/docs/model-cards-and-prompt-formats/llama4/
@@ -12,14 +12,19 @@ primary_sources:
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/prompt_format.md
   - https://huggingface.co/meta-llama
   - https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct
+  - https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/
 maturity_note: |
   Llama 4 is open-weights. "API" here means the chat-template contract plus
   the inference-stack surface (transformers, vLLM, SGLang), not a
-  provider-hosted HTTP endpoint. Lineup re-confirmed 2026-06-01: Scout and
+  provider-hosted HTTP endpoint. Lineup re-confirmed live 2026-07-19: Scout and
   Maverick remain current and no Llama 5 has been released. Sampling-parameter
   defaults are not explicitly published by Meta for Llama 4; this file does not
   fabricate them. vLLM/SGLang version floors beyond `transformers>=4.51.0` were
-  not pulled in this retrieval pass and appear in Gaps.
+  not pulled in this retrieval pass and appear in Gaps. Meta now operates a
+  hosted HTTP model API (the Meta Model API, public preview 2026-07-09), but it
+  serves the closed-weight Muse Spark model, not Llama 4; "API" in this file
+  never refers to that endpoint.
+  [source: ai.meta.com/blog/introducing-muse-spark-meta-model-api/, retrieved 2026-07-19]
 ---
 
 # Llama — API-Layer Reference
@@ -28,7 +33,7 @@ Inference-layer detail for Llama 4. Prompt-layer content (selection, voice, anti
 
 ## 1. API Surface
 
-Llama 4 has no official Meta-hosted API. Deployment paths:
+Llama 4 has no official Meta-hosted API. (Meta does operate a hosted HTTP endpoint, the Meta Model API, but it serves the closed-weight Muse Spark model, not Llama 4; see `llama-prompt.md` for the scope note.) [source: ai.meta.com/blog/introducing-muse-spark-meta-model-api/, retrieved 2026-07-19] Deployment paths:
 
 - **HuggingFace `transformers`** (≥ 4.51.0) with `Llama4ForConditionalGeneration`.
 - **vLLM** via `LLM(model="meta-llama/Llama-4-Scout-17B-16E-Instruct", ...)`. Exact minimum version not quoted in the retrieved excerpts (see Gaps).

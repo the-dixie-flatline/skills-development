@@ -4,7 +4,7 @@ scope: prompt
 versions:
   - meta-llama/Llama-4-Scout-17B-16E-Instruct
   - meta-llama/Llama-4-Maverick-17B-128E-Instruct
-retrieved: 2026-06-01
+retrieved: 2026-07-19
 primary_sources:
   - https://www.llama.com/models/llama-4/
   - https://www.llama.com/docs/model-cards-and-prompt-formats/llama4/
@@ -12,16 +12,22 @@ primary_sources:
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/prompt_format.md
   - https://huggingface.co/meta-llama
   - https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct
+  - https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/
+  - https://ai.meta.com/blog/introducing-muse-spark-msl/
 maturity_note: |
-  Llama 4 (released 2025-04-05) remains Meta's current generation. Lineup
-  re-confirmed 2026-06-01: Scout and Maverick are still the only publicly
-  available Llama 4 instruct variants, and no Llama 5 has been released on any
-  Meta first-party surface (llama.com lists only Llama 4 and Llama 3; the
+  Llama 4 (released 2025-04-05) remains Meta's current open-weight generation.
+  Lineup re-confirmed live 2026-07-19: Scout and Maverick are still the only
+  publicly available Llama 4 instruct variants, and no Llama 5 has been released
+  on any Meta first-party surface (llama.com lists only Llama 4 and Llama 3; the
   meta-llama HF org card labels Llama 4 "Current"). Behemoth (288B active) was
   still training at the 2025-04-05 release and is not publicly available. The
   knowledge cutoff is August 2024, the oldest of the current-generation
   frontier families, which matters for any use case sensitive to recent
-  world knowledge.
+  world knowledge. Scope caveat: Meta's current flagship assistant model is no
+  longer Llama-branded. Muse Spark (closed-weight, API-only, Meta Model API
+  public preview 2026-07-09) is a separate Muse-series model and is out of scope
+  for this file; see Model Selection for the disambiguation.
+  [source: ai.meta.com/blog/introducing-muse-spark-meta-model-api/, retrieved 2026-07-19]
 ---
 
 # Llama — Prompt-Layer Reference
@@ -46,6 +52,14 @@ Notes on selection:
 - **Scout** advertises a 10M-token context window and fits a single H100 with INT4 quantization, making it the practical default for long-context open-weights work.
 - **Maverick** has more experts (128 vs 16) and roughly equivalent quality-per-active-parameter, at the cost of requiring multi-GPU deployment.
 - **No Llama 5** has been released. Prompts referencing "Llama 5" are misinformed as of this retrieval.
+
+### Muse Spark is not in scope (Meta's flagship is no longer Llama-branded)
+
+A reader looking for "Meta's newest model" will not find it here. As of 2026-07-09 Meta's current flagship assistant model is **Muse Spark** (Muse Spark 1.1), a closed-weight, API-only model from Meta Superintelligence Labs, branded as the first in a separate "Muse" family distinct from Llama. It is served on the hosted Meta Model API (public preview) and via a "Thinking" mode in the Meta AI app and on meta.ai; no downloadable weights are documented, and it does not appear on Meta's Llama weight-download surface.
+[source: ai.meta.com/blog/introducing-muse-spark-meta-model-api/, retrieved 2026-07-19]
+[source: ai.meta.com/blog/introducing-muse-spark-msl/, retrieved 2026-07-19]
+
+This file covers only the open-weight Llama family. Muse Spark's parameters, hosted-API protocol, sampling controls, and tool/structured-output surface are not documented in canonical Meta sources fetched this pass (checked 2026-07-19) and are out of scope; Llama 4 remains the current open-weight Llama generation. Route Muse Spark or Meta-hosted-assistant-API questions elsewhere.
 
 ## 2. Prompt Structure Conventions
 
