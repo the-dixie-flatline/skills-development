@@ -5,10 +5,11 @@ versions:
   - claude-fable-5
   - claude-opus-4-8
   - claude-opus-4-7
+  - claude-sonnet-5
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-07-18
+retrieved: 2026-07-19
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5
   - https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback
@@ -17,7 +18,11 @@ primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/overview
   - https://docs.claude.com/en/docs/about-claude/models/overview
   - https://docs.claude.com/en/docs/about-claude/model-deprecations
-  - https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7
+  - https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-8
+  - https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5
+  - https://platform.claude.com/docs/en/release-notes/overview
+  - https://platform.claude.com/docs/en/api/errors
+  - https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/claude/structured-outputs
   - https://platform.claude.com/docs/en/build-with-claude/extended-thinking
   - https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
   - https://platform.claude.com/docs/en/build-with-claude/effort
@@ -43,7 +48,12 @@ maturity_note: |
   tool-use overhead table, the `frontier_llm` refusal category, the current
   web-search tool version, Fable 5 `max` effort availability, Vertex structured-
   outputs support, and model-deprecation states/tenses; those claims carry a
-  2026-07-18 retrieval date inline.
+  2026-07-18 retrieval date inline. A 2026-07-19 Tier-1 browser-verification
+  pass added Claude Sonnet 5 (GA 2026-06-30, drop-in Sonnet 4.6 successor),
+  pinned last-turn prefill rejection (400) and the per-model effort/tool-use/
+  prompt-cache tables as Tier-1, corrected the Vertex structured-outputs matrix
+  to Preview (not GA), and re-anchored the retired whats-new-claude-4-7
+  citations; those claims carry a 2026-07-19 retrieval date inline.
 ---
 
 # Claude — API-Layer Reference
@@ -57,8 +67,8 @@ API-call-level detail for the current Claude 4.x generation. Portable prompt-lay
 The Messages API (`POST /v1/messages`) is the primary endpoint. Anthropic provides first-party SDKs in Python, TypeScript, C#, Go, Java, PHP, and Ruby.
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-04-18]
 
-The Message Batches API (`/v1/messages/batches`) supports asynchronous batching at discounted pricing. Extended output tokens up to **300K** are available on Opus 4.7, Opus 4.6, and Sonnet 4.6 via the `output-300k-2026-03-24` beta header.
-[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+The Message Batches API (`/v1/messages/batches`) supports asynchronous batching at discounted pricing. Extended output tokens up to **300K** are available on Opus 4.8, Opus 4.7, Opus 4.6, Sonnet 5, and Sonnet 4.6 via the `output-300k-2026-03-24` beta header.
+[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-07-19]
 
 ### Platforms and model IDs
 
@@ -83,6 +93,11 @@ The Claude API ID for the prior flagship is `claude-opus-4-8` (GA 2026-05-28). T
 [source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
 [source: anthropic.com/claude/opus, retrieved 2026-06-01]
 [source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+
+Claude Sonnet 5 (`claude-sonnet-5`, GA 2026-06-30) is the drop-in successor to Sonnet 4.6. Model IDs: `claude-sonnet-5` on the Claude API (both API ID and alias); `anthropic.claude-sonnet-5` on Amazon Bedrock; `claude-sonnet-5` on Google Cloud. The dateless form is a **pinned snapshot**, not an evergreen pointer. Context is 1M tokens by default (also the maximum; no smaller-context variant, no beta header); max output is 128K synchronous, 300K via the Batch API with `output-300k-2026-03-24`. Introductory pricing is $2/$10 per MTok through 2026-08-31, then standard $3/$15. Priority Tier is not available. Sonnet 5 is the first Sonnet-tier model with real-time cybersecurity safeguards; a declined request returns HTTP 200 with `stop_reason: "refusal"` (see §2), not an error.
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/release-notes/overview, retrieved 2026-07-19]
 
 Bedrock exposes **global** (dynamic-routing) and **regional** endpoints from Sonnet 4.5 onward. Vertex AI exposes **global**, **multi-region**, and **regional** endpoints. Claude is also available on Microsoft Foundry.
 [source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
@@ -114,8 +129,10 @@ Content-block types on assistant output include `text`, `thinking`, `tool_use`. 
 
 ### Prefilled assistant messages
 
-Prefilled content on the **last** assistant turn is **deprecated on Claude 4.6 and later**; Claude Mythos Preview rejected it with 400. Prefills placed elsewhere in the conversation continue to work. Fable 5's exact prefill handling was not pinned in the retrieved launch sources (see §10 Gaps); treat last-turn prefills as unavailable there. Migrate to Structured Outputs (§6) or system-prompt directives.
-[source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
+Prefilled content on the **last** assistant turn returns a **400 `invalid_request_error`** on Claude Fable 5, Mythos 5, Mythos Preview, Opus 4.8, Opus 4.7, Opus 4.6, and Sonnet 4.6; the errors page states the message verbatim as "Prefilling assistant messages is not supported for this model." Sonnet 5 is not enumerated in that list, but whats-new-sonnet-5 states last-turn prefill "returns a 400 error, unchanged from Claude Sonnet 4.6." Prefills placed **elsewhere** in the conversation continue to work. This pins the previously-open Fable 5 prefill handling. Migrate to Structured Outputs (§6) or system-prompt directives.
+[source: platform.claude.com/docs/en/api/errors, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5, retrieved 2026-07-19]
+[testable: id=claude.prefill-last-turn-rejected.v1, expected=request to claude-opus-4-8 with a prefilled last assistant message returns HTTP 400 invalid_request_error]
 
 ### Refusal responses and fallback (Fable 5)
 
@@ -173,11 +190,13 @@ Fallback behavior is surface-dependent per the system card: client applications 
 
 ## 3. Sampling Parameters
 
-[applies-to: claude-opus-4-7, claude-opus-4-8]
-`temperature`, `top_p`, and `top_k` are **rejected (400 error)** when set to any non-default value on Claude Opus 4.7 and later, including Claude Opus 4.8. Omit these parameters entirely. If you were using `temperature = 0` for determinism, note that it never produced identical outputs on any Claude model.
-[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
-[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
+[applies-to: claude-opus-4-7, claude-opus-4-8, claude-sonnet-5]
+`temperature`, `top_p`, and `top_k` are **rejected (400 error)** when set to any non-default value on Claude Opus 4.7 and later (including Claude Opus 4.8) and on Claude Sonnet 5. Omit these parameters entirely. If you were using `temperature = 0` for determinism, note that it never produced identical outputs on any Claude model.
+[source: platform.claude.com/docs/en/about-claude/model-deprecations, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/release-notes/overview, retrieved 2026-07-19]
 [testable: id=claude.opus47-sampling-rejected.v1, expected=request to claude-opus-4-7 with temperature=0.5 returns HTTP 400]
+[testable: id=claude.sonnet5-sampling-rejected.v1, expected=request to claude-sonnet-5 with temperature=0.5 returns HTTP 400]
 
 On Opus 4.6, Sonnet 4.6, and Haiku 4.5 these parameters remain accepted, but `output_config.effort` is the recommended control for response characteristics.
 [source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-04-18]
@@ -200,19 +219,22 @@ Per the Bedrock model card: `temperature` must be **1.0 or unset**; `top_p` must
 ```
 
 - `type: "adaptive"` — model decides when and how much to think. The **only** supported thinking mode on Fable 5, Opus 4.8, and Opus 4.7.
-- `type: "enabled"` with `budget_tokens` — manual budget. Rejected on Opus 4.8 and Opus 4.7 (400; bare `thinking.type: "enabled"` is also rejected with HTTP 400), deprecated but still functional on Opus 4.6 and Sonnet 4.6 (which still support adaptive **and** manual), still supported on Opus 4.5 / Sonnet 4.5 and older.
-- `type: "disabled"` or field omitted — no thinking on Opus 4.8/4.7 and earlier. **On Fable 5 the semantics differ**: adaptive thinking applies whenever `thinking` is unset, and `{"type": "disabled"}` is **not supported** — thinking cannot be turned off. Control depth with `output_config.effort` instead.
+- `type: "enabled"` with `budget_tokens` — manual budget. Rejected on Opus 4.8, Opus 4.7, and Sonnet 5 (400; bare `thinking.type: "enabled"` is also rejected with HTTP 400), deprecated but still functional on Opus 4.6 and Sonnet 4.6 (which still support adaptive **and** manual), still supported on Opus 4.5 / Sonnet 4.5 and older.
+- `type: "disabled"` or field omitted — no thinking on Opus 4.8/4.7 and earlier. **On Fable 5, Mythos 5, and Mythos Preview the semantics differ**: adaptive thinking is always on, and `{"type": "disabled"}` is **not supported** (rejected; the docs label it "not supported" and pin an explicit 400 only for the manual `{type: "enabled"}` case, so treat the disabled case as rejected without asserting a specific status code). Control depth with `output_config.effort` instead. **Sonnet 5 differs again**: adaptive thinking is on by default, but `thinking: {type: "disabled"}` **is** supported and turns thinking off without error.
 - `budget_tokens` must be `< max_tokens` in manual mode (except with interleaved thinking).
-- `display` controls whether the `thinking` field on returned thinking blocks carries summarized reasoning or is empty. Defaults: `"summarized"` on Opus 4.6, Sonnet 4.6, Haiku 4.5, earlier Claude 4; `"omitted"` on Fable 5, Mythos 5, Opus 4.8, Opus 4.7, and Mythos Preview. On Fable 5 / Mythos 5 the raw chain of thought is **never** returned — `display: "summarized"` is the maximum visibility. Pass thinking blocks back unchanged in multi-turn conversations on the same model.
+- `display` controls whether the `thinking` field on returned thinking blocks carries summarized reasoning or is empty. Defaults: `"summarized"` on Opus 4.6, Sonnet 4.6, Haiku 4.5, earlier Claude 4; `"omitted"` on Fable 5, Mythos 5, Sonnet 5, Opus 4.8, Opus 4.7, and Mythos Preview (a silent change from Opus 4.6, where the default was "summarized"; this default is documented on the Adaptive thinking page). On Fable 5 / Mythos 5 the raw chain of thought is **never** returned — `display: "summarized"` is the maximum visibility. Pass thinking blocks back unchanged in multi-turn conversations on the same model.
 
 [source: platform.claude.com/docs/en/build-with-claude/extended-thinking, retrieved 2026-04-18]
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-04-18]
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
+[source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5, retrieved 2026-07-19]
 [source: platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5, retrieved 2026-06-10]
 [testable: id=claude.opus47-manual-thinking-rejected.v1, expected=request to claude-opus-4-7 with thinking.type="enabled" returns HTTP 400]
 [testable: id=claude.opus47-display-default-omitted.v1, expected=request to claude-opus-4-7 with thinking.type="adaptive" and no display field returns thinking blocks with empty thinking strings]
 [testable: id=claude.fable5-thinking-disabled-unsupported.v1, expected=request to claude-fable-5 with thinking.type="disabled" is rejected]
 [testable: id=claude.fable5-display-default-omitted.v1, expected=request to claude-fable-5 with thinking unset returns thinking blocks with empty thinking strings]
+[testable: id=claude.sonnet5-thinking-disabled-supported.v1, expected=request to claude-sonnet-5 with thinking.type="disabled" succeeds with thinking off and no error]
 
 ### `output_config.effort`
 
@@ -224,19 +246,21 @@ Per the Bedrock model card: `temperature` must be **1.0 or unset**; `top_p` must
 
 | Level   | Availability                                               | Guidance                                                                                 |
 |---------|------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| `max`   | Fable 5, Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 4.6    | Frontier problems only; often overthinks on structured tasks                             |
-| `xhigh` | Opus 4.7                                                   | Recommended starting point for coding and agentic workloads on Opus 4.7                  |
-| `high`  | All models supporting effort; API default                  | Strong quality balance; Opus 4.7 recommendation for intelligence-sensitive workloads      |
+| `max`   | Fable 5, Mythos 5, Opus 4.8, Mythos Preview, Opus 4.7, Opus 4.6, Sonnet 5, Sonnet 4.6 | Frontier problems only; often overthinks on structured tasks                             |
+| `xhigh` | Fable 5, Mythos 5, Opus 4.8, Opus 4.7, Sonnet 5 (**not** Mythos Preview, Opus 4.6, or Sonnet 4.6, which have `max` but not `xhigh`) | Recommended starting point for coding and agentic workloads on Opus 4.7                  |
+| `high`  | All models supporting effort; API default                  | Strong quality balance; default on Sonnet 5 (Claude API and Claude Code); Opus 4.7 recommendation for intelligence-sensitive workloads |
 | `medium`| All models supporting effort                               | Cost-sensitive workloads; recommended default for Sonnet 4.6                             |
 | `low`   | All models supporting effort                               | Short, scoped tasks; latency-sensitive subagents                                         |
 
-[source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-04-18]
+The `effort` parameter itself requires no beta header.
+[source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-07-19]
 
 Setting `effort: "high"` is identical to omitting the parameter. At `high` and above on adaptive-capable models, Claude almost always thinks; at `low` / `medium` it may skip thinking on simple queries.
 [source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-04-18]
 
-Opus 4.8 uses the same reasoning-control model as Opus 4.7: adaptive thinking only (manual budgets rejected) with `output_config.effort` as the lever. Per-effort-level availability and token multipliers for Opus 4.8 were not pinned in the retrieved primary sources; do not assume the Opus 4.7 availability rows transfer level-for-level. Measure on your own evals.
+Opus 4.8 uses the same reasoning-control model as Opus 4.7: adaptive thinking only (manual budgets rejected) with `output_config.effort` as the lever. Its effort availability is now pinned: both `max` and `xhigh` are listed for Opus 4.8 (see the table above). Per-effort-level token multipliers remain unpublished; measure on your own evals.
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
+[source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-07-19]
 
 [applies-to: claude-fable-5] Effort is the primary control for the intelligence/latency/cost trade-off on Fable 5 (thinking cannot be disabled, so there is no off switch — only depth). Documented guidance: `high` as the default for most tasks, `xhigh` for the most capability-sensitive workloads, `medium`/`low` for routine work; lower effort settings still perform well and often exceed `xhigh` on prior models. The effort doc lists the full `max` / `xhigh` / `high` / `medium` / `low` ladder as available on Fable 5 — `max` **is** available (the Fable prompting guide simply omits it from its worked examples).
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5, retrieved 2026-06-10]
@@ -254,7 +278,7 @@ Beta header: `task-budgets-2026-03-13` (Fable 5 supports task budgets at launch 
 ```
 
 Advisory budget across the full agentic loop (thinking + tool calls + tool results + final output). The model sees a running countdown and uses it to prioritize; it is **not** a hard cap (that is `max_tokens`). Minimum value: 20K tokens. For open-ended agentic tasks where quality matters more than speed, omit `task_budget`.
-[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, vendor page retired as of 2026-07-19 (301 to whats-new-claude-4-8); the Opus 4.7 task-budget detail is historical, no longer vendor-documented]
 [source: platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5, retrieved 2026-06-10]
 
 [applies-to: claude-fable-5] Other launch-supported features: the memory tool, tool-result clearing via context editing (beta header `context-management-2025-06-27`), compaction, and vision.
@@ -350,19 +374,23 @@ For the web search server tool specifically, the current latest type is `web_sea
 
 When a request includes `tools`, a tool-use system prompt is added automatically. The overhead is **per-model**, not a flat figure (the previous 346/313 figure this file carried matched no current model):
 
-| Model      | `tool_choice: auto \| none` | `tool_choice: any \| tool` |
-|------------|-----------------------------|----------------------------|
-| Opus 4.8   | 290                         | 410                        |
-| Opus 4.7   | 675                         | 804                        |
-| Opus 4.6   | 497                         | 589                        |
-| Opus 4.5   | 496                         | 588                        |
-| Sonnet 5   | 354                         | 474                        |
-| Sonnet 4.6 | 497                         | 589                        |
-| Sonnet 4.5 | 496                         | 588                        |
-| Haiku 4.5  | 496                         | 588                        |
+| Model                 | `tool_choice: auto \| none` | `tool_choice: any \| tool` |
+|-----------------------|-----------------------------|----------------------------|
+| Opus 4.8              | 290                         | 410                        |
+| Opus 4.7              | 675                         | 804                        |
+| Opus 4.6              | 497                         | 589                        |
+| Opus 4.5              | 496                         | 588                        |
+| Opus 4.1 (deprecated) | 313                         | 315                        |
+| Opus 4 (retired)      | 313                         | 315                        |
+| Sonnet 5              | 354                         | 474                        |
+| Sonnet 4.6            | 497                         | 589                        |
+| Sonnet 4.5            | 496                         | 588                        |
+| Sonnet 4 (retired)    | 313                         | 315                        |
+| Haiku 4.5             | 496                         | 588                        |
+| Haiku 3.5 (retired)   | 264                         | 355                        |
 
-No `tools` field + `tool_choice: none` → 0 additional tokens. Fable 5 is not a separate row in the current table; fetch the tool-use overview at integration time for the exact row of the model you are calling, since these values drift per model revision.
-[source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-07-18]
+No `tools` field + `tool_choice: none` → 0 additional tokens. These figures were re-verified against the tool-use overview on 2026-07-19 (Tier-1); the four previously Tier-3-sourced rows (Opus 4.8 290/410, Sonnet 5 354/474, Opus 4.7 675/804, Sonnet 4.6 497/589) all matched the primary and are promoted. Fable 5 is not a separate row in the current table; fetch the tool-use overview at integration time for its row and re-check the others, since these values can drift per model revision.
+[source: platform.claude.com/docs/en/agents-and-tools/tool-use/overview, retrieved 2026-07-19]
 
 ## 6. Structured Outputs
 
@@ -383,8 +411,9 @@ No `tools` field + `tool_choice: none` → 0 additional tokens. Fable 5 is not a
 - **Parameter:** `output_config.format`. (The earlier `output_format` parameter and `structured-outputs-2025-11-13` beta header are deprecated but still accepted during transition.)
 - **Required schema constraint:** `additionalProperties: false` on every object.
 - **Supported models:** Fable 5, Mythos 5, Opus 4.8, Opus 4.7, Opus 4.6, Sonnet 5, Sonnet 4.6, Sonnet 4.5, Opus 4.5, Haiku 4.5, Mythos Preview (Claude API). No beta header required.
-- **Platform support:** Claude API GA across the current-gen set (incl. Fable 5, Opus 4.8, Sonnet 5, Mythos Preview). Google Cloud Vertex AI is now GA for the same set, **including Mythos Preview** (the earlier "Vertex does not support Mythos Preview" claim is corrected). Amazon Bedrock supports 4.6 and earlier current-gen plus Opus 4.7 / Sonnet 5 / Mythos Preview. Microsoft Foundry: 4.6 and earlier GA; Sonnet 5 / Opus 4.7 / Mythos Preview require the Hosted-on-Anthropic deployment.
+- **Platform support:** Claude API GA across the current-gen set (incl. Fable 5, Opus 4.8, Sonnet 5, Mythos Preview). **Google Cloud Vertex AI: Preview (Pre-GA), not GA.** Supported there only on Opus 4.7, Sonnet 4.6, and Opus 4.6, with Opus 4.5, Sonnet 4.5, and Haiku 4.5 marked "coming soon"; Fable 5, Sonnet 5, Opus 4.8, and Mythos Preview are absent entirely. See the Vertex structured-outputs subsection below for the feature split and constraints (this corrects an earlier "Vertex is GA, including Mythos Preview" statement). Amazon Bedrock supports 4.6 and earlier current-gen plus Opus 4.7 / Sonnet 5 / Mythos Preview. Microsoft Foundry: 4.6 and earlier GA; Sonnet 5 / Opus 4.7 / Mythos Preview require the Hosted-on-Anthropic deployment.
 [source: platform.claude.com/docs/en/build-with-claude/structured-outputs, retrieved 2026-07-18]
+[source: docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/claude/structured-outputs, retrieved 2026-07-19]
 - **Combined with tool use:** Max 20 strict tools per request, 24 optional parameters total across schemas, 16 parameters with `anyOf` unions.
 - **Schema violation:** returns HTTP 400 (rare due to constrained decoding). Safety refusals return `stop_reason: "refusal"` with status 200; output may not match schema in that case. `stop_reason: "max_tokens"` truncation may also produce non-conforming output.
 
@@ -397,6 +426,22 @@ Supported: `object`, `array`, `string`, `integer`, `number`, `boolean`, `null`, 
 Not supported: recursive schemas, complex enum types, external `$ref` URLs, numeric constraints (`minimum`, `maximum`, `multipleOf`), string length constraints (`minLength`, `maxLength`), most array constraints beyond `minItems`, `additionalProperties: true`.
 [source: platform.claude.com/docs/en/build-with-claude/structured-outputs, retrieved 2026-04-18]
 
+### Vertex AI structured outputs (Preview)
+
+On Google Cloud Vertex AI, structured outputs for Claude partner models is a **Preview** feature under the Pre-GA Offerings Terms, not GA. Model availability differs from the Claude API set:
+
+- **Supported:** Claude Opus 4.7, Claude Sonnet 4.6, Claude Opus 4.6.
+- **Coming soon:** Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5.
+- **Absent entirely** (neither supported nor coming soon): Claude Fable 5, Claude Sonnet 5, Claude Opus 4.8, Claude Mythos Preview.
+
+Two complementary features are exposed:
+
+- **JSON outputs** via `output_config.format` (`json_schema` only).
+- **Strict tool use** via `tools[].strict`.
+
+Both require `additionalProperties: false` on every object and every property listed in `required`; numeric and string-length constraints are not supported (the same subset limits as the Claude API surface above). The feature is disabled by default and gated by the org-policy constraint `constraints/vertexai.allowedPartnerModelFeatures`, which must allow `structured_outputs`.
+[source: docs.cloud.google.com/gemini-enterprise-agent-platform/models/partner-models/claude/structured-outputs, retrieved 2026-07-19]
+
 ## 7. Caching, Batch, Streaming
 
 ### Prompt caching
@@ -406,8 +451,8 @@ Not supported: recursive schemas, complex enum types, external `$ref` URLs, nume
 ```
 
 - **Placement:** on individual blocks in `tools`, `system`, or `messages[].content`; or at request level for automatic caching.
-- **Minimum cacheable tokens:** Fable 5 / Mythos 5 = **512** (Claude API; **1024** on Amazon Bedrock); Opus 4.8 = **1024**; Opus 4.7 = **2048**; Opus 4.6 / Opus 4.5 = **4096**; Sonnet 5 / Sonnet 4.6 / Sonnet 4.5 = **1024**; Haiku 4.5 = **4096**; Haiku 3.5 / 3 = 2048. (Opus 4.7 dropped 4096→2048 and Sonnet 4.6 dropped 2048→1024 from the prior figures.)
-  [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-18]
+- **Minimum cacheable tokens** (Claude API / Claude Platform on AWS / Google Cloud / Microsoft Foundry): Fable 5 / Mythos 5 = **512**; Mythos Preview / Opus 4.7 = **2048**; Opus 4.6 / Opus 4.5 = **4096**; Opus 4.8 / Sonnet 5 / Sonnet 4.6 / Sonnet 4.5 = **1024** (also Opus 4.1 deprecated, Opus 4 retired except Google Cloud, Sonnet 4 retired except Bedrock/Google Cloud); Haiku 4.5 = **4096**; Haiku 3.5 = **2048**. **Bedrock override:** on Amazon Bedrock the minimum for Fable 5 and Mythos 5 is **1,024**; no separate Bedrock override is stated for Sonnet 5, so Sonnet 5 is 1,024 on both the standard platforms and Bedrock. (Opus 4.7 dropped 4096→2048 and Sonnet 4.6 dropped 2048→1024 from the prior figures.)
+  [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-19]
 - **Breakpoints:** max 4 explicit per request (1 slot consumed by automatic caching if used together).
 - **Cost model:** cache write = 1.25× base input (5m TTL) or 2.0× base input (1h TTL). Cache read = 0.1× base input for both TTLs.
 - **Thinking blocks** cannot carry explicit `cache_control` but are cached alongside content in tool-use loops; they count as input tokens on cache read.
@@ -417,7 +462,7 @@ Not supported: recursive schemas, complex enum types, external `$ref` URLs, nume
 [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-04-18]
 
 [applies-to: claude-fable-5] On the first-party Claude API the Fable 5 (and Mythos 5) minimum is **512 tokens** per checkpoint; on Amazon Bedrock it is **1,024 tokens** per cache checkpoint. Both surfaces allow max 4 checkpoints per request, 5-minute and 1-hour TTLs, on `system`, `messages`, and `tools`.
-[source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-18]
+[source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-07-19]
 [source: docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-fable-5.html, retrieved 2026-06-10]
 
 [applies-to: claude-fable-5] **Fallback credit.** When a Fable 5 request is refused and retried on another model, fallback credit refunds the prompt-cache cost of switching. Server-side fallback and the SDK middleware apply it automatically; manual retries opt in with the `fallback-credit-2026-06-01` beta header. See §2 for the fallback mechanics.
@@ -455,8 +500,8 @@ Stream events:
 
 ### Batch API
 
-Extended output up to 300K tokens available on Opus 4.7, Opus 4.6, and Sonnet 4.6 with the `output-300k-2026-03-24` beta header. Caching multipliers **stack** with Batch discounts.
-[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-04-18]
+Extended output up to 300K tokens available on Opus 4.8, Opus 4.7, Opus 4.6, Sonnet 5, and Sonnet 4.6 with the `output-300k-2026-03-24` beta header. Caching multipliers **stack** with Batch discounts.
+[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-07-19]
 [source: platform.claude.com/docs/en/build-with-claude/prompt-caching, retrieved 2026-04-18]
 
 ## 8. Deployment Flags
@@ -472,12 +517,13 @@ For Claude this section covers **beta headers** and **platform routing**, rather
 | `task-budgets-2026-03-13`           | Enable `output_config.task_budget`                         | Opus 4.7, Fable 5              |
 | `context-management-2025-06-27`     | Tool-result clearing via context editing                   | Fable 5 (launch-supported)     |
 | `interleaved-thinking-2025-05-14`   | Enable interleaved thinking in manual thinking mode        | Sonnet 4.6 manual mode         |
-| `output-300k-2026-03-24`            | Extended output up to 300K tokens via Batch API            | Opus 4.7, Opus 4.6, Sonnet 4.6 |
+| `output-300k-2026-03-24`            | Extended output up to 300K tokens via Batch API            | Opus 4.8, Opus 4.7, Opus 4.6, Sonnet 5, Sonnet 4.6 |
 | `structured-outputs-2025-11-13`     | Legacy; Structured Outputs no longer requires a beta header| Deprecated, still accepted     |
 
 [source: platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5, retrieved 2026-06-10]
 [source: platform.claude.com/docs/en/build-with-claude/refusals-and-fallback, retrieved 2026-06-10]
-[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
+[source: platform.claude.com/docs/en/about-claude/models/overview, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, vendor page retired as of 2026-07-19 (301 to whats-new-claude-4-8); the task-budgets header detail is historical, no longer vendor-documented]
 [source: platform.claude.com/docs/en/build-with-claude/extended-thinking, retrieved 2026-04-18]
 [source: platform.claude.com/docs/en/build-with-claude/structured-outputs, retrieved 2026-04-18]
 
@@ -515,14 +561,15 @@ Vertex AI: choose **global**, **multi-region** (within a geographic area), or **
 Opus 4.8 carries the same three hard API-rejection changes as Opus 4.7 (sampling, manual thinking, default `thinking.display`). The tokenizer and behavioral-shift bullets below were documented against Opus 4.7; the retrieved sources did not confirm identical figures for Opus 4.8.
 
 - **Sampling parameters rejected.** `temperature`, `top_p`, `top_k` non-default values → 400 on Opus 4.7 and later, including Opus 4.8. Omit them.
-[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-06-01]
+[source: platform.claude.com/docs/en/about-claude/model-deprecations, retrieved 2026-07-19]
 - **Manual thinking rejected.** `thinking.type: "enabled"` → 400 (adaptive is the only supported mode on both Opus 4.8 and Opus 4.7). Use `{type: "adaptive"}` with `output_config.effort`.
 [source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-06-01]
-- **`thinking.display` default changed** from `"summarized"` (Opus 4.6) to `"omitted"` on Opus 4.7 and Opus 4.8. Thinking `thinking` field returns empty unless you set `display: "summarized"` explicitly.
-- [applies-to: claude-opus-4-7] **New tokenizer.** Token counts for the same text are **1.0× to 1.35× higher** than Opus 4.6. Update `max_tokens` and compaction thresholds with headroom.
+- **`thinking.display` default changed** from `"summarized"` (Opus 4.6) to `"omitted"` on Opus 4.7, Opus 4.8, Sonnet 5, Fable 5, Mythos 5, and Mythos Preview. The `thinking` field returns empty unless you set `display: "summarized"` explicitly. (This default is now documented on the Adaptive thinking page.)
+- [applies-to: claude-opus-4-7] **New tokenizer.** Token counts for the same text run higher than Opus 4.6; the original 1.0× to 1.35× figure is historical and no longer vendor-documented as of 2026-07-19. Update `max_tokens` and compaction thresholds with headroom.
 - [applies-to: claude-opus-4-7] **Behavioral shifts** (more literal instruction following, shorter default verbosity, fewer default tool calls) are not API errors but require prompt tuning — see `claude-prompt.md` §6.
 
-[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, retrieved 2026-04-18]
+[source: platform.claude.com/docs/en/build-with-claude/adaptive-thinking, retrieved 2026-07-19]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, vendor page retired as of 2026-07-19 (301 to whats-new-claude-4-8, which no longer documents the tokenizer/behavioral claims); historical, no longer vendor-documented]
 
 ### Claude 4.6-generation deprecations
 
@@ -537,14 +584,13 @@ Opus 4.8 carries the same three hard API-rejection changes as Opus 4.7 (sampling
 - **Claude Sonnet 4** (`claude-sonnet-4-20250514`), deprecated 2026-04-14, was **retired 2026-06-15** (completed). Replacement `claude-sonnet-4-6`.
 - **Claude Opus 4** (`claude-opus-4-20250514`), deprecated 2026-04-14, was **retired 2026-06-15** (completed). Replacement `claude-opus-4-8`.
 - **Claude Opus 4.1** (`claude-opus-4-1-20250805`) is now **Deprecated** (deprecated 2026-06-05), retiring **2026-08-05**. Replacement `claude-opus-4-8`.
-- **Claude Mythos Preview** (`claude-mythos-preview`) retires **2026-07-21** (imminent as of 2026-07-18 — 3 days out). Replacement `claude-mythos-5`.
+- **Claude Mythos Preview** (`claude-mythos-preview`) retires **2026-07-21** (imminent as of 2026-07-19, two days out); the model-deprecations page carries only this date, verbatim: "Claude Mythos Preview (claude-mythos-preview) will be retired on July 21, 2026." Replacement `claude-mythos-5`.
 - **Claude Haiku 3** (`claude-3-haiku-20240307`) is **Retired** — retirement date **April 20, 2026**. Replacement `claude-haiku-4-5-20251001`.
 
-[source: docs.claude.com/en/docs/about-claude/model-deprecations, retrieved 2026-07-18]
+[source: platform.claude.com/docs/en/about-claude/model-deprecations, retrieved 2026-07-19]
 
 ## 10. Gaps
 
-- **Fable 5 last-turn prefill handling** was not pinned in the retrieved launch sources. Treat prefills as unavailable on Fable 5 pending re-verification.
 - **Fable 5 Vertex AI and Microsoft Foundry ID strings** were not pinned; availability is documented, the exact IDs are not. Fetch the respective catalogs at integration time.
 - **`allowed_fallback_models` contents** for `claude-fable-5` (which models are permitted fallback targets beyond the documented Opus 4.8 example) must be read live from the Models API with the `server-side-fallback-2026-06-01` header set.
 - **Server-side fallback sticky-routing and billing subsections** of the refusals-and-fallback doc were not captured in the retrieval pass; consult the live page before building billing-sensitive fallback logic.

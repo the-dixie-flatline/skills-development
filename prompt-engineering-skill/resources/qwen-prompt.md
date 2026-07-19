@@ -6,11 +6,13 @@ versions:
   - qwen3.6-plus
   - qwen3.6-35b-a3b
   - Qwen/Qwen3.6-27B
-retrieved: 2026-06-01
+retrieved: 2026-07-19
 primary_sources:
   - https://qwen.ai/blog?id=qwen3.7
   - https://www.alibabacloud.com/help/en/model-studio/deep-thinking
   - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
+  - https://www.alibabacloud.com/help/en/model-studio/model-pricing
+  - https://www.alibabacloud.com/help/en/model-studio/model-deployment-introduction
   - https://huggingface.co/Qwen/Qwen3.6-27B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B
   - https://www.alibabacloud.com/blog/qwen3-6-plus-towards-real-world-agents_603005
@@ -23,7 +25,9 @@ maturity_note: |
   MoE `qwen3.6-35b-a3b` and the new dense `Qwen/Qwen3.6-27B`. Some older
   fine-grained guidance below remains grounded in the Qwen3.6-35B-A3B model card
   and tokenizer configuration; claims carrying a 2026-04-18 retrieval date have
-  not been re-verified in this pass.
+  not been re-verified in this pass. A 2026-07-19 pass folded maintainer-verified
+  live-browser captures into §4: the 1M-vs-256K context figures resolve as two
+  serving modes, not a conflict.
 ---
 
 # Qwen — Prompt-Layer Reference
@@ -108,6 +112,14 @@ Qwen3.6 adds a `preserve_thinking` option that, when enabled, retains reasoning 
 The closed flagship and most Qwen3.5+ closed variants advertise 1M-token context windows. The open-weights 35B-A3B is 262K native and extends to ~1M with YaRN scaling (configuration-level; see `qwen-prompt-api.md`).
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
+
+The advertised 1M figure is the standard pay-as-you-go ceiling. The closed tiers carry two distinct input caps depending on serving mode; the two numbers describe different modes, not a contradiction:
+
+- **Standard pay-as-you-go API:** max input 1M tokens per request. `qwen3.7-max` (`qwen3.7-max-2026-05-20`) prices as a single `0<Token<=1M` tier; `qwen3.7-plus` (`qwen3.7-plus-2026-05-26`) splits into `0<Token<=256K` and `256K<Token<=1M` pricing tiers, where 256K is only a pricing-tier boundary, not an input cap.
+- **Dedicated deployment (Provisioned Throughput / Model Unit):** the per-snapshot "Max input tokens" is lower — 256K for `qwen3.7-max-2026-05-20` and `qwen3.7-plus-2026-05-26`, 128K for `qwen3.6-plus-2026-04-02` and `qwen3.5-plus-2026-04-20`. A request that exceeds the dedicated cap (or the purchased TPM) automatically switches to pay-as-you-go mode.
+
+[source: https://www.alibabacloud.com/help/en/model-studio/model-pricing, retrieved 2026-07-19]
+[source: https://www.alibabacloud.com/help/en/model-studio/model-deployment-introduction, retrieved 2026-07-19]
 
 Practical constraints:
 

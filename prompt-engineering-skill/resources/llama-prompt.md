@@ -7,6 +7,7 @@ versions:
 retrieved: 2026-07-19
 primary_sources:
   - https://www.llama.com/models/llama-4/
+  - https://developer.meta.com/ai/models/llama-4/
   - https://www.llama.com/docs/model-cards-and-prompt-formats/llama4/
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md
   - https://github.com/meta-llama/llama-models/blob/main/models/llama4/prompt_format.md
@@ -191,6 +192,8 @@ Llama 4 model cards do not list audio or video as accepted input modalities. Vid
 
 ## 8. Gaps
 
+- **Current-generation tag (quote-level gap, now closed).** Meta's Llama 4 models page marks the line with the literal tag `LATEST` — an `mcds-label` whose only child text is "LATEST", positioned directly above the "Llama 4 models" heading, rendered reading order "LATEST | Llama 4 models | View documentation". This is the first-party string behind the "current open-weight generation" claim in the front-matter maturity note (which otherwise leaned on the meta-llama HF org card's "Current" label). Caveat: the page is client-side rendered, so plain-text extraction returns empty and a screenshot paints blank; the string was read from the live DOM CMS payload, not a static fetch. The old `developer.meta.com/models/llama-4` path 301s and gates behind sign-in — cite the `/ai/` path below.
+  [source: developer.meta.com/ai/models/llama-4/, retrieved 2026-07-19]
 - **Behemoth (288B active / 16 experts)** remained in training at the 2025-04-05 release date. Current release status (April 2026) is not quoted in the retrieved model-card excerpts.
 - **Llama 5** has not been announced. Release timing and scope are unverified.
 - **Llama Guard 4 and Llama Prompt Guard 2** exist on `llama.com/docs/model-cards-and-prompt-formats/` but were not deeply fetched in this pass. The Llama 4 model card still references Llama Guard 3, Prompt Guard, and Code Shield as the companion safety models for Llama 4.

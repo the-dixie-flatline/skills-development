@@ -12,6 +12,61 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.4.1 — 2026-07-19
+
+Manual browser-verification fold-in. Thirteen bot-blocked/JS-rendered primaries were
+verified by the maintainer in a signed-in browser (exact quotes, retrieved 2026-07-19;
+evidence retained in the round-3 audit records) and folded into the skill. `SKILL.md`
+bumped to `0.4.1`; contract-version unchanged (2026-04-18).
+
+### Claude (`claude-prompt.md`, `claude-prompt-api.md`)
+
+- **Claude Sonnet 5 added** (GA 2026-06-30, drop-in Sonnet 4.6 successor): IDs incl.
+  Bedrock/Google Cloud forms (dateless ID = pinned snapshot), 1M context default-and-max
+  with no beta header, 128K sync / 300K batch output (`output-300k-2026-03-24`), intro
+  $2/$10 per MTok through 2026-08-31 then $3/$15, adaptive thinking on by default with
+  `{type:"disabled"}` supported (manual `budget_tokens` 400), effort default `high`,
+  sampling params 400, ~30% larger tokenizer at unchanged per-token price, no Priority
+  Tier, real-time cybersecurity safeguards (HTTP 200 `stop_reason:"refusal"`).
+- **`whats-new-claude-4-7` citations re-anchored** (~13; the URL now 301s to
+  `whats-new-claude-4-8`): thinking-display default re-pointed to the Adaptive thinking
+  page (default `display` "omitted" on Fable 5 / Mythos 5 / Sonnet 5 / Opus 4.8 / 4.7 /
+  Mythos Preview — silent change from Opus 4.6 "summarized"); literalism,
+  response-length-calibration, tokenizer-1.0-1.35x, and other 4.7-only claims kept scoped
+  to Opus 4.7 with explicit historical / no-longer-vendor-documented markers.
+- Effort `max`/`xhigh` availability pinned per model (xhigh not on Mythos Preview /
+  Opus 4.6 / Sonnet 4.6; no beta header); full per-model prompt-cache minimum table
+  (Sonnet 5 = 1,024 incl. Bedrock) and 12-row tool-use overhead table promoted to Tier-1.
+- Last-turn prefill rejection pinned: 400 `invalid_request_error` with exact message;
+  closes the prefill gaps; disable-thinking on Fable 5 / Mythos 5 / Mythos Preview stated
+  as rejected/not-supported without asserting a status code (only the manual-enabled 400
+  is vendor-pinned). New testable markers for prefill and Sonnet 5 sampling/thinking.
+- **Vertex AI structured outputs corrected to Preview (Pre-GA), not GA**: supported =
+  Opus 4.7 / Sonnet 4.6 / Opus 4.6; coming soon = Opus 4.5 / Sonnet 4.5 / Haiku 4.5;
+  Fable 5 / Sonnet 5 / Opus 4.8 / Mythos Preview absent; `output_config.format` +
+  `tools[].strict` mechanics and the org-policy gate documented.
+- Mythos Preview retirement 2026-07-21 re-confirmed on the deprecations page; the
+  competing 2026-06-30 date found no live Anthropic surface and no [disputed] tag ships.
+
+### Qwen (`qwen-prompt.md`, `qwen-prompt-api.md`)
+
+- 1M-vs-256K context figures resolved as two serving modes, not a conflict: standard
+  pay-as-you-go API caps input at 1M (256K is a qwen3.7-plus pricing-tier boundary);
+  dedicated deployment (Provisioned Throughput / Model Unit) caps the -2026-05 snapshots
+  at 256K (128K for qwen3.6-plus / qwen3.5-plus snapshots) with documented automatic
+  fallback to pay-as-you-go.
+- Per-tier Model Studio pricing added (qwen3.7-max $2.5/$7.5 0-1M; qwen3.7-plus $0.4/$1.6
+  and $1.2/$4.8; qwen3.6-plus $0.5/$3 and $2/$6; limited-time promos dated) plus cache
+  rates (explicit creation 125% of standard input, hits 10%).
+- qwen3.6-plus confirmed NOT scheduled for retirement (appears on the deprecation ledger
+  only as a migrate-to reference; current batch dated 2026-10-10).
+
+### Llama (`llama-prompt.md`)
+
+- Closed the quote-level gap on the Llama 4 current-generation tag (literal "LATEST",
+  captured from the live DOM); citation updated to the working `/ai/models/llama-4/` path
+  with a client-side-rendering caveat.
+
 ## prompt-engineering-skill 0.4.0 — 2026-07-19
 
 Round-3 refinement pass. `SKILL.md` bumped to `0.4.0`; contract-version

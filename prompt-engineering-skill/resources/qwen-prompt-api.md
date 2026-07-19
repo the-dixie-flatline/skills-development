@@ -6,12 +6,14 @@ versions:
   - qwen3.6-plus
   - qwen3.6-35b-a3b
   - Qwen/Qwen3.6-27B
-retrieved: 2026-06-01
+retrieved: 2026-07-19
 primary_sources:
   - https://qwen.ai/blog?id=qwen3.7
   - https://www.alibabacloud.com/help/en/model-studio/deep-thinking
   - https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
   - https://www.alibabacloud.com/help/en/model-studio/compatibility-with-openai-responses-api
+  - https://www.alibabacloud.com/help/en/model-studio/model-pricing
+  - https://www.alibabacloud.com/help/en/model-studio/model-depreciation
   - https://huggingface.co/Qwen/Qwen3.6-27B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B
   - https://huggingface.co/Qwen/Qwen3.6-35B-A3B/raw/main/tokenizer_config.json
@@ -29,7 +31,9 @@ maturity_note: |
   OpenAI-compat hazard matrix, see `resources/openai-compatibility-surface.md`.
   A 2026-07-18 pass added a `[field-observed]` grammar-constrained-decoding note
   to §6 (N=15; a general grammar-backend behavior, not Qwen-specific); no Tier-1
-  claim changed.
+  claim changed. A 2026-07-19 pass folded maintainer-verified live-browser
+  captures: per-tier pricing and cache rates (§7) and a deprecation-ledger
+  confirmation that `qwen3.6-plus` is not scheduled for retirement (§9).
 ---
 
 # Qwen — API-Layer Reference
@@ -360,9 +364,25 @@ These apply to any grammar backend (the generic vLLM / SGLang / llama.cpp `choic
 
 ## 7. Caching, Batch, Streaming
 
-- **Context caching**, Alibaba Cloud Model Studio: the OpenAI-compatible surface reports cache usage via the OpenAI-standard `prompt_tokens_details.cached_tokens` field, and explicit context caching is supported. Multimodal input is supported on the same surface.
+- **Context caching**, Alibaba Cloud Model Studio: the OpenAI-compatible surface reports cache usage via the OpenAI-standard `prompt_tokens_details.cached_tokens` field, and explicit context caching is supported. Multimodal input is supported on the same surface. Explicit cache creation is billed at 125% of the standard input price, and cache hits at 10% — rates stated as percentages of standard input, so they apply across the tiers in the pricing table below.
 [source: https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions, retrieved 2026-06-01]
+[source: https://www.alibabacloud.com/help/en/model-studio/model-pricing, retrieved 2026-07-19]
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
+
+### Per-tier pricing
+
+Standard pay-as-you-go list prices, USD per 1M tokens (input / output). Promotions are flagged limited-time on the source page as of the retrieval date; treat them as expiring and re-verify before quoting.
+
+| Model (snapshot)                | Input tier        | Input | Output | Promotion                        |
+|---------------------------------|-------------------|-------|--------|----------------------------------|
+| `qwen3.7-max` (`-2026-05-20`)   | `0<Token<=1M`     | $2.5  | $7.5   | limited-time 50% off             |
+| `qwen3.7-plus` (`-2026-05-26`)  | `0<Token<=256K`   | $0.4  | $1.6   | limited-time 20% off             |
+| `qwen3.7-plus` (`-2026-05-26`)  | `256K<Token<=1M`  | $1.2  | $4.8   | limited-time 20% off             |
+| `qwen3.6-plus` (`-2026-04-02`)  | `0<Token<=256K`   | $0.5  | $3     | —                                |
+| `qwen3.6-plus` (`-2026-04-02`)  | `256K<Token<=1M`  | $2    | $6     | —                                |
+
+For `qwen3.7-plus`, thinking and non-thinking output are priced the same.
+[source: https://www.alibabacloud.com/help/en/model-studio/model-pricing, retrieved 2026-07-19]
 
 - **Streaming**: not quoted verbatim in the retrieved excerpts; OpenAI-compatible and Anthropic-compatible endpoints conventionally support SSE streaming and the compatibility claim implies it.
 [unverified] SSE streaming works identically on Qwen's OpenAI-compatible endpoint as on the OpenAI reference.
@@ -429,6 +449,9 @@ For long-video understanding with the 35B-A3B open-weights model, raise `longest
 - **`qwen-turbo` deprecated** in favor of `qwen-flash` on Alibaba Cloud Model Studio.
 [source: www.alibabacloud.com/help/en/model-studio/models, retrieved 2026-04-18]
 
+- **`qwen3.6-plus` is not scheduled for retirement.** It does not appear on the Model Studio deprecation ledger — neither as a deprecating model nor in the replacement column. Any prior scrape that saw it with an empty discontinuation date was reading a migrate-to reference, not a pending-retirement row; every empty-date entry on that page sits in the replacement column. The current deprecation batch carries a 2026-10-10 date. `qwen3.7-plus` and `qwen3.7-max` are current, appearing on the ledger only as active migrate-to targets (e.g. `qwen3-coder-plus` → `qwen3.7-plus`; `qwen3.6-max-preview` → `qwen3.7-max`).
+[source: https://www.alibabacloud.com/help/en/model-studio/model-depreciation, retrieved 2026-07-19]
+
 - **`enable_thinking` deprecating on the OpenAI Responses-compatible layer.** Migrate to `reasoning.effort` (which takes precedence when both are sent). `enable_thinking` remains the documented control on the Chat Completions layer, passed via `extra_body`.
 [source: https://www.alibabacloud.com/help/en/model-studio/deep-thinking, retrieved 2026-06-01]
 [source: https://www.alibabacloud.com/help/en/model-studio/compatibility-with-openai-responses-api, retrieved 2026-06-01]
@@ -444,5 +467,5 @@ For long-video understanding with the 35B-A3B open-weights model, raise `longest
 - **Batch API** surface on Alibaba Cloud Model Studio is not covered in the retrieved excerpts.
 - **Parallel tool-call emission** behavior is not explicitly documented for Qwen3.6; whether the model reliably emits multiple `<tool_call>` blocks in one turn is unverified.
 - **SSE streaming details** for the OpenAI-compatible and Anthropic-compatible endpoints (event shape, `content_block_delta` vs OpenAI `delta` semantics on the Anthropic-compatible path) are not quoted.
-- **Context-caching** beyond `qwen3-coder-plus` is not documented per-tier in the retrieved pricing excerpt.
+- **Context-caching** cache rates are documented as percentages of standard input (125% create / 10% hit; see §7) and apply across tiers; per-model eligibility beyond the tiers priced in §7 is not enumerated in the retrieved pricing excerpt.
 - **Upstream user-facing docs (`qwen.readthedocs.io`)** were not reachable at retrieval time; several API-level behaviors that would normally be covered there (fine-grained error codes, rate-limit shapes, field-by-field OpenAI-compat deviations) are consequently gaps in this reference.

@@ -1,7 +1,7 @@
 ---
 name: prompt-engineering-skill
 description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek, GLM, MiniMax, Kimi. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, configures a hosted deep-research or agent-orchestration surface, calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology (use prompt-engineering-architect) and for questions about how this current Claude session should respond.
-version: 0.4.0
+version: 0.4.1
 contract-version: 2026-04-18
 ---
 
@@ -58,12 +58,12 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 
 | Family  | Prompt-layer | API-layer | Notes              |
 |---------|--------------|-----------|--------------------|
-| Claude  | published    | published | Fable 5 flagship (`claude-fable-5`, GA 2026-06-09) + Opus 4.8/4.7 Active + Sonnet 4.6 + Haiku 4.5, as of 2026-06-10. Fable 5: always-on adaptive thinking, summarized-only thinking output, classifier refusals + fallback surface; adaptive-only thinking on 4.7/4.8; Opus 4 / Sonnet 4 retired 2026-06-15; Opus 4.1 deprecated (retires 2026-08-05); Mythos Preview retires 2026-07-21; frontier_llm now a visible refusal category |
+| Claude  | published    | published | Fable 5 flagship (`claude-fable-5`, GA 2026-06-09) + Opus 4.8/4.7 Active + Sonnet 5 (`claude-sonnet-5`, GA 2026-06-30, supersedes Sonnet 4.6) + Haiku 4.5, re-verified 2026-07-19 (whats-new-claude-4-7 page retired; citations re-anchored; Vertex structured outputs is Preview, not GA). Fable 5: always-on adaptive thinking, summarized-only thinking output, classifier refusals + fallback surface; adaptive-only thinking on 4.7/4.8; Opus 4 / Sonnet 4 retired 2026-06-15; Opus 4.1 deprecated (retires 2026-08-05); Mythos Preview retires 2026-07-21; frontier_llm now a visible refusal category |
 | OpenAI  | published    | published | GPT-5.5 flagship + 5.5-pro + 5.4 (cheaper tier) /mini/nano + 5.3-codex, as of 2026-06-01. Responses API primary; Assistants removed 2026-08-26 (→ Responses + Conversations); o*-deep-research IDs shut down 2026-07-23 |
 | Gemini  | published    | published | 3.5 Flash GA + 3.1 Flash-Lite GA + 3.1 Pro Preview, as of 2026-06-01. thinkingLevel replaces thinkingBudget on Gemini 3; 2.0 GA shut down 2026-06-01, 2.5 GA sunsets 2026-10-16 |
 | Gemma   | published    | published | Open weights, Apache 2.0. Gemma 4 E2B / E4B / 26B-A4B / 31B / 12B Unified (encoder-free multimodal, added 2026-06-03), re-verified 2026-07-19. 128K/256K context split; dedicated draft model on the four original sizes; audio on E-series + 12B Unified |
 | Llama   | published    | published | Open weights, Meta. Llama 4 Scout + Maverick, re-confirmed 2026-07-19. No Llama 5 released. Muse Spark (closed-weight Meta Model API, public preview 2026-07-09, Meta Superintelligence Labs) is NOT Llama and is out of scope |
-| Qwen    | published    | published | Qwen3.7-Max GA flagship + Qwen3.6-Plus (demoted GA) + open `qwen3.6-35b-a3b` MoE + dense `Qwen3.6-27B`, as of 2026-06-01 |
+| Qwen    | published    | published | Qwen3.7-Max GA flagship + Qwen3.6-Plus (demoted GA) + open `qwen3.6-35b-a3b` MoE + dense `Qwen3.6-27B`; Model Studio per-tier pricing, cache rates, and deprecation ledger re-verified 2026-07-19 |
 | Grok    | published    | published | OpenAI-compatible API. grok-4.5 flagship (500K context, reasoning_effort {low,medium,high} default high, `none` removed) supersedes grok-4.3 (1M context, {none,low,medium,high} default low, still live); grok-build-0.1 coding model. Flagship context REGRESSES vs prior gen (500K < 1M). Prior fast/4.x/3 slugs retired 2026-05-15, route to grok-4.3 (not 4.5), as of 2026-07-19 |
 | Mistral | published    | published | Open weights + native API. Mistral Medium 3.5 frontier + Small 4 hybrid, as of 2026-06-01. Unified binary reasoning_effort (high|none); Magistral → Legacy |
 | DeepSeek| published    | published | DeepSeek V4 (`deepseek-v4-flash` / `deepseek-v4-pro`), as of 2026-06-01. MIT, 1M ctx; legacy chat/reasoner retire 2026-07-24; V3.2-Speciale API expired 2025-12-15 |
