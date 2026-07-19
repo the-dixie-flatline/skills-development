@@ -181,14 +181,17 @@ Specific numeric defaults per model are not uniformly documented in the retrieve
 [source: developers.openai.com/api/docs/guides/latest-model, retrieved 2026-07-19]
 [source: developers.openai.com/api/docs/models/gpt-5.5, retrieved 2026-06-01]
 [source: developers.openai.com/api/docs/models/gpt-5.3-codex, retrieved 2026-06-01]
-[testable: id=openai.gpt56-default-effort-medium.v1, expected=request to gpt-5.6-sol with no reasoning field returns usage with output_tokens_details.reasoning_tokens > 0]
 
-- **GPT-5.6 adds `max` above `xhigh`** and "defaults to `medium` in both standard and pro modes."
+- **GPT-5.6 adds `max` above `xhigh`** and the vendor doc states it "defaults to `medium` in both standard and pro modes."
   [source: developers.openai.com/api/docs/guides/latest-model, retrieved 2026-07-19]
+  [testable: id=openai.gpt56-default-effort-medium.v1, expected=default effort behaves like medium on a reasoning-token count] Not behaviorally reproduced; checkpoint-dependent. Native reasoning-token measurement (`output_tokens_details.reasoning_tokens`, N=5/level, 2026-07-19, native OpenAI Responses API): on `gpt-5.6-sol` the default (≈328 tokens) sits closest to `high` (353), not `medium` (262), and `low` (263) ≈ `medium`; on `gpt-5.6-luna` the default (437) sits near `medium` (464, between `low` 334 and `high` 478). The two checkpoints disagree and both ladders are compressed, so reasoning-token counts cannot behaviorally verify "defaults to medium." Keep the vendor-doc statement as a Tier-1 claim, not a behaviorally-verified fact.
 
 - **[disputed: the effort enum differs across two live vendor pages]** `guides/latest-model` (model-specific): `none, low, medium, high, xhigh, max`. `guides/reasoning` (general): `none, minimal, low, medium, high, xhigh`. Two live vendor surfaces conflict; for GPT-5.6 author against the model-specific scale (`max`, no `minimal`). Do not silently pick one enum for all models.
   [source: developers.openai.com/api/docs/guides/latest-model, retrieved 2026-07-19]
   [source: developers.openai.com/api/docs/guides/reasoning, retrieved 2026-07-19]
+
+- **[verified: native probe corrects the live enum on `gpt-5.6-sol`]** The sol checkpoint's own API error message advertises supported values as `{none, low, medium, high, xhigh}`: `minimal` is rejected with HTTP 400 ("'minimal' is not supported with 'gpt-5.6-sol'. Supported values are: 'none', 'low', 'medium', 'high', and 'xhigh'."), while `max` is TOLERATED (HTTP 200) but does NOT appear in that advertised list — likely aliased/coerced. On sol, treat `max` as tolerated-but-unadvertised and do not send `minimal`. Verified 2026-07-19: native OpenAI Responses API.
+  [source: gpt-5.6-sol API error message, native OpenAI Responses API, retrieved 2026-07-19]
 
 Per-model effort defaults for `gpt-5.4`, `gpt-5.4-mini`, and `gpt-5.4-nano` were not re-verified in this pass; set `reasoning.effort` explicitly rather than relying on the implicit default.
 
@@ -211,7 +214,7 @@ Controls how much prior reasoning the model may draw on. Support is "model-depen
 
 - The response echoes the effective mode: "The response's `reasoning.context` field contains the effective mode, either `current_turn` or `all_turns`." Read the response value rather than assuming the request value took effect.
   [source: developers.openai.com/api/docs/guides/reasoning, retrieved 2026-07-19]
-- **[unverified]** `all_turns` requires replaying prior reasoning items (including any encrypted reasoning content) or supplying `previous_response_id`. This is consistent with the documented reasoning-preservation mechanics but was not re-quoted verbatim this pass; treat the exact replay requirement as inferred until confirmed.
+- **[partially verified]** `all_turns` requires replaying prior reasoning items (including any encrypted reasoning content) or supplying `previous_response_id`. Verified 2026-07-19 (native OpenAI Responses API): the `previous_response_id` path is confirmed — a 2-turn Responses chain with `previous_response_id` preserved the turn-1 reasoning item and correctly recalled a value withheld from turn 2. The manual replay path (carrying encrypted reasoning items forward without `previous_response_id`) was not exercised and remains unverified.
 
 ### Reasoning tokens
 
@@ -281,7 +284,7 @@ Hosted tools available on the current flagship: web search, file search, code in
 ### `tool_choice`
 
 String values (`"auto"`, `"none"`, `"required"`) or an object specifying a named function. Exact shape of the object variant was not quoted verbatim in the retrieved excerpt.
-[unverified] `tool_choice: "required"` forces the model to emit a tool call on every response; this is accepted on the Responses API but specific interactions with reasoning effort are not documented in the retrieved excerpts.
+[testable: id=openai.tool-choice-required-always-calls.v1, expected=tool_choice:"required" emits a tool call even when the prompt needs no tool] Verified 2026-07-19: `tool_choice: "required"` forced a tool call on every response to a no-tool-needed prompt ("What is 2+2?") at BOTH reasoning effort none and high (10/10 each, 20/20 total; via OpenRouter→OpenAI). No reasoning-effort exception was observed — high-effort reasoning did not route around "required".
 
 ### Strict function tools
 
@@ -452,7 +455,7 @@ There is no self-hosted path; "deployment" on OpenAI means choosing among endpoi
 - **WebSocket mode**: supported on Responses API; useful for long-running agentic sessions.
 - **Flex Processing**: 50% discount via Responses API for latency-insensitive work with full caching support.
 - **Batch**: 50% discount via `/v1/batch`; limited caching on pre-GPT-5 models.
-- **Server-side context management**: `context_management: [{type: "...", compact_threshold: N}]` configures server-side compaction (added 2026-02-10). [unverified] exact `type` enum values not quoted verbatim in the retrieved API-reference excerpt.
+- **Server-side context management**: `context_management: [{type: "...", compact_threshold: N}]` configures server-side compaction (added 2026-02-10). The exact `type` enum values were not quoted verbatim in the retrieved API-reference excerpt, and native probing rules out the previously-guessed values. Verified 2026-07-19 (native OpenAI Responses API): `context_management` type `"compact"` and type `"summarize"` are both REJECTED with HTTP 400 ("Unsupported context_management type: 'compact'" / "'summarize'"), and a top-level `phase` field on the request is REJECTED with HTTP 400 ("Unknown parameter: 'phase'"). Do not assert these values — the correct `type` enum (if any), `compact_threshold` scope, and any top-level `phase` usage remain unknown.
 
 ### Deep Research
 

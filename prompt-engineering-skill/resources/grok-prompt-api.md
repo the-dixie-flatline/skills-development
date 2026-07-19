@@ -106,6 +106,7 @@ The accepted value set and default differ by generation. Split any wrapper mappi
 [source: https://docs.x.ai/developers/model-capabilities/text/reasoning, retrieved 2026-07-19]
 [testable: id=grok.reasoning-effort-none-disables.v1, expected=grok-4.3 with reasoning_effort="none" returns no reasoning content / zero reasoning tokens] [applies-to: grok-4.3]
 [testable: id=grok.reasoning-effort-none-rejected-45.v1, expected=grok-4.5 with reasoning_effort="none" returns an error] [applies-to: grok-4.5]
+Verified 2026-07-19: grok-4.3 with `reasoning_effort="none"` returned 0 reasoning tokens and no reasoning content (3/3, native xAI API); grok-4.5 with `reasoning_effort="none"` returned HTTP 400 `"This model does not support reasoning_effort value 'none'."` (3/3, native xAI API). The accept-vs-reject divergence is confirmed on both halves.
 
 Per-value effect (both models): `low` = least effort / lowest latency (grok-4.5 floor); `medium` = more deliberation; `high` = maximum reasoning effort (grok-4.5 default). Only grok-4.3 has `none` (no reasoning; lowest latency).
 
@@ -188,6 +189,7 @@ Enabled by default. Disable with `"parallel_tool_calls": false` to force sequent
 Function calls are **not streamed progressively** — the call arrives whole in a single SSE chunk. Accumulating SSE deltas as if they were free-form text will misparse tool calls. Handle event types explicitly.
 [source: docs.x.ai/docs/guides/function-calling, retrieved 2026-04-19]
 [testable: id=grok.function-call-whole-chunk-streaming.v1, expected=SSE stream for a response with a tool call emits the tool call in one complete chunk rather than streaming arguments incrementally]
+Verified 2026-07-19: streaming a tool call, the arguments arrived in one SSE delta chunk (`arg_fragment_chunks=1`), not fragmented across many deltas (3/3, native xAI API). Reassembly of fragmented tool-call arguments is unnecessary for Grok, but harmless.
 
 ### Built-in tools
 
@@ -203,7 +205,7 @@ Parameter shapes for the built-in tools beyond the type name were not captured i
 
 Structured Outputs are supported on current Grok models (per the release notes). Exact parameter shape (field name, schema constraints, strict-mode semantics) was not captured in this retrieval pass — see §10 (Gaps). Community practice aligns with OpenAI's `response_format` / `text.format` shape given the OpenAI-compatible API, but this has not been verified verbatim against Grok's primary docs.
 [source: docs.x.ai/developers/release-notes, retrieved 2026-04-19]
-[unverified] `response_format: {"type": "json_schema", ...}` is accepted on current Grok reasoning variants identically to OpenAI Chat Completions.
+Verified 2026-07-19: `response_format: {"type": "json_schema", strict}` was accepted (200) and produced conformant output on grok-4.3 (3/3, native xAI API), confirming json_schema parity with OpenAI Chat Completions.
 
 ## 7. Caching, Batch, Streaming
 

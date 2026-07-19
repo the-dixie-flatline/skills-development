@@ -116,6 +116,8 @@ Control reasoning via `thinking: {"type": ...}`:
 - **M3 default**: thinking is **OFF** when `thinking` is omitted.
 - **M2.x**: thinking **cannot be disabled**; `disabled` is accepted but ignored, and thinking stays on.
 
+**OpenRouter-route carve-out.** The "omit `thinking` → no reasoning" default is a native-surface (Anthropic-shaped MiniMax API) fact. Verified 2026-07-19: through OpenRouter's unified `reasoning` surface, MiniMax-M3 defaulted reasoning **ON** even with the `reasoning` parameter **omitted** (3/3 reasoning present, DeepInfra). OpenRouter maps the omitted case onto M3's native `thinking:{"type":"adaptive"}`, so callers on the router path must send an explicit off signal to suppress reasoning; the omit-and-get-no-reasoning contract holds only on the native surface.
+
 ```python
 # M3: opt in to reasoning (off by default)
 resp = client.messages.create(

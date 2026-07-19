@@ -208,9 +208,10 @@ Support for individual sampling parameters varies by inference stack. The Qwen t
 
 ### Greedy decoding
 
-Pure greedy decoding (`temperature=0` or equivalent) is a documented failure mode: the model falls into repetition loops. Always sample.
+Pure greedy decoding (`temperature=0` or equivalent) is a documented repetition-loop failure mode on older Qwen generations. Treat it as a serving-stack- and version-dependent caution rather than a flat rule: prefer sampling by default, but validate the behavior against the specific model and inference stack before assuming loops.
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 [testable: id=qwen.greedy-repetition.v1, expected=temperature=0 top_p=1.0 top_k=1 on a non-trivial prompt yields repeating n-grams within the first 512 output tokens]
+Verified 2026-07-19: not reproduced on qwen3.6-35b-a3b — 0 repeated-4-gram loops in 20 runs at temperature 0 (via OpenRouter/Parasail), replicated 0/15. qwen3.6-35b-a3b is a newer Qwen than the anti-pattern's origin; the loop pathology may be older-generation. Other providers (DeepInfra/Novita) were rate-limited and left unmeasured, so OpenRouter callers on other serving stacks should still verify.
 
 ## 4. Reasoning / Thinking Control
 
@@ -340,8 +341,8 @@ bot = Assistant(llm=llm_cfg, function_list=tools)
 
 ### Parallel tool calls
 
-Parallel tool-call behavior in Qwen3.6 is not explicitly documented in the retrieved primary sources. Treat parallelism as unverified until confirmed against current docs.
-[unverified] Qwen3.6 supports emitting multiple `<tool_call>` blocks in a single assistant turn.
+Parallel tool-call behavior in Qwen3.6 is not explicitly documented in the retrieved primary sources.
+Verified 2026-07-19: qwen3.6-35b-a3b emitted multiple `tool_calls` in a single assistant turn (5/5, two calls per turn, via OpenRouter/Parasail). Multiple `<tool_call>` blocks per turn is observed-true at the API layer; tool-orchestration code must handle multi-entry `tool_calls`.
 
 ## 6. Structured Outputs
 

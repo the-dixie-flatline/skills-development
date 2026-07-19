@@ -96,6 +96,7 @@ No canonical chat template, special tokens, or tokenizer config is published for
 K3 always reasons and may return a separate `reasoning_content` field alongside `content`. Reasoning depth is governed by the top-level `reasoning_effort` parameter (API detail in `kimi-prompt-api.md`), which currently accepts only `max`; the vendor states more reasoning-effort levels are "coming soon."
 [source: platform.kimi.ai/docs/guide/use-thinking-effort, retrieved 2026-07-19]
 [source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
+Verified 2026-07-19: kimi-k3 with `reasoning_effort` omitted returned non-empty reasoning content even on a trivial prompt ("What is 2+2? one word") — 5/5 reasoning present (23–75 reasoning tokens, via OpenRouter/Moonshot). Confirms K3 reasons on every request; there is no non-thinking variant.
 
 Because reasoning is unconditional, do not prompt for explicit step-by-step chain-of-thought as a way to "turn on" deliberation; the model already reasons internally and surfaces it in `reasoning_content`. Prompts that demand the model print its scratch reasoning into `content` fight the model's own separation of `reasoning_content` from `content`.
 

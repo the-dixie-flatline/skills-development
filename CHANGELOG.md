@@ -12,6 +12,90 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.6.0 — 2026-07-19
+
+First live-model verification pass. The family references through 0.5.0 were authored
+largely from vendor documentation with little or no live testing; this release promotes,
+corrects, scopes, or adds behavioral claims based on ~40 pre-registered tests run against
+public model APIs — OpenRouter for hosted chat-completions, plus native xAI and OpenAI
+endpoints for surfaces OpenRouter cannot reach. All fixtures synthetic; every finding is a
+public-model-behavior observation (reproducible by anyone with API access, no business
+context). `SKILL.md` bumped to `0.6.0`; contract-version unchanged (2026-04-18). No
+structural change — same routing, same file set, same models; this is research and testing
+on what was already covered.
+
+Provenance discipline: each verified claim is labeled with its route ("via
+OpenRouter→Anthropic", "native xAI API", …), N, and threshold. A passing statistical test
+promotes a claim to a version-scoped `[testable]`-backed statement with the stated N — not
+to a Tier-1 vendor fact. Nulls, non-reproductions, and serving-stack dependence are recorded
+rather than dropped.
+
+### Claude — CHANGED (`claude-prompt.md`, `claude-prompt-api.md`)
+
+- **Placeholder collision is tooling-side only.** Bare angle-bracket placeholder tokens are
+  treated as literal fill-in by Fable 5 / Opus 4.8 / Sonnet 5 (3/3 each) — correct
+  substitution, no spurious closing tag. The hedge "plausibly, to the model's own tag
+  parser" is dropped; the collision is a linter/validator concern, not a model defect.
+- **Literalism broadened** from Opus 4.7 to Opus 4.8, Sonnet 5, and Fable 5 (5/5 literal per
+  tier): current tiers apply a per-item instruction only to the named item.
+- **Recall-suppression broadened** to Sonnet 5 (~23 pp) and Opus 4.8 (~22 pp); Opus 4.7
+  control ~18 pp (just under the 20 pp margin); high-severity recall unaffected.
+- **Emphasis anti-pattern refined and tier-mapped** (the open `narrative-caps-overtrigger`
+  testable). On Fable 5 both emphatic formatting (15%→50%) and urgent-imperative wording
+  (→95%) raise spurious tool invocation, wording dominant and saturating — un-capitalizing
+  does not mitigate. Sonnet 5 over-fires the optional tool 100% regardless of emphasis;
+  Opus 4.7/4.8 immune. Supersedes the earlier "not yet confirmed" note.
+- **Framing-extension tendency bounded**: on crisp single-step arithmetic flaws Fable 5 (and
+  Opus 4.8, Sonnet 5) challenged rather than extended; the risk concentrates in subtler flaws.
+- **NEW `[field-observed]` — `cyber` refusal over-fires and is Fable-specific.** Fable 5
+  refused vulnerable-code review 10/10 while Sonnet 5 / Opus 4.8 / Opus 4.7 did not (0/10);
+  on ops runbooks it is phrasing-fragile and run-variable, and authorized-sysadmin framing
+  raised rather than lowered it. Budget the fallback path for security/ops automation.
+- **Prefill last-turn rejection confirmed** on Opus 4.8 and the not-enumerated Sonnet 5
+  (3/3 each, verbatim error), plus the works-elsewhere half.
+
+### OpenAI — CHANGED (`openai-prompt-api.md`, `openai-prompt.md`, `openai-compatibility-surface.md`)
+
+- `tool_choice: "required"` promoted from `[unverified]` to a confirmed guarantee (20/20,
+  both none and high effort).
+- "Defaults to medium effort" marked not-behaviorally-reproduced / checkpoint-dependent
+  (default ≈ high on gpt-5.6-sol but ≈ medium on gpt-5.6-luna; both ladders compressed).
+- Effort enum corrected: sol advertises {none, low, medium, high, xhigh}; `minimal` rejected,
+  `max` tolerated-but-unadvertised. Guessed Responses `context_management` types and a
+  top-level `phase` field are all rejected (400).
+- Reasoning-item preservation via `previous_response_id` verified; manual `all_turns` replay
+  left unverified.
+- Developer-role precedence promoted to a real hierarchy: beats a conflicting system
+  instruction 10/10 both directions (distinct from system) and a conflicting user
+  instruction 20/20.
+- Compatibility surface: NEW `[field-observed]` OpenRouter refusal normalization
+  (`stop_reason: refusal` → `finish_reason: content_filter`, $0 billed, N=105); the
+  community-reported MiniMax router-400 softened to not-reproduced; a carve-out that
+  top-level `reasoning.effort` steers OR-hosted gpt-oss-120b (7.24×) despite the
+  raw-passthrough no-op.
+
+### DeepSeek / Gemini / Grok / Qwen / Mistral / GLM / Kimi / MiniMax — CHANGED
+
+- **DeepSeek**: parallel-tool-call default confirmed (disable flag native-only); **penalty
+  params reframed from blanket "no effect" to serving-stack-dependent** — inert on
+  Fireworks/Novita, effective on Parasail (a Tier-1 correction for OpenRouter callers);
+  tool-turn reasoning-omission 400 scoped native-only (the router tolerates stripping).
+- **Gemini**: `minLength` is enforced, not silently ignored, on gemini-3-flash-preview;
+  flash-lite minimal-thinking default backed (zero reasoning tokens by default).
+- **Grok**: reasoning_effort="none" disables on grok-4.3 / rejects on grok-4.5, whole-chunk
+  tool-call streaming, and json_schema parity all promoted (native xAI).
+- **Qwen**: multiple tool_calls per turn promoted; greedy-repetition anti-pattern softened to
+  serving-stack/version-dependent (not reproduced on qwen3.6); thinking-on-by-default backed.
+- **Mistral / GLM / Kimi / MiniMax**: reasoning-effort high/none toggle, clean tool-call JSON
+  (no XML leakage), K3 always-on reasoning promoted to test-backed; MiniMax M3 gains an
+  OpenRouter carve-out (unified surface defaults reasoning on when omitted).
+
+### Recorded as open (surfaces the harness could not reach)
+
+Gemini Deep Research (the largest untested surface), Claude native thinking/sampling
+contracts, OpenAI Responses `all_turns` / correct `context_management` shapes, Llama (no
+route), and the MiniMax/DeepSeek native-400 contracts remain unverified and are queued.
+
 ## prompt-engineering-skill 0.5.0 — 2026-07-19
 
 Round-3 wrap-up: a new open-weight family lane, an OpenAI generational bump, and a

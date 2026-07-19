@@ -218,7 +218,8 @@ Valid values and defaults:
 | `gemini-3.1-flash-lite`     | `minimal`                | Does not think by default; raise level for reasoning tasks                  |
 
 [source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
-[testable: id=gemini.flash-lite-thinking-default-minimal.v1, expected=request to gemini-3.1-flash-lite with no thinkingConfig produces response with thoughtsTokenCount near zero]
+Verified 2026-07-19: on gemini-3.1-flash-lite the default is effectively zero, not merely low. With no `thinkingConfig` the model emitted **zero** reasoning tokens (5/5); `reasoning:{effort:high}` emitted 295-463 on the same route, so the field is surfaced and the zero default is real, not a reporting gap (via Google AI Studio). "Minimal thinking by default" holds at the floor: dynamic thinking is off by default here.
+[testable: id=gemini.flash-lite-thinking-default-minimal.v1, expected=request to gemini-3.1-flash-lite with no thinkingConfig produces zero reasoning tokens; effort:high produces non-zero (295-463 observed 2026-07-19)]
 
 ### `thinkingBudget` (Gemini 2.5)
 
@@ -473,9 +474,11 @@ The Python and JavaScript SDKs also accept `responseJsonSchema` as an alternativ
 
 Supported: `string`, `number`, `integer`, `boolean`, `object`, `array`, `null`; `title`, `description`, `enum`, `format` (`date-time`, `date`, `time`) on strings; `minimum`, `maximum` on numbers/integers; `properties`, `required`, `additionalProperties` on objects; `items`, `prefixItems`, `minItems`, `maxItems` on arrays.
 
-**Unsupported constructs are silently ignored** (not rejected). Examples: `minLength`, `maxLength`, complex `pattern` regex, `multipleOf`, recursive schemas, external `$ref` URLs.
+**Some constructs outside the documented subset are silently ignored** (not rejected). Examples: complex `pattern` regex, `multipleOf`, recursive schemas, external `$ref` URLs.
 [source: ai.google.dev/gemini-api/docs/structured-output, retrieved 2026-04-18]
-[testable: id=gemini.unsupported-schema-silent.v1, expected=schema with minLength constraint returns response that may violate the constraint; no 400 error]
+
+Do not generalize "silently ignored" to every out-of-subset keyword. Verified 2026-07-19: `minLength` is **enforced**, not silently ignored, on gemini-3-flash-preview. A `response_format` json_schema string field constrained `minLength:50` returned values >=50 chars on 3/3 (the model padded/expanded a bare `"ok"` to satisfy it), while a control schema without `minLength` returned bare `"ok"` (2 chars); a `require_parameters:true` re-probe was unchanged, so this is vendor-stack enforcement, not OpenRouter-side stripping (via Google AI Studio). Treat length constraints as potentially enforced on current Gemini 3 models; validate conformance yourself only for the genuinely-unsupported keywords listed above.
+[testable: id=gemini.unsupported-schema-silent.v1, expected=on gemini-3-flash-preview a schema with minLength:50 returns strings >=50 chars (constraint enforced); a genuinely-unsupported keyword such as multipleOf is ignored with no 400 error]
 
 ### Model support
 

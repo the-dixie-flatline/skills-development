@@ -39,10 +39,13 @@ maturity_note: |
   changed, so the retrieval date is unchanged. A 2026-07-19 pass added MiniMax,
   GLM, and Kimi provider sections and split the Grok reasoning-control line by
   generation (grok-4.5 vs grok-4.3); a 2026-07-19 pass also added a self-hosted
-  gpt-oss / gpt-oss-safeguard section (Harmony reasoning-effort divergence);
-  those additions carry their own dated sources, so the file-level `retrieved:`
-  (which represents the 2026-06-01 sweep of the original seven providers) is
-  unchanged.
+  gpt-oss / gpt-oss-safeguard section (Harmony reasoning-effort divergence).
+  A later 2026-07-19 live-test pass added `[field-observed]` router notes
+  (OpenRouter refusal normalization; an OR-hosted gpt-oss effort-steering
+  carve-out to the Harmony no-op; the MiniMax reasoning-omission 400
+  non-reproduction). All of these additions carry their own dated sources, so
+  the file-level `retrieved:` (which represents the 2026-06-01 sweep of the
+  original seven providers) is unchanged.
 ---
 
 # OpenAI Compatibility Surface — Cross-Family Reference
@@ -309,9 +312,13 @@ routing index only.
 - **Cache field:** `usage.prompt_tokens_details.cached_tokens` (OpenAI path);
   the Anthropic path reports `usage.cache_read_input_tokens` /
   `usage.cache_creation_input_tokens` instead.
-- **Router divergence (Tier 2):** OpenRouter returns a hard 400 when reasoning
-  content is missing on a round-trip; the first-party MiniMax consequence of
-  omitting it is reasoning-chain degradation, not a 400. [community-reported]
+- **Router divergence (Tier 2 — not reproduced):** A `[community-reported]` claim
+  held that OpenRouter returns a hard 400 when reasoning content is missing on a
+  round-trip. This did NOT reproduce: MiniMax-M3 via OpenRouter (DeepInfra),
+  replaying an assistant turn with reasoning stripped, returned HTTP 200 (3/3),
+  not 400 [field-observed, 2026-07-19]. The first-party MiniMax consequence of
+  omitting reasoning is reasoning-chain degradation, not a 400; that native
+  contrast remains native-only (not exercised through OpenRouter this pass).
 
 ---
 
@@ -397,12 +404,19 @@ one divergence worth calling out here; the full family contract (Harmony format,
 policy-as-prompt discipline) lives in `resources/gpt-oss-prompt-api.md`.
 
 - **Base URL:** server-defined (whatever host you run — vLLM, Ollama, or LM Studio).
-- **Reasoning control is NOT a top-level field.** Reasoning effort is a Harmony
-  system-message directive (`Reasoning: low|medium|high`, default medium), not a
-  top-level `reasoning.effort` / `reasoning_effort` request parameter. An OpenAI-style
-  client that sets a top-level effort param will not steer the model — the setting has
-  to be rendered into the Harmony system message, which the serving stack handles when
-  it applies the model's chat template.
+- **Reasoning control is NOT a top-level field (raw passthrough).** Reasoning effort is a
+  Harmony system-message directive (`Reasoning: low|medium|high`, default medium), not a
+  top-level `reasoning.effort` / `reasoning_effort` request parameter. On a raw passthrough
+  server an OpenAI-style client that sets a top-level effort param will not steer the model —
+  the setting has to be rendered into the Harmony system message, which the serving stack
+  handles when it applies the model's chat template.
+  - **OpenRouter-hosted carve-out:** top-level `reasoning.effort` DOES steer OR-hosted
+    `gpt-oss-120b` — `effort=high` vs `effort=low` gave mean 811 vs 112 reasoning tokens
+    (7.24×, non-overlapping 95% CIs, N=20/arm, provider-pinned DeepInfra). The OpenRouter
+    provider wrapper translates the effort field into the Harmony directive server-side, so
+    the no-op holds only for the raw-passthrough case, not this route. May not generalize
+    across gpt-oss deployments (single pinned provider).
+    [field-observed, N=20/arm, 2026-07-19, via OpenRouter (DeepInfra)]
 - **Harmony rendering is mandatory.** The model requires Harmony-format rendering to
   work correctly; a raw non-Harmony prompt misbehaves. The OpenAI-shaped wrapper is a
   transport convenience over a model whose native contract is Harmony, not the GPT-5.x
@@ -413,6 +427,18 @@ policy-as-prompt discipline) lives in `resources/gpt-oss-prompt-api.md`.
   LM Studio.
 
 ---
+
+## OpenRouter response normalization (field-observed)
+
+OpenRouter rewrites some upstream response fields into its OpenAI-shaped envelope, so the
+finish/stop semantics a caller sees are the router's, not always the upstream provider's.
+Observed for an Anthropic-family model routed through OpenRouter: an Anthropic
+`stop_reason: "refusal"` is normalized to `finish_reason: "content_filter"` with
+`native_finish_reason: "refusal"` and a populated `message.refusal` field; refusal
+completions bill $0. Code that branches on `finish_reason` should treat `content_filter`
+plus a `native_finish_reason: "refusal"` / `message.refusal` as the refusal signal on this
+route.
+[field-observed, N=105, 2026-07-19]
 
 ## Gaps / do-not-assert
 

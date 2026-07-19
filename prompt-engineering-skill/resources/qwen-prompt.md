@@ -151,6 +151,7 @@ Placement rules that matter in the prompt:
 - **Thinking on by default.** With no parameters set, Qwen3.6 emits a `<think>` block before the response. Callers expecting a terse response without thinking must explicitly disable it at the API layer.
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]
 [testable: id=qwen.thinking-on-by-default.v1, expected=generation from a user-only prompt produces a <think>...</think> block]
+Verified 2026-07-19: qwen3.6-35b-a3b on a user-only prompt with no reasoning param produced reasoning by default (5/5 reasoning present, 244–528 reasoning tokens, via OpenRouter/Parasail). Fidelity note: OpenRouter parses Qwen's `<think>` into the `reasoning` field, so this confirms reasoning-present-by-default at the API layer; the literal `<think>...</think>` tag emission is a local chat-template fact not exercised on this route.
 
 - **Greedy decoding is a documented failure mode.** Temperature 0 / pure argmax decoding produces repetition loops. This is called out explicitly in the model card.
 [source: huggingface.co/Qwen/Qwen3.6-35B-A3B, model card, retrieved 2026-04-18]

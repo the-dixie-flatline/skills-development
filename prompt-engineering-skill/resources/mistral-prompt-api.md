@@ -176,6 +176,7 @@ Adjustable reasoning is available on `mistral-medium-3-5` and `mistral-small-lat
 [source: docs.mistral.ai/api/endpoint/chat, retrieved 2026-06-01]
 [source: docs.mistral.ai/studio-api/conversations/reasoning/adjustable, retrieved 2026-06-01]
 [testable: id=mistral.reasoning-effort-high-emits-thinking.v1, expected=request with reasoning_effort="high" returns a thinking chunk before the answer; reasoning_effort="none" returns an answer with the thinking chunk omitted]
+Verified 2026-07-19: mistral-medium-3-5 with `reasoning_effort`/`reasoning.effort` `"high"` returned a reasoning trace (3/3, ~3.4k reasoning tokens); `"none"` returned no reasoning trace (3/3, 0 tokens). Via OpenRouter to Mistral first-party. The binary high/none reasoning toggle is confirmed.
 
 ### Magistral reasoning (Legacy)
 

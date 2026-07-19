@@ -117,6 +117,8 @@ Tool calls are emitted in an XML-shaped format at the template level, not as an 
 Each argument is a `<arg_key>`/`<arg_value>` pair; multiple pairs stack inside one `<tool_call>` block.
 [source: huggingface.co/zai-org/GLM-5.2/blob/main/chat_template.jinja, retrieved 2026-07-19]
 
+Verified 2026-07-19: the hosted API translates this XML-shaped template into clean OpenAI-style tool calls. GLM-5.2 (Z.AI first-party) returned well-formed `message.tool_calls` with parseable JSON arguments and zero `<tool_call>`/`<arg_key>`/`<arg_value>` substrings leaking into `message.content` (20/20). Callers on the hosted API parse `tool_calls` normally and do not need an XML-fallback path.
+
 ## 3. Sampling Parameters
 
 Vendor production recommendation:
@@ -197,6 +199,7 @@ Parallel tool calls are **not documented** on the first-party API. The streaming
 ## 6. Structured Outputs
 
 A dedicated JSON-schema / grammar-constrained structured-output parameter is not documented in the retrieved primary sources for this pass. Use function calling with an explicit schema as the structured-extraction path. See Gaps.
+Verified 2026-07-19: this recommendation stands with no XML-fallback caveat needed — hosted GLM-5.2 (Z.AI first-party) tool calls arrive as clean JSON `tool_calls`, no XML leakage into `content` (20/20). See §2 tool-call wire format.
 
 ## 7. Caching, Batch, Streaming
 

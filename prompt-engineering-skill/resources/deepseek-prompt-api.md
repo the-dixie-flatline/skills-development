@@ -132,8 +132,9 @@ Roles: `user`, `assistant`, `tool`. OpenAI-compatible otherwise.
 
 ## 3. Sampling Parameters
 
-- `frequency_penalty` and `presence_penalty` are **hard-deprecated** — they have no effect.
+- `frequency_penalty` and `presence_penalty` are documented as **hard-deprecated** — no effect.
 [source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
+  Verified 2026-07-19: through OpenRouter this is **serving-stack-dependent**, not a universal no-op. On a repetition-inducing fixture (40 short testimonials, temperature 0.7, thinking off; metric = mean max repeated 4-gram, N=20/arm) max penalty (freq=2.0, pres=2.0) was inert on Fireworks (no-penalty 2.55 vs max-penalty 2.60) and Novita (2.80 vs 2.67) but measurably reduced repetition on Parasail (2.13 vs 1.00) (via OpenRouter). Do not state a blanket "no effect" for OpenRouter callers — whether the penalties do anything depends on the routed provider.
 
 For the V4 open weights, DeepSeek recommends local sampling of temperature=1.0, top_p=1.0.
 [source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
@@ -185,7 +186,9 @@ Thinking responses carry `reasoning_content` at the same level as `content` (thi
 On V4 the round-trip behavior depends on whether the turn performs tool calls:
 
 - On turns that do **not** perform tool calls, passing `reasoning_content` back in `messages` is **ignored** (no error).
-- On turns that **do** perform tool calls, `reasoning_content` **must** be passed back or the API returns **HTTP 400**.
+- On turns that **do** perform tool calls, DeepSeek's native contract is that `reasoning_content` **must** be passed back or the API returns **HTTP 400**. This is a **native-only** (`api.deepseek.com`) assertion — see the OpenRouter caveat below.
+
+Verified 2026-07-19: the hard-400 did NOT reproduce via OpenRouter (DeepInfra). A tool-call turn resubmitted with `reasoning_content` / `reasoning_details` **stripped** returned HTTP 200 (2/2); the intact resubmit also 200; a non-tool stripped turn 200 (via OpenRouter/DeepInfra). OpenRouter manages reasoning as `reasoning_details` and tolerates its absence, so code that strips reasoning on tool-turn resubmit does not break the V4 loop on this route. The first-party OpenRouter `deepseek` endpoint could not be pinned to re-test the native contract (404, provider not available at the test account), so the HTTP 400 assertion is verified only against DeepSeek's own docs, not directly re-observed.
 
 ```python
 # Tool-call turn: reasoning_content REQUIRED on round-trip or HTTP 400
@@ -204,7 +207,7 @@ This inverts the legacy `deepseek-reasoner` behavior, where **any** `reasoning_c
 [source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
 [source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-06-01]
 [source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
-[testable: id=deepseek.reasoning-content-roundtrip-tool-turn.v2, expected=on V4 a tool-call turn omitting prior reasoning_content returns HTTP 400; a non-tool-call turn including it is accepted]
+[testable: id=deepseek.reasoning-content-roundtrip-tool-turn.v2, expected=on native api.deepseek.com a V4 tool-call turn omitting prior reasoning_content returns HTTP 400; a non-tool-call turn including it is accepted. Native-only: verified 2026-07-19 the 400 does not reproduce via OpenRouter/DeepInfra (stripped tool-turn 200, 2/2)]
 
 ### `max_tokens` includes CoT
 
@@ -316,7 +319,7 @@ Append a `tool` role message with `tool_call_id`:
 
 - **Max tools per request** — not quoted in the retrieved primary excerpt (earlier search results suggested up to 128; not verified).
 - **`tool_choice` values** — not quoted.
-- **Parallel tool-call default / disable flag** — not quoted.
+- **Parallel tool-call default** — Verified 2026-07-19: default is parallel. Given two independent tools ("weather and time in Paris?"), deepseek-v4-flash emitted 2 `tool_calls` in one assistant turn with no param set (3/3, via OpenRouter/DeepInfra); tool-orchestration code must handle a multi-entry `tool_calls` array. The `parallel_tool_calls:false` **disable flag** remains unverified/native-only — no OpenRouter provider for this slug advertises the parameter in `supported_parameters`.
 
 See §10.
 
@@ -383,10 +386,11 @@ On V4, `reasoning_content` is ignored on non-tool-call turns but **required** (o
 [source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
 [source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
 
-### `frequency_penalty` / `presence_penalty` hard-deprecated
+### `frequency_penalty` / `presence_penalty` hard-deprecated (native); serving-stack-dependent via OpenRouter
 
-`frequency_penalty` and `presence_penalty` have no effect.
+`frequency_penalty` and `presence_penalty` are documented as having no effect on the native API.
 [source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
+Verified 2026-07-19: for OpenRouter callers this is not universal — inert on Fireworks and Novita but effective on Parasail (max penalty cut mean max repeated 4-gram 2.13 to 1.00, N=20/arm, via OpenRouter). Full per-provider numbers in §3.
 
 ### V3.2-Speciale API endpoint expired
 
@@ -411,7 +415,7 @@ V3.2 introduced a revised chat template with new tool-calling format and the "th
 - **Knowledge cutoff dates** for any V3.x or V4 model are not documented in primary sources.
 - **Maximum tools per request** is not quoted in the retrieved function-calling primary excerpt.
 - **`tool_choice` values** (`auto`, `required`, `none`, named-function form) are not quoted.
-- **Parallel tool-call default** and disable flag are not quoted.
+- **Parallel tool-call default** — confirmed parallel-by-default (2 `tool_calls` in one turn, 3/3, Verified 2026-07-19 via OpenRouter/DeepInfra; see §5). The `parallel_tool_calls:false` **disable flag** stays open (native-only — not advertised by any OpenRouter provider for this slug).
 - **Dedicated `response_format: {"type": "json_schema", ...}` parameter** — a path independent of function calling — is not documented in retrieved sources.
 - **Streaming event-type enumeration** on `reasoning_content` vs `content` deltas is not quoted.
 - **vLLM / SGLang minimum versions** supporting the V4 chat-encoding helper are not quoted.

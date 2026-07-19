@@ -165,6 +165,7 @@ Setting `reasoning.summary: "auto"` returns a summary of the model's internal re
 
 When both a `system`/`developer` message and a `user` message are present in `input`, the `system` / `developer` content takes precedence. Use `developer` role for constraints that must survive user override attempts; use `user` for the task itself.
 [source: developers.openai.com/api/docs/api-reference/responses/create, retrieved 2026-04-18]
+[testable: id=openai.developer-role-precedence.v1, expected=a developer-role instruction overrides a directly conflicting user instruction] Verified 2026-07-19: this is a real role hierarchy, not best-effort. A `developer`-role instruction beat a directly conflicting `system`-role instruction 10/10 in BOTH directions — `developer` is distinct from `system` and outranks it (native OpenAI Chat Completions) — and beat a directly conflicting `user` instruction 20/20 (via OpenRouter→OpenAI, gpt-5.6-terra). Treat developer-role constraints as strong-precedence over both system and user content, suitable for instructions that must resist prompt injection.
 
 ## 4. Context Window Practical Guidance
 
