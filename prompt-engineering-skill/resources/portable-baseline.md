@@ -1,7 +1,7 @@
 ---
 family: cross-family
 scope: portable-baseline
-families: [anthropic, openai, gemini, llama, qwen, gemma]
+families: [anthropic, openai, gemini, llama, qwen, gemma, mistral, deepseek]
 retrieved: 2026-07-19
 primary_sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
@@ -11,6 +11,8 @@ primary_sources:
   - https://ai.google.dev/gemini-api/docs/prompting-strategies
   - https://developer.meta.com/ai/docs/model-cards-and-prompt-formats/llama4/
   - https://huggingface.co/Qwen/Qwen3-32B
+  - https://docs.mistral.ai/capabilities/completion/prompting_capabilities
+  - https://api-docs.deepseek.com/prompt-library/
   - https://docs.litellm.ai/docs/completion/prompt_formatting
   - https://docs.litellm.ai/docs/completion/input
   - https://openrouter.ai/docs/guides/features/plugins/response-healing
@@ -71,6 +73,13 @@ All three vendors require explicit structural delimiters for complex prompts. Th
 ### Explicit output contract
 
 State the output format explicitly in its own section rather than implying it: Google's published templates carry a dedicated `# Output format` / `<task>` constraint section, and Anthropic documents examples as the most reliable output-format steering mechanism. [sources: ai.google.dev/gemini-api/docs/prompting-strategies; platform.claude.com claude-prompting-best-practices; both retrieved 2026-07-19] For a portable prompt this is load-bearing beyond quality: a schema stated in the prompt is the only output constraint that survives crossing families, because structured-output API mechanisms (JSON mode, grammar constraints, schema fields) are family-specific and do not port.
+
+### Alignment beyond the big three
+
+Checked 2026-07-19 against the two remaining families with native prompting surfaces:
+
+- **Mistral aligns**, with one structural divergence. Its prompting guide recommends Markdown and/or XML-style tags for sectioning ("Readable: Easy for humans to scan. Parsable: Simple to extract information programmatically"), demonstrates 2–4 few-shot examples per task, and strongly emphasizes explicit output contracts (enforced JSON formats; worded scales over numeric). The divergence: its few-shot examples are structured as alternating user/assistant *message pairs*, not in-prompt delimited blocks — a reminder that example *placement* (in-prompt vs in-history) is itself family-convention-dependent. It publishes no long-context placement guidance, and the page is undated. [source: docs.mistral.ai/capabilities/completion/prompting_capabilities, retrieved 2026-07-19]
+- **DeepSeek publishes no structural prompting guide.** Its official prompting surface is a use-case prompt library (code tasks, classification, JSON conversion, role-play, translation) with no delimiter, few-shot, or ordering guidance. A verified absence, not an unchecked gap: DeepSeek neither confirms nor contradicts the convergence. [source: api-docs.deepseek.com/prompt-library/, retrieved 2026-07-19]
 
 ## Reasoning-era corrections
 
@@ -138,7 +147,7 @@ When the target family has no reference in this skill, in order:
 - **Cross-family validity of every rule here.** No vendor documents cross-model claims; the skeleton is convergence synthesis over self-scoped Tier 1 guidance. It is the best-documented available default, not a guarantee for any specific family.
 - **Reasoning-toggle effect on format sensitivity.** No source in this file measures the same model's format sensitivity with thinking on vs off. The delayed-structure recovery (arxiv.org/abs/2606.09410) is a prompt-level ablation, not a reasoning-toggle comparison; whether enabling a family's thinking mode changes its format tax is unmeasured.
 - **Breadth of the capacity-dependence finding.** The capacity-dependent format-tax result rests on one study (4 models, 5 benchmarks, heavily Claude/OpenAI). Independent replication, and coverage of open-weights families, is absent as of 2026-07-19.
-- **Mistral and DeepSeek prompting guides.** Not verified into this file; their family references carry their guidance. Whether they align with the Anthropic/OpenAI/Google convergence on delimiters, few-shot, and context-last placement is unchecked.
+- **Long-context placement beyond the big three.** Mistral and DeepSeek publish no long-context ordering guidance (checked 2026-07-19; see Alignment beyond the big three), so the context-first/task-last rule rests on the Anthropic/Google/OpenAI convergence alone.
 - **Router-layer prompt-content guidance.** Router vendors document mechanism-layer normalization (parameter dropping, template mapping, output healing — see the gateway subsection), but no verified router-vendor documentation on prompt *content* authoring for heterogeneous targets exists in this file's sources. The content-side exclusion rules above remain built from per-family vendor documentation.
-- **Few-shot on current Gemini.** Google's "always include few-shot examples" and its Gemini 3 "may over-analyze verbose or overly complex prompt engineering techniques" caution are in unresolved tension as of 2026-07-19; this file carries both rather than reconciling them.
+- **Few-shot on current Gemini.** Google's "always include few-shot examples" and its Gemini 3 "may over-analyze verbose or overly complex prompt engineering techniques" caution remain in unresolved tension. Re-checked 2026-07-19 against the Gemini 3 Developer Guide (page updated 2026-07-07): it is silent on few-shot and does not reference the general prompting-strategies guidance. This file carries both positions rather than reconciling them.
 - **Instruction-first vs instruction-last for short prompts.** The context-first/task-last convergence is documented for long-context inputs. No vendor quantifies ordering effects for short prompts; the skeleton's ordering is applied there as an unverified default. [unverified]

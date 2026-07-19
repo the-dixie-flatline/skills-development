@@ -12,6 +12,38 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.8.1 — 2026-07-19
+
+Gap-closure research pass on `portable-baseline.md` plus documentation catch-up. All
+checks 2026-07-19 against live vendor pages. `SKILL.md` bumped to `0.8.1`;
+contract-version unchanged (2026-04-18).
+
+### Portable baseline — CHANGED (`portable-baseline.md`)
+
+- NEW "Alignment beyond the big three" subsection: **Mistral aligns** with the
+  three-vendor convergence (Markdown/XML-style sectioning, 2–4 few-shot examples,
+  enforced JSON output contracts) with one structural divergence — its few-shot examples
+  are alternating message *pairs*, not in-prompt delimited blocks; it publishes no
+  long-context placement guidance. **DeepSeek publishes no structural prompting guide**
+  (official surface is a use-case prompt library) — recorded as a verified absence.
+- Gaps updated: the Mistral/DeepSeek gap narrows to "no long-context ordering guidance
+  beyond the big three"; the Gemini few-shot tension re-checked against the Gemini 3
+  Developer Guide (updated 2026-07-07) — still silent on few-shot, still unreconciled.
+
+### Documentation — CHANGED (`README.md`, repo `TODO.md`)
+
+- README coverage statement was three releases stale ("At 0.1.0, nine families");
+  now defers to SKILL.md's authoritative table (thirteen families as of 0.8.x). Files
+  list and uncovered-family fallback now mention the portable-baseline lane.
+- README Known Limitations gains the portable-baseline confidence profile: synthesis
+  not vendor guarantee, single-study capacity finding, unmeasured reasoning-toggle
+  effect, router vendors document mechanisms not prompt content.
+- Repo `TODO.md`: tabled a browser-supervised web-UI testing design for the two
+  empirically-unclosable gaps (surface-scoped claims only; delayed-structure
+  replication as the strongest arm; deterministic scoring; supervised, modest N —
+  consumer surfaces lack a stable API). Pruned the stale `research-skill/` placeholder
+  entry (directory no longer exists).
+
 ## prompt-engineering-skill 0.8.0 — 2026-07-19
 
 New cross-family portable-baseline lane, closing the skill's dangling escalation path:

@@ -23,13 +23,13 @@ The split is deliberate. Someone writing a Gemini webui prompt loads only `gemin
 - `SKILL.md` — Routing layer. Describes when this skill applies and how to pick which resource to load.
 - `SCHEMA.md` — Normative schema for every reference file: front-matter shape, section order, source tiers, inline markers, required workflow.
 - `README.md` — This file.
-- `resources/` — Per-family reference files, named `{family}-prompt.md` and `{family}-prompt-api.md`, plus surface files (`*-surface.md`) covering product surfaces whose contract differs from the underlying model API.
+- `resources/` — Per-family reference files, named `{family}-prompt.md` and `{family}-prompt-api.md`, plus surface files (`*-surface.md`) covering product surfaces whose contract differs from the underlying model API, and `portable-baseline.md` — the cross-family structural baseline for prompts that must run across multiple families or target a family not covered here.
 
 ## Coverage
 
-At 0.1.0, nine families are covered: Claude, OpenAI (GPT-5.x / o-series), Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek. `SKILL.md` carries the authoritative coverage table and the "published" vs "planned" status of each family.
+`SKILL.md` carries the authoritative coverage table — thirteen families as of 0.8.x (Claude, OpenAI GPT-5.x / o-series, gpt-oss, Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek, GLM, Kimi, MiniMax) plus cross-family surface files — and the "published" vs "planned" status of each.
 
-A family listed as "planned" is an honest gap, not a placeholder. If the family you need has not been written, it has not been written. Additional families (Cohere Command, Kimi, Phi, Granite, Jamba, etc.) may be added in future releases; see `CHANGELOG.md` at the repository root for release history.
+A family listed as "planned" is an honest gap, not a placeholder. If the family you need has not been written, it has not been written; for uncovered families the `resources/portable-baseline.md` fallback provides a structural baseline with the gap declared. Additional families may be added in future releases; see `CHANGELOG.md` at the repository root for release history.
 
 ## Source Policy (summary)
 
@@ -56,6 +56,7 @@ Every non-trivial claim carries inline provenance and a retrieval date. Every fi
 - **No pre-current-generation coverage.** Retired model families (Claude 3.x, GPT-4.x, Gemini 2.x, Llama 2/3.x) are not covered except where migration guidance is warranted.
 - **Gemini Notebook is documentation-derived only.** The Gemini Notebook surface file is built entirely from Google's published documentation; no claim in it rests on first-party testing against the live product. Its retrieval date is three days after Google renamed the product from NotebookLM (2026-07-16), so naming and page structure are unusually volatile. Its enterprise API section is deliberately shallow because that API is `v1alpha`; the one claim worth re-checking there is the absence of a chat/query endpoint.
 - **Product surfaces carry a different confidence profile than model families.** Vendors document consumer and enterprise products less rigorously than APIs, and product pages go stale without version markers. Where a surface file records a vendor self-contradiction, both positions are stated rather than reconciled.
+- **The portable baseline is synthesis, not vendor guarantee.** No vendor documents cross-model-family claims; `portable-baseline.md`'s cross-family rules are convergence synthesis over each vendor's self-scoped guidance plus flagged Tier 2 literature. Its capacity-dependent format-tax finding rests on a single study; the reasoning-toggle effect on format sensitivity is unmeasured anywhere in its sources; and router vendors document normalization mechanisms but no prompt-content authoring guidance. For a covered family, the family reference always outranks the baseline.
 
 ## Contributing
 

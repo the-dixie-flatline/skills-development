@@ -56,6 +56,34 @@ Captured here so they are not lost:
 Declined (confirmed out of scope, do not author anywhere): local inference-stack / runtime tuning,
 image-generation prompting, NotebookLM.
 
-## Stale `research-skill/` placeholder directory
+## Tabled: browser-supervised web-UI testing for the deferred format-sensitivity gaps
 
-An empty `research-skill/` directory exists at the repo root (leftover from early planning before the `domain-research-skill/` name was chosen). Decide whether to remove it or repurpose it for a future skill, then clean up.
+Two gaps in `prompt-engineering-skill/resources/portable-baseline.md` cannot be closed
+from documentation and have no published measurements: (1) the reasoning-toggle effect on
+format sensitivity, and (2) independent replication of the capacity-dependent format-tax
+finding (arXiv 2606.09410, single study). Direct testing has previously caught errors even
+in model cards, so empirical closure is worth doing — but consumer web UIs lack a stable
+API, so this is tabled rather than scheduled.
+
+Design notes captured for when it is picked up (browser-supervised assistant sessions,
+e.g. Claude co-work with browser integration):
+
+- **Scope honestly.** Web-UI results are *surface-scoped* `[field-observed]` claims, not
+  model-level ones: consumer surfaces have undocumented default reasoning effort, no
+  temperature control, and possible silent model substitution (see
+  `webui-surfaces-and-silent-degradation.md`). Findings feed that file and the
+  portable-baseline sensitivity section with the surface named.
+- **Strongest arm: delayed-structure replication.** The reason-freely-then-format ablation
+  is a prompt pattern, not an API mechanism, so a chat UI can run it faithfully: same items,
+  three arms (JSON-constrained single turn / free-form / free-form-then-format two-turn).
+- **Toggle A/B only where a UI exposes an explicit control** (claude.ai extended-thinking
+  switch, ChatGPT thinking-model selector, Gemini app model picker) — measures "toggle
+  effect on this surface," not the model.
+- **Protocol requirements:** synthetic corpus, deterministic scoring only (exact-match /
+  MCQ, no judge calls), randomized item order per run (order-effect confound, arXiv
+  2502.04134), N≥10 per cell, account tier + date recorded per run, findings as ranges.
+- **Human-supervised, modest N** — consumer-surface terms restrict automated access; the
+  protocol must be written as supervised sessions, not an unattended harness.
+- Protocol document belongs in `tests/` when authored. Gemini Deep Research (the largest
+  untested surface per the 0.6.0 ledger) is a separate protocol: long-horizon runs, not
+  per-item scoring.

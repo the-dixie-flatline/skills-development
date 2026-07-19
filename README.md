@@ -24,7 +24,7 @@ what it does and when to use it.
 Not a comprehensive skill library. Not a certified-production anything. Not a
 replacement for reading the actual provider documentation when you need ground truth.
 
-There are probably better and more robust out skills you and I can both use out there
+There are probably better and more robust skills out there that you and I can both use,
 but you ultimately learn by doing, not copying.
 
 The skills here reflect how I work and what I've found useful. Your mileage will

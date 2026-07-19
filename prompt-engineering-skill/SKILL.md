@@ -1,7 +1,7 @@
 ---
 name: prompt-engineering-skill
 description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, gpt-oss (open weights), Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek, GLM, MiniMax, Kimi. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, authors one prompt that must run across multiple families or targets a family not covered here (portable-baseline lane), configures a hosted deep-research or agent-orchestration surface, prompts a source-grounded vendor product such as Gemini Notebook (formerly NotebookLM), calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology beyond structural baseline (the planned prompt-engineering-architect skill, not yet published) and for questions about how this current Claude session should respond.
-version: 0.8.0
+version: 0.8.1
 contract-version: 2026-04-18
 ---
 
