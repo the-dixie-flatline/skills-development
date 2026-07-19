@@ -8,20 +8,25 @@ versions:
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-07-18
+retrieved: 2026-07-19
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
   - https://ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025
+  - https://ai.google.dev/gemini-api/docs/interactions-overview
   - https://ai.google.dev/gemini-api/docs/thinking
   - https://ai.google.dev/gemini-api/docs/function-calling
   - https://ai.google.dev/gemini-api/docs/caching
   - https://ai.google.dev/gemini-api/docs/structured-output
   - https://ai.google.dev/gemini-api/docs/deprecations
+  - https://blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/
 maturity_note: |
-  Gemini 3 is Google's current generation. Gemini 3.5 Flash reached GA on
+  Gemini 3 is Google's current generation. The Interactions API reached GA on
+  2026-06-22 and is the vendor-recommended default for new work; `generateContent`
+  is legacy but fully supported. Prompt craft is portable across both surfaces
+  (see the surface-selection note in section 2). Gemini 3.5 Flash reached GA on
   2026-05-19 and Gemini 3.1 Flash-Lite reached GA on 2026-05-07; Gemini 3.1
   Pro remains Preview (no GA). The Gemini 3 line uses `thinkingLevel`
   {minimal, low, medium, high} as the reasoning control, replacing the 2.5-era
@@ -83,6 +88,12 @@ A separate endpoint, `gemini-3.1-pro-preview-customtools`, is tuned to prioritiz
 
 ## 2. Prompt Structure Conventions
 
+### Surface selection: Interactions API vs `generateContent`
+
+Gemini exposes two request surfaces. For new work the **Interactions API** is the vendor-recommended default (GA 2026-06-22, public beta since December 2025); `generateContent` is now legacy but fully supported and still receiving new mainline models. Prompt craft — roles, system instruction, few-shot structure, output-format intent — is portable across both; only the request envelope and field paths differ (see `gemini-prompt-api.md`).
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+[source: blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/, published 2026-06-22, retrieved 2026-07-19]
+
 Gemini's request shape differs from Anthropic-style roles in a few ways that trip people migrating prompts:
 
 - **`systemInstruction` is a top-level field** on the request, separate from the turn list. It carries `parts: [{text: ...}]` content blocks, not a flat string. (See `gemini-prompt-api.md` for the exact JSON.)
@@ -121,7 +132,7 @@ Rather than stuffing web search results into the prompt manually, enable the `go
 
 ### Deep Research prompting (hosted agent)
 
-The hosted Gemini Deep Research agent (Interactions API) is a separate surface with its own prompting contract; the full field-observed guidance lives in `resources/deep-research-agents.md`. One prompt-craft point worth surfacing here: on "list all X" prompts the agent tends to name a few items and collapse the rest into an explicit "others / various / unlisted" **bucket**. A single directive eliminated the bucket language entirely in before/after testing — "a bucket is a failed answer; enumerate every item individually; if an item is confirmed to exist but you cannot detail it, still list it and flag that it is undetailed." [field-observed, N=1-2; before/after on the hosted Deep Research agent] Because the agent does not honor inline per-claim markup, put load-bearing shape in structural/suppression form (see `deep-research-agents.md`).
+The hosted Gemini Deep Research agent (Interactions API) is a separate surface with its own prompting contract; the full field-observed guidance lives in `resources/deep-research-agents.md`. One prompt-craft point worth surfacing here: on "list all X" prompts the agent tends to name a few items and collapse the rest into an explicit "others / various / unlisted" **bucket**. A single directive eliminated the bucket language entirely in before/after testing — "a bucket is a failed answer; enumerate every item individually; if an item is confirmed to exist but you cannot detail it, still list it and flag that it is undetailed." [field-observed, N=1-2; before/after on the hosted Deep Research agent] Because the agent does not honor inline per-claim markup, put load-bearing shape in structural/suppression form (see `deep-research-agents.md`). The completed report's text is read from the terminal step (`interaction.steps[-1].content[0].text`), not a separate outputs list.
 
 ### Thought signatures in multi-turn + tool use
 

@@ -8,12 +8,17 @@ versions:
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-07-18
+retrieved: 2026-07-19
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
+  - https://ai.google.dev/gemini-api/docs/interactions-overview
+  - https://ai.google.dev/gemini-api/docs/migrate-to-interactions
+  - https://ai.google.dev/api/interactions-api
+  - https://ai.google.dev/api/agents
+  - https://ai.google.dev/gemini-api/docs/streaming
   - https://ai.google.dev/gemini-api/docs/thinking
   - https://ai.google.dev/gemini-api/docs/function-calling
   - https://ai.google.dev/gemini-api/docs/caching
@@ -21,19 +26,21 @@ primary_sources:
   - https://ai.google.dev/gemini-api/docs/openai
   - https://ai.google.dev/gemini-api/docs/thought-signatures
   - https://ai.google.dev/gemini-api/docs/deprecations
-  - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
+  - https://blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/
 maturity_note: |
-  Gemini 3.5 Flash reached GA on 2026-05-19 and Gemini 3.1 Flash-Lite reached
-  GA on 2026-05-07; Gemini 3.1 Pro remains Preview. Field paths differ between
-  REST (`generationConfig`) and SDKs (`config`); this file uses REST shapes and
-  flags SDK aliases inline. The Gemini 3 line uses `thinkingLevel`, replacing
+  The Interactions API reached GA on 2026-06-22 and is now the vendor-recommended
+  primary surface for all new projects; `generateContent` is relabeled legacy but
+  remains fully supported and continues to receive new mainline Gemini models.
+  This file leads each section with the Interactions (snake_case) shape and retains
+  the legacy `generateContent` (camelCase) shape clearly labeled. Gemini 3.5 Flash
+  reached GA on 2026-05-19 and Gemini 3.1 Flash-Lite reached GA on 2026-05-07;
+  Gemini 3.1 Pro remains Preview. The Gemini 3 line uses `thinkingLevel`, replacing
   the 2.5-era `thinkingBudget`. Deprecation pressure is high: Gemini 2.0 Flash /
   Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
   sunset 2026-10-16. Cache discount percentages and several rate-limit specifics
-  are partial in the retrieved sources and appear in Gaps. Most claims carry a
-  2026-06-01 retrieval date; implicit-caching floors, the gemini-3.5-flash
-  context window, and deprecation dates were re-verified 2026-07-18 and carry
-  that date inline.
+  are partial in the retrieved sources and appear in Gaps. Interactions API facts
+  carry a 2026-07-19 retrieval date; older legacy claims retain their 2026-04-18 /
+  2026-06-01 / 2026-07-18 inline dates.
 ---
 
 # Gemini — API-Layer Reference
@@ -42,9 +49,26 @@ API-call-level detail for the current Gemini 3 generation (and 2.5 where still r
 
 ## 1. API Surface
 
+### Surface selection: Interactions (primary) vs `generateContent` (legacy)
+
+Gemini exposes two request surfaces on the Gemini API. Choose the surface before writing integration code.
+
+- **Interactions API — primary, GA.** Vendor-recommended for all new projects: "The Interactions API is now generally available. We recommend using this API for all new projects." GA'd 2026-06-22, public beta since December 2025.
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+[source: blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/, published 2026-06-22, retrieved 2026-07-19]
+- **`generateContent` — legacy, fully supported.** "now considered legacy" yet "fully supported"; the migration page states "While generateContent remains fully supported, we recommend the Interactions API for all new development." The legacy surface "will continue to receive new mainline Gemini models for the foreseeable future," but Google expects "frontier capabilities for long-running models and agents to increasingly land exclusively on the Interactions API."
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+[source: ai.google.dev/gemini-api/docs/migrate-to-interactions, retrieved 2026-07-19]
+[source: blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/, retrieved 2026-07-19]
+
+Prompt craft (roles, system instruction, structured-output intent, thinking level) is portable across both surfaces; the request envelope and field paths differ. The Interactions surface is snake_case (`generation_config`, `thinking_level`, `tool_choice`, `response_format`); the legacy surface is camelCase (`generationConfig`, `thinkingConfig`, `responseSchema`). Each section below leads with the Interactions shape and retains the legacy `generateContent` shape clearly labeled.
+
 ### Endpoints
 
 - **Gemini API** (ai.google.dev) — public developer API, consumer-facing billing.
+- **Interactions API** — primary Gemini API surface: `POST https://generativelanguage.googleapis.com/v1beta/interactions` (SDK `client.interactions.create`). A stable `v1` version exists alongside `v1beta`; this file documents `v1beta`.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+- **`generateContent`** — legacy Gemini API surface: `POST .../v1beta/models/{model}:generateContent`. Fully supported (see surface selection above).
 - **Vertex AI** (cloud.google.com/vertex-ai) — enterprise control plane, regional routing, IAM, billing via Google Cloud.
 - **OpenAI compatibility layer** — Gemini API exposes an OpenAI-compatible endpoint at base URL `https://generativelanguage.googleapis.com/v1beta/openai/` for drop-in migrations. Deviations are detailed in §4 and §5.
 
@@ -63,6 +87,9 @@ First-party Google GenAI SDKs: Python, JavaScript/TypeScript, Go, Java. SDK fiel
 Translate between the two when copying examples.
 [source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-04-18]
 
+The Interactions API (GA) requires SDK floors `google-genai >= 2.3.0` and `@google/genai >= 2.3.0`.
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+
 ### Model IDs
 
 Use dated model IDs when pinning. Base preview IDs (e.g. `gemini-3.1-pro-preview`) rotate to newer snapshots without notice on the same string. Google has shut down superseded preview IDs (see §9). `gemini-3.1-pro-preview-customtools` is a separate endpoint tuned to prioritize custom tools over built-in tools.
@@ -70,9 +97,34 @@ Use dated model IDs when pinning. Base preview IDs (e.g. `gemini-3.1-pro-preview
 
 ## 2. Chat Template / Message Structure
 
-Gemini does not use a special-token chat template (no `<|im_start|>` equivalent). The protocol is a parts-based JSON structure.
+Gemini does not use a special-token chat template (no `<|im_start|>` equivalent). Both surfaces are JSON. The Interactions API uses an `input` list of typed `Step` objects; the legacy `generateContent` surface uses a `contents` list of parts.
 
-### Basic shape
+### Interactions API envelope (primary surface)
+
+The Interactions API replaces the `contents`/`parts` array with an `input` field carrying an ordered list of typed `Step` objects; the model reply comes back as a `steps` array.
+
+```json
+{
+  "model": "gemini-3.5-flash",
+  "input": [
+    { "type": "user_input", "content": [{ "type": "text", "text": "..." }] }
+  ],
+  "generation_config": { "thinking_level": "medium" }
+}
+```
+
+Documented step types: `user_input`, `model_output`, `function_call`, `function_result`, plus `thought` (which appears in thinking contexts).
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+Function-call pairing uses matched IDs, not positional order: a `function_call` step carries an `id` (example `"gth23981"`); the corresponding `function_result` step carries a matching `call_id`.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+Terminal text is read from the last step: `interaction.steps[-1].content[0].text`.
+[source: ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-07-19]
+
+Server-side conversation state: pass `previous_interaction_id` to continue from a prior completed interaction (see §7).
+
+### `generateContent` message shape (legacy surface)
 
 ```json
 {
@@ -129,9 +181,22 @@ Defaults and recommended values are not uniformly documented across Gemini 3 Pre
 
 ### Field path
 
-REST: `generationConfig.thinkingConfig`. SDK: `config.thinkingConfig`.
+- **Interactions API (primary):** `generation_config.thinking_level` (snake_case), a field on `generation_config`.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+- **Legacy `generateContent`:** `generationConfig.thinkingConfig` (REST) / `config.thinkingConfig` (SDK).
 
-### `thinkingLevel` (Gemini 3)
+### `thinking_level` (Interactions API, primary surface)
+
+```json
+"generation_config": {
+  "thinking_level": "minimal" | "low" | "medium" | "high"
+}
+```
+
+Lowercase enum, the same four values as the legacy `thinkingLevel` on a different path. Per-model defaults match the legacy table below.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+### `thinkingLevel` (Gemini 3, legacy `generateContent`)
 
 ```json
 "generationConfig": {
@@ -211,7 +276,12 @@ Billing: thinking tokens count toward output tokens via `thoughtsTokenCount` (se
 On the OpenAI-compatible endpoint, reasoning is controlled by `reasoning_effort` {minimal, low, medium, high}, which maps to `thinking_level` / `thinking_budget` under the hood. The value `none` is accepted for 2.5 models only; reasoning cannot be turned off for Gemini 2.5 Pro or any Gemini 3 model. There is **no documented `reasoning_content` response field** on this layer. To receive thought summaries, set `extra_body.google.thinking_config.include_thoughts=true` (the retrieval field/shape for the summary is not specified in the docs). The full cross-family OpenAI-compat hazard matrix lives in `resources/openai-compatibility-surface.md`.
 [source: ai.google.dev/gemini-api/docs/openai, retrieved 2026-06-01]
 
-### `thoughtSignature` handling
+### Thought signatures on the Interactions API (primary surface)
+
+The Interactions API simplifies signature handling relative to `generateContent`. In **stateful mode** (`store: true` plus `previous_interaction_id` on later turns) the server manages all thought blocks and signatures automatically — "They are handled entirely on the server side." In **stateless mode** (you resend full history each request) you MUST resend every `thought` block verbatim, including built-in-tool result signatures; do not remove or modify them. On this surface signatures live only on `thought` steps and built-in-tool steps (for example `google_search_call` / `google_search_result`), never on user inputs, model outputs, or standard function calls. A `thought` step's `signature` field is always present (even under minimal reasoning); its `summary` is present only when `thinking_summaries` is enabled and the model reasoned enough to produce one.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-07-19]
+
+### `thoughtSignature` handling (legacy `generateContent`)
 
 When thinking is enabled and function calling is in play, responses carry opaque `thoughtSignature` strings on parts. Gemini 3 returns signatures more broadly than 2.5. Multi-turn handling rules:
 
@@ -228,7 +298,41 @@ On the OpenAI-compatibility layer, tool-call thought signatures travel in `extra
 
 ## 5. Tool Use / Function Calling
 
-### Request shape
+### Interactions API tool declaration (primary surface)
+
+Tools are a flat array of typed objects. A function tool is `{type: "function", name, description, parameters}` — `name` / `description` / `parameters` sit directly on the tool object alongside `type`, not nested under a `function` key.
+
+```json
+{
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "type": "object",
+        "properties": { "location": { "type": "string" } },
+        "required": ["location"]
+      }
+    }
+  ],
+  "generation_config": { "tool_choice": "auto" }
+}
+```
+
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+[source: ai.google.dev/api/agents, retrieved 2026-07-19]
+
+**`tool_choice` sits under `generation_config`, not at the top level.** Enum: `auto` | `any` | `none` | `validated`. A top-level `tool_choice` belongs to the separate Vertex enterprise-agent-platform product, not the Gemini API Interactions surface; do not place it at the top level here.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+Built-in and MCP tool types share the polymorphic-on-`type` shape: `{type: "code_execution"}`; `{type: "google_search"}` (with a `search_types` array of `web_search` / `image_search` / `enterprise_web_search`); `{type: "url_context"}`; and `{type: "mcp_server"}` (`name`, `url`, `allowed_tools.{mode, tools}`, `headers`).
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+Function-call results pair by ID: the `function_call` step's `id` matches the `function_result` step's `call_id` (see §2).
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+### Request shape (legacy `generateContent`)
 
 ```json
 {
@@ -326,7 +430,28 @@ Set `"includeServerSideToolInvocations": true` in config to receive traces of th
 
 ## 6. Structured Outputs
 
-### Request shape
+### `response_format` (Interactions API, primary surface)
+
+The Interactions API uses `response_format` (a `ResponseFormat` object or an array of them), polymorphic on `type`, to enforce output shape — it "enforces that the generated response is a JSON object that complies with the JSON schema specified."
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+Four documented sub-shapes:
+
+- **`TextResponseFormat`** (`type: "text"`): `mime_type` (`application/json` | `text/plain`), `schema` (JSON schema; only when `mime_type` is `application/json`).
+- **`AudioResponseFormat`** (`type: "audio"`): `mime_type` (`audio/mp3` | `audio/ogg_opus` | `audio/l16` | `audio/wav` | `audio/alaw` | `audio/mulaw`), `bit_rate`, `sample_rate`, `delivery` (`inline` | `uri`).
+- **`ImageResponseFormat`** (`type: "image"`): `mime_type` (`image/jpeg` documented), `aspect_ratio` (`1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:8`, `8:1`, `1:4`, `4:1`), `image_size` (`512` | `1K` | `2K` | `4K`), `delivery` (`inline` | `uri`).
+- **`VideoResponseFormat`** (`type: "video"`): `aspect_ratio` (`16:9` | `9:16`), `duration`, `delivery` (`inline` | `uri`), `gcs_uri` (documented as Vertex-only; required for Vertex when delivery is URI).
+
+```json
+{ "type": "text", "mime_type": "application/json", "schema": { "type": "object", "properties": { "recipe_name": { "type": "string" } }, "required": ["recipe_name"] } }
+```
+
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+A separate top-level `response_modalities` field (`text` / `image` / `audio` / `video` / `document`) selects output modalities and is distinct from `response_format`.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+
+### Request shape (legacy `generateContent`)
 
 ```json
 "generationConfig": {
@@ -374,7 +499,32 @@ Gemini 3 supports combining them. The model may call a function or emit schema-c
 
 ## 7. Caching, Batch, Streaming
 
-### Context caching
+### Interactions API server-side state and retention (primary surface)
+
+The Interactions API keeps conversation state server-side. `store` defaults to `true`; pass `previous_interaction_id` on a later request to continue from a prior completed interaction — the Interactions equivalent of implicit context reuse. Setting `store: false` disables background execution AND `previous_interaction_id`. Stored interactions are retained **55 days on paid tiers, 1 day on the free tier**.
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+
+### Interactions API streaming (primary surface)
+
+Set `stream: true`. The SSE event flow is: `interaction.created` (metadata: ID, model, status), then per step a `step.start` (carrying the step type) followed by one or more `step.delta` (incremental data) and a `step.stop`, then `interaction.completed` (final `usage`). An `interaction.status_update` event carries status transitions, and an `error` event carries `{message, code}`. Every transcript ends with the SSE sentinel `event: done` / `data: [DONE]`.
+[source: ai.google.dev/gemini-api/docs/streaming, retrieved 2026-07-19]
+
+Delta types by step: `model_output` produces `text` / `image` / `audio`; `thought` produces `thought_signature` / `thought_summary`; `function_call` produces `arguments_delta` (a partial JSON string that must be accumulated across deltas); server-side tool steps produce tool-specific deltas (`google_search_call`, `google_search_result`, `code_execution_call`, `code_execution_result`).
+[source: ai.google.dev/gemini-api/docs/streaming, retrieved 2026-07-19]
+
+**Stream resume is distinct from `previous_interaction_id`.** Each SSE event carries an `event_id`; on disconnect, call `GET .../v1beta/interactions/{id}?stream=true&last_event_id=<event_id>` to replay from the next chunk. `previous_interaction_id` chains a new interaction onto a prior completed one — it is not a stream-resume mechanism. Do not conflate the two.
+[source: ai.google.dev/api/interactions-api, retrieved 2026-07-19]
+[source: ai.google.dev/gemini-api/docs/streaming, retrieved 2026-07-19]
+
+With `stream: false` the API returns one `interaction` object with a `steps` array; each element is the fully assembled `step.start` -> `step.delta`(s) -> `step.stop` cycle.
+[source: ai.google.dev/gemini-api/docs/streaming, retrieved 2026-07-19]
+
+### Capabilities not yet supported on the Interactions API
+
+As of retrieval, the Interactions API does NOT support: (1) `video_metadata` (custom frame-rate / clipping); (2) the Batch API; (3) automatic function calling in the Python SDK; (4) explicit caching (implicit caching via `previous_interaction_id` is available); (5) custom safety settings. For any of these, use the legacy `generateContent` surface.
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+
+### Context caching (legacy `generateContent`)
 
 Two tiers:
 
@@ -443,6 +593,13 @@ There are no Gemini-specific beta headers; feature flags are surfaced via per-fi
 
 ## 9. Deprecations and Breaking Changes
 
+### Interactions API is now primary; `generateContent` is legacy
+
+The Interactions API GA'd 2026-06-22 and is the recommended default for new development. `generateContent` is now labeled legacy but remains fully supported and continues to receive new mainline Gemini models; frontier long-running-model and agent capabilities are expected to land on the Interactions API first. Migration is not forced, but new agent-shaped work should start on Interactions.
+[source: ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+[source: ai.google.dev/gemini-api/docs/migrate-to-interactions, retrieved 2026-07-19]
+[source: blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/, retrieved 2026-07-19]
+
 ### Gemini 3 vs Gemini 2.5 thinking control
 
 [applies-to: gemini-3.5-flash, gemini-3.1-flash-lite, gemini-3.1-pro-preview]
@@ -482,3 +639,5 @@ Gemini 3 responses carry a unique `id` on every `functionCall`. Code from the Ge
 - **Safety settings** (`safetySettings` array, category / threshold enums) were not targeted in this retrieval pass.
 - **OpenAI-compat thought-summary retrieval shape** — `extra_body.google.thinking_config.include_thoughts=true` enables summaries, but the response field/shape carrying them is not specified in the docs.
 - **Rate-limit and quota specifics** per model / per tier are not covered.
+- **Interactions API `v1` (stable) vs `v1beta` divergence** — the reference page notes a stable `v1` exists alongside the `v1beta` documented here; per-version field or behavior differences are not enumerated at `ai.google.dev/api/interactions-api`, checked 2026-07-19.
+- **Interactions usage-object schema divergence** — `ai.google.dev/gemini-api/docs/tokens` documents a 6-key core usage schema (`total_input_tokens`, `total_output_tokens`, `total_thought_tokens`, `total_cached_tokens`, `total_tool_use_tokens`, `total_tokens`), while the `ai.google.dev/api/interactions-api` `Usage` schema additionally lists `cached_tokens_by_modality` and `grounding_tool_count`. Whether those two are populated in practice is unconfirmed; parse the usage object defensively.

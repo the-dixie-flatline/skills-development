@@ -2,11 +2,13 @@
 family: cross-family
 scope: deep-research-agents
 families: [gemini, openai, perplexity, anthropic, grok]
-retrieved: 2026-07-18
+retrieved: 2026-07-19
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/interactions/deep-research
   - https://ai.google.dev/gemini-api/docs/interactions
+  - https://ai.google.dev/gemini-api/docs/interactions-overview
   - https://ai.google.dev/api/interactions-api
+  - https://ai.google.dev/gemini-api/docs/tokens
   - https://developers.openai.com/api/docs/guides/deep-research
   - https://developers.openai.com/api/docs/deprecations
   - https://docs.perplexity.ai/docs/sonar/models/sonar-deep-research
@@ -30,7 +32,14 @@ maturity_note: |
   subsection (N=1-2 first-party observations of the public hosted agent,
   abstracted to model/API behavior, carrying [field-observed] markers and
   sample-size caveats), refreshed the Anthropic web-search tool version, and
-  tightened the OpenAI deep-research shutdown proximity.
+  tightened the OpenAI deep-research shutdown proximity. A 2026-07-19 pass
+  reconciled the Gemini section against the now-GA Interactions API: the terminal
+  response schema is the vendor-documented `steps` array (not a flat `outputs`
+  list), `agent_config` fields and the 55-day/1-day retention window are promoted
+  to Tier-1, the documented usage list is trimmed to the 6-key core schema, SDK
+  floors move to >= 2.3.0, and the OpenAI deep-research shutdown date is pinned to
+  2026-07-23 (the earlier Dec-11 reading conflated it with the base o3-2025-04-16
+  snapshot).
 ---
 
 # Deep Research Agents — Cross-Family Reference
@@ -46,9 +55,9 @@ Pick the shape first. The integration code, latency profile, and citation surfac
 
 ### Gemini Deep Research
 
-**Agent IDs.** `deep-research-preview-04-2026` (fast tier) and `deep-research-max-preview-04-2026` (max tier), both Public Preview. The overview still lists `deep-research-pro-preview-12-2025`. All three are preview IDs and rotate.
-[source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
-[source: https://ai.google.dev/gemini-api/docs/interactions, retrieved 2026-06-01]
+**Agent IDs.** `deep-research-preview-04-2026` (fast tier) and `deep-research-max-preview-04-2026` (max tier), both Public Preview — these are the two agent rows on the current supported-models table. The older `deep-research-pro-preview-12-2025` is no longer listed on the interactions overview page but still appears in the `agent` enum and worked example on the API reference page, so it likely still resolves; treat it as stale/legacy and pin the current IDs. All are preview IDs and rotate.
+[source: https://ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
+[source: https://ai.google.dev/api/interactions-api, retrieved 2026-07-19]
 
 **Submit.** `POST /v1beta/interactions` (SDK `client.interactions.create`). Required body fields: `input`, `agent`. `background: true` is mandatory — the docs state "Agents are required to use background=True". `store: true` is required; `store=false` is incompatible with `background=true`.
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
@@ -56,6 +65,9 @@ Pick the shape first. The integration code, latency profile, and citation surfac
 
 **Poll.** `GET /v1beta/interactions/{id}` (SDK `interactions.get(id)`). Loop on `.status`.
 [source: https://ai.google.dev/api/interactions-api, retrieved 2026-06-01]
+
+**Terminal response.** The completed report's text is read from the last step of the `steps` array — `interaction.steps[-1].content[0].text` — not a separate `outputs` list. This is the vendor-documented Interactions terminal shape.
+[source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-07-19]
 
 **Status enum.** Full set: `in_progress`, `requires_action`, `completed`, `failed`, `cancelled`, `incomplete`, `budget_exceeded`. Terminal success/failure values are lowercase `completed` / `failed` — not `SUCCEEDED`. Do not match on uppercase or on Perplexity-style status strings.
 [source: https://ai.google.dev/api/interactions-api, retrieved 2026-06-01]
@@ -69,7 +81,8 @@ Pick the shape first. The integration code, latency profile, and citation surfac
 
 Instruction compliance splits by class: **structural** and **suppression** instructions are honored — a "no charts/images" instruction zeroed a default embedded PNG, and section layout / negative-result reporting followed — but **inline per-claim machine-readable markup** (e.g. "tag every claim `[primary]`/`[secondary]`") is NOT honored (zero literal tags emitted). Put load-bearing shape in structural or suppression form; treat inline per-claim markup as best-effort only. [field-observed, N=2 before/after; hosted Gemini Deep Research]
 
-**Usage and cost.** The response carries a `usage` object with token statistics: `total_tokens`, `total_input_tokens`, `total_output_tokens`, `total_thought_tokens`, `total_tool_use_tokens`, `cached_tokens_by_modality`, and `grounding_tool_count`. There is no monetary cost field in the response; cost is a narrative estimate only — roughly $1–3 per task for Deep Research and roughly $3–7 per task for Deep Research Max.
+**Usage and cost.** The core Gemini API tokens page documents a 6-key `usage` schema: `total_input_tokens`, `total_output_tokens`, `total_thought_tokens`, `total_cached_tokens`, `total_tool_use_tokens`, and `total_tokens`. (The `cached_tokens_by_modality` and `grounding_tool_count` fields appear on the Interactions API `Usage` schema reference but not on the core tokens page; see the field-observed GET-time note below.) There is no monetary cost field in the response; cost is a narrative estimate only — roughly $1–3 per task for Deep Research and roughly $3–7 per task for Deep Research Max.
+[source: https://ai.google.dev/gemini-api/docs/tokens, retrieved 2026-07-19]
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
 
 The **observed GET-time usage schema diverges from the documented field list and is NOT `Api-Revision`-dependent.** Controlled re-GETs of terminal interactions with and without the header returned an identical 8-key `usage` object — `total_cached_tokens`, `input_tokens_by_modality` / `output_tokens_by_modality`, and the `total_*` counters — while the documented `cached_tokens_by_modality` / `grounding_tool_count` fields were absent in both cases. Do not hard-code the documented field names; parse the `usage` object defensively. [field-observed, N=2 controlled re-GETs, 2026-07-19, superseding an earlier N=2 header-dependence reading]
@@ -79,12 +92,12 @@ Realized cost can run **far above the nominal band.** One Max-tier task realized
 **Tools.** When `tools` is omitted the defaults are `google_search`, `url_context`, and `code_execution`. Optional additions: `mcp_server` and `file_search`. Custom function-calling tools are not supported — remote MCP only.
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
 
-**Agent config.** `agent_config` fields: `thinking_summaries` (`none` / `auto`), `visualization` (`auto` / `off`), `collaborative_planning` (boolean). Use `previous_interaction_id` to refine or follow up on a prior interaction.
-[source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
+**Agent config.** `agent_config` fields, all vendor-documented: `type` (`"deep-research"`, required — selects the agent); `thinking_summaries` (`auto` / `none`, default `none`); `visualization` (`auto` / `off`, default `auto`); `collaborative_planning` (boolean, default `false`). Use `previous_interaction_id` to refine or follow up on a prior interaction.
+[source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-07-19]
 
-**Streaming.** Streaming requires `stream=True` and `background=True` together. Set `thinking_summaries: "auto"` to receive thoughts. `step.delta` deltas carry `thought`, `text`, or `image` content. Reconnect a dropped stream with `?stream=true&last_event_id=`. The examples send an `Api-Revision` header of `2026-05-20`. SDK floor versions: `google-genai >= 1.55.0`, `@google/genai >= 1.33.0`. Storage retention is 55 days on paid tiers and 1 day on the free tier.
+**Streaming.** Streaming requires `stream=True` and `background=True` together. Set `thinking_summaries: "auto"` to receive thoughts. `step.delta` deltas carry `thought`, `text`, or `image` content. Reconnect a dropped stream with `?stream=true&last_event_id=` (distinct from `previous_interaction_id`, which chains a new interaction onto a prior completed one). The examples send an `Api-Revision` header of `2026-05-20`. Interactions API (GA) SDK floors: `google-genai >= 2.3.0`, `@google/genai >= 2.3.0`. Storage retention is **55 days on paid tiers and 1 day on the free tier**.
+[source: https://ai.google.dev/gemini-api/docs/interactions-overview, retrieved 2026-07-19]
 [source: https://ai.google.dev/gemini-api/docs/interactions/deep-research, retrieved 2026-06-01]
-[source: https://ai.google.dev/gemini-api/docs/interactions, retrieved 2026-06-01]
 
 Do not assert an output-token cap for Gemini Deep Research. The 65,536-token cap that circulates for Gemini agents belongs to the separate Antigravity Agent, documented in `resources/agent-orchestration-surfaces.md`, not to Deep Research. See Gaps.
 
@@ -100,15 +113,13 @@ First-party observations of the public hosted agent, abstracted to model/API beh
 
 - **~5-job account concurrency cap.** Roughly five concurrent jobs per account; over-cap jobs park rather than queueing cleanly, and neither `status` nor step content is a liveness signal (steps appear only at terminal state; a parked job reports non-terminal indefinitely). Batched submission *at* the cap showed no latency penalty versus solo (N=4 vs N=7). Issuing `DELETE` on an interaction frees a slot. [field-observed, N=1-2 for the cap itself]
 
-- **Terminal response schema differs from the streaming shape.** The completed interaction returns a flat `outputs` list (text records plus base64-image records) rather than the streaming `steps` deltas. Parse the terminal payload from `outputs`, not by replaying step deltas. [field-observed, N=1-2]
-
 - **Narrow source pool.** The agent deep-exploits a small set (~5 sources observed) where a competitor system reached ~17 on the same prompt — strong authority, weak recall. Do not treat a Gemini DR report as an exhaustive sweep; pair it with a broader-recall pass when coverage matters. [field-observed, N=1-2]
 
 - **Adjacent/successor-entity substitution and unreachable-source padding.** Observed substituting an adjacent or successor entity for the asked-about one, and padding an unreachable citation with a different (wrong) source rather than reporting the gap. Verify entity identity and dereference every cited source before relying on a claim. [field-observed, N=1-2]
 
 - **Latency is scope- and tier-dependent; measure with continuous polling.** Narrow single-table prompts on the standard agent completed in **3.6–8.9 minutes** end-to-end (N=11, continuous ~20 s polling), identical solo and batched four-wide at the ~5-job concurrency cap. A previously recorded 39–50 minute envelope (N=2, Max agent, broad multi-part prompts) was not reproduced and included polling-observation lag — completion timestamps were recorded at the next poll pass, not at service completion. Treat the vendor's "~20 min typical" as scope- and tier-dependent, not a bound in either direction. [field-observed, N=11, 2026-07-19]
 
-- **Integration facts.** Auth via `x-goog-api-key` header; poll cadence ~20s; interaction ids are resumable; `agent_config.type` selects the agent; omitting `store` succeeds and defaults it to `true`; the `Api-Revision` header is accepted and documented as schema-pinning, but omitting it produced no observable difference at terminal GET (see the usage-object note above); completed interactions remained GET-able ≥ 30 minutes post-completion. [field-observed, N=1-2, corroborated against the interactions-API docs]
+- **Integration facts.** Auth via `x-goog-api-key` header; poll cadence ~20s; interaction ids are resumable; omitting `store` succeeds and defaults it to `true` (consistent with the documented `store` default); the `Api-Revision` header is accepted and documented as schema-pinning, but omitting it produced no observable difference at terminal GET (see the usage-object note above). Completed interactions remain retrievable within the documented retention window (55 days paid / 1 day free), which subsumes the earlier `>= 30-minute` post-completion observation. [field-observed, N=1-2, corroborated against the interactions-API docs]
 
 - **Seeding pre-verified facts suppresses a recurring fabrication.** Supplying already-verified facts as fixed inputs suppressed a recurring fabrication and improved recall on the seeded entities. DR fabrications are **run-variable** — absence in one run is not a safety guarantee. (The generic verify / quote-or-abstain discipline is methodology and routes to `prompt-engineering-architect`; only the model-behavior half is recorded here.) [field-observed, N=1-2]
 
@@ -117,9 +128,9 @@ First-party observations of the public hosted agent, abstracted to model/API beh
 **Models and invocation.** `o3-deep-research` and `o4-mini-deep-research`, called through the Responses API in background mode. Configure a webhook to be notified on completion rather than polling indefinitely.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
 
-**Imminent shutdown — flag this.** The `o3-deep-research` / `o4-mini-deep-research` IDs shut down **2026-07-23**, with `gpt-5.5-pro` named as the replacement — that is **5 days out as of 2026-07-18**, and the deep-research guide's own samples still reference the retiring IDs. Do not build against `o*-deep-research` now; verify the successor invocation (`gpt-5.5-pro` via the Responses API) against the current guide before writing any new integration.
+**Imminent shutdown — flag this.** The `o3-deep-research-2025-06-26` / `o4-mini-deep-research-2025-06-26` snapshots (and their `o3-deep-research` / `o4-mini-deep-research` aliases) shut down **2026-07-23**, with `gpt-5.5-pro` named as the replacement — that is **4 days out as of 2026-07-19**, and the deep-research guide's own samples still reference the retiring IDs. This 2026-07-23 date is a distinct deprecation row from the base `o3-2025-04-16` snapshot (which retires 2026-12-11); do not conflate the two. Do not build against `o*-deep-research` now; verify the successor invocation (`gpt-5.5-pro` via the Responses API) against the current guide before writing any new integration.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
-[source: https://developers.openai.com/api/docs/deprecations, retrieved 2026-07-18]
+[source: https://developers.openai.com/api/docs/deprecations, retrieved 2026-07-19]
 
 **Data source requirement.** At least one data source is required: web search, remote MCP servers, or file search backed by vector stores. Supported tools: web search, file search, remote MCP, and code interpreter. Function calling is not supported.
 [source: https://developers.openai.com/api/docs/guides/deep-research, retrieved 2026-06-01]
@@ -221,7 +232,7 @@ These behaviors recur across more than one hosted deep-research agent and are re
 ## Gaps
 
 - **Gemini Deep Research output-token cap** — not documented for this agent. The 65,536-token figure belongs to the separate Antigravity Agent (see `resources/agent-orchestration-surfaces.md`), not Deep Research.
-- **Gemini `agent_config` semantics** — the runtime effect of `visualization`, `collaborative_planning`, and the interaction between `thinking_summaries` and streaming are not detailed beyond the field names.
+- **Gemini `agent_config` runtime effects** — the field names and defaults are now documented (Tier-1), but the observable runtime effect of `visualization` and `collaborative_planning`, and how `thinking_summaries` interacts with streaming, are not detailed at `ai.google.dev/gemini-api/docs/interactions/deep-research`, checked 2026-07-19.
 - **OpenAI deep-research post-migration shape** — how the replacement `gpt-5.5-pro` is invoked for deep research after the 2026-07-23 shutdown of the `o*-deep-research` IDs is not covered by the current guide.
 - **Perplexity lifecycle label** — no GA / beta / preview status is stated on the `sonar-deep-research` model page.
 - **Perplexity async polling cadence and timeout** — recommended poll interval and maximum job lifetime are not specified beyond the 3–5 concurrent-request guidance.
