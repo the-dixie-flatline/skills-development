@@ -12,6 +12,81 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.8.0 — 2026-07-19
+
+New cross-family portable-baseline lane, closing the skill's dangling escalation path:
+the "target family not covered" and "one prompt across many families" cases previously
+routed to the unpublished `prompt-engineering-architect` skill and dead-ended. Grounded
+by a 2026-07-19 primary-source research pass (all vendor claims verbatim-verified against
+live pages; two arXiv abstracts independently re-fetched). `SKILL.md` bumped to `0.8.0`;
+contract-version unchanged (2026-04-18).
+
+### Portable baseline — NEW (`portable-baseline.md`)
+
+Cross-family resource with a deliberately lower epistemic ceiling, stated in its lead:
+no vendor documents cross-model portability claims, so every cross-family rule is
+labeled convergence synthesis (Anthropic + OpenAI + Google, each self-scoped) or Tier 2
+empirical literature. Contents:
+
+- **Portable prompt skeleton** — explicit delimiters held consistent (format choice is
+  documented as free; consistency is the requirement), long context first / task last,
+  few-shot examples relevant-diverse-delimited, explicit output contract in text (the
+  only output constraint that survives crossing families).
+- **Reasoning-era corrections** — all three majors document manual CoT / prescriptive
+  step plans as unnecessary-to-counterproductive on thinking-enabled models; the
+  correction is scoped to the API toggle state, not the prompt (GPT-5.1
+  `reasoning_effort: none` re-enables classic guidance).
+- **Router-portable exclusion rules** — no chat-template control tokens in content
+  (Llama 4), no family role names (`ipython`), no sampling assumptions (Qwen3 forbids
+  greedy decoding in thinking mode — the counterexample to temperature=0 as a safe
+  default), no reasoning vocabulary or API-mechanism dependencies in prompt text.
+- **Format sensitivity** `[community-reported]` — 2024 baseline: FormatSpread (up to
+  76-point spreads; format performance only weakly correlates between models) and arXiv
+  2411.10541 (up to 40% swing on GPT-3.5-turbo; GPT-4 more robust), carried as direction,
+  not magnitude. 2025–2026 follow-ups (second pass, same day; abstracts independently
+  re-fetched): order sensitivity persists on current API models with few-shot only a
+  partial mitigation (arXiv 2502.04134; 2502.06065); the format tax is capacity-dependent
+  rather than generation-dependent — high-headroom models absorb JSON free, capacity-limited
+  ones drop 28–36pp, Opus 4.7 loses 5.3pp on AIME, and delayed structuring (reason freely,
+  format afterward) recovers most of it (arXiv 2606.09410). Portable consequences added:
+  evaluate the weakest target's schema cost, not the flagship's; prefer delayed structure
+  for strict schemas on unknown or capacity-limited targets. Third pass (externally
+  sourced report, every claim re-verified against primaries before inclusion): input-side
+  format effects are scale-dependent with no universal winner (MDPI Electronics 14(5):888,
+  single task, 2024-era models); declaring input structure in the system prompt gains
+  ~10-13pp on GPT-4.1 (arXiv 2505.12837); mechanism evidence — templates influence logits
+  more than questions (arXiv 2604.18389), and much measured sensitivity traces to prompt
+  underspecification (arXiv 2602.04297) — converges with the vendor guidance on explicit
+  structure. Rejected from the same report: a fabrication-class citation (probe study
+  attributed to an unrelated PDF), a ProofBench rubric-sensitivity claim not supported by
+  its abstract, and all Tier 3 sourcing.
+- **Uncovered-family procedure** — declare the gap, pull the family's own primary
+  sources, use the canonical chat-template encoder, apply the skeleton, label the
+  deliverable as baseline rather than family-grounded guidance.
+- **Gateway-layer normalization** — router-vendor docs verified on the third pass and
+  added as a subsection: LiteLLM `drop_params` and chat-template registration/mapping,
+  OpenRouter `response_format` plus the Response Healing JSON-repair plugin. Framed as
+  vendor-documented validation of the exclusion rules: state the contract in text,
+  normalize at the gateway, never compensate for one family inside the prompt.
+- **Gaps** — Mistral/DeepSeek guide alignment unchecked; router-layer gap narrowed from
+  "no guidance" to "mechanism documented, prompt-content authoring guidance still
+  absent"; reasoning-toggle effect on format sensitivity unmeasured; capacity-dependence
+  finding rests on a single study; Google's always-few-shot vs Gemini 3 over-analysis
+  caution left in documented tension.
+
+### Routing and escalation — CHANGED (`SKILL.md`)
+
+- Surface axis gains two triggers: multi-family/target-unchosen prompts load
+  `portable-baseline.md` additively; uncovered families load it alone.
+- Escalation for an uncovered family now terminates in the uncovered-family procedure
+  instead of routing to the unpublished architect skill; remaining architect mentions
+  are explicitly labeled planned/not-yet-published.
+- Family files always outrank the baseline for a covered family; migration between
+  families stays with the family files, distinguished from one-artifact-many-targets.
+
+`TODO.md`'s architect stockpile updated: the router-portable pattern set's structural
+half landed here; methodology remainder still queued for the architect skill.
+
 ## prompt-engineering-skill 0.7.0 — 2026-07-19
 
 New family-scoped product-surface lane for Gemini Notebook (renamed from NotebookLM

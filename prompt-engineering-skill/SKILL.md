@@ -1,7 +1,7 @@
 ---
 name: prompt-engineering-skill
-description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, gpt-oss (open weights), Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek, GLM, MiniMax, Kimi. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, configures a hosted deep-research or agent-orchestration surface, prompts a source-grounded vendor product such as Gemini Notebook (formerly NotebookLM), calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology (use prompt-engineering-architect) and for questions about how this current Claude session should respond.
-version: 0.7.0
+description: Family-specific prompt-engineering references for current-generation LLMs — Claude, GPT-5.x / o-series, gpt-oss (open weights), Gemini, Gemma, Llama, Qwen, Grok, Mistral, DeepSeek, GLM, MiniMax, Kimi. Trigger when the user writes or debugs prompts for a specific model family, configures sampling or thinking/reasoning budgets, picks a model variant, works with a family's chat template or tool-use protocol, migrates a prompt between versions, authors one prompt that must run across multiple families or targets a family not covered here (portable-baseline lane), configures a hosted deep-research or agent-orchestration surface, prompts a source-grounded vendor product such as Gemini Notebook (formerly NotebookLM), calls a non-OpenAI family through an OpenAI-compatible endpoint, or reasons about consumer/web-UI vs API behavior. Skip for general prompt-engineering methodology beyond structural baseline (the planned prompt-engineering-architect skill, not yet published) and for questions about how this current Claude session should respond.
+version: 0.8.0
 contract-version: 2026-04-18
 ---
 
@@ -33,7 +33,7 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 
 ## When NOT to Use
 
-- **General prompt-engineering methodology.** CoT theory, few-shot selection strategy, structured-output design in the abstract — that is the scope of the `prompt-engineering-architect` skill.
+- **General prompt-engineering methodology.** CoT theory, few-shot selection strategy, structured-output design in the abstract — that is the scope of the `prompt-engineering-architect` skill (planned, not yet published; say so rather than routing to it as if it existed). The exception now in scope here: *structural* baseline for multi-family and uncovered-family prompts lives in `resources/portable-baseline.md`.
 - **Questions about how this current Claude assistant should behave.** That is a normal Claude task, not a reference lookup.
 - **Model rankings or "which is best."** No benchmarks, no buying guides, no leaderboard commentary.
 - **Questions the user's own code or the file they opened already answers.** Read the file; do not load a reference.
@@ -53,6 +53,8 @@ Invoke this skill when the task centers on a specific LLM family and the questio
      - **Hosted vendor** multi-agent / agent-orchestration endpoints (managed-agent APIs — Anthropic Managed Agents, OpenAI hosted agents, the Gemini agent products) → `resources/agent-orchestration-surfaces.md`. Scope this to vendor-hosted orchestration endpoints. **Exclusion:** authoring prompts or briefs for a local or CLI agent runner is prompt-craft, not a hosted-surface lookup — do not load this file for it; route to the consumer family file (and `prompt-engineering-architect` for orchestration methodology).
      - Calling a non-OpenAI family through an OpenAI-shaped endpoint → `resources/openai-compatibility-surface.md`.
      - Consumer / web-UI behavior (vs the API) → `resources/webui-surfaces-and-silent-degradation.md`.
+     - One prompt that must run **unmodified across two or more families** (router deployment, fallback chain, cross-vendor A/B), or a prompt drafted **before the target model is chosen** → `resources/portable-baseline.md`, in addition to each covered target family's prompt-layer file. Distinguish from migration: porting a prompt *from one family to another* stays with the family files plus the Cross-Family Portability list below; the portable-baseline file is for one artifact serving many targets at once.
+     - Target family **not covered** by this skill → `resources/portable-baseline.md` alone; see Escalation.
      - **Gemini Notebook** (formerly NotebookLM), including Gemini Notebook Enterprise → `resources/gemini-notebook-surface.md`. Trigger on the product name in either form, on notebooks-inside-the-Gemini-app, or on source-grounded/RAG questions scoped to that product. This one is **substitutive, not additive**: Notebook exposes no sampling, thinking level, system prompt, or chat template, so `gemini-prompt.md` and `gemini-prompt-api.md` add nothing unless the task *also* touches the Gemini API. Load the family files only in that mixed case.
      Load cross-family surface files *in addition to* the family file. The Gemini Notebook file is the documented exception (see the two sub-kinds above).
 
@@ -86,6 +88,7 @@ Invoke this skill when the task centers on a specific LLM family and the questio
 | `openai-compatibility-surface.md`      | published | Per-provider divergences through OpenAI-shaped endpoints (Grok, DeepSeek, Gemini, Qwen, Mistral, vLLM, llama.cpp), as of 2026-06-01 |
 | `agent-orchestration-surfaces.md`      | published | Anthropic Managed Agents, OpenAI hosted/SDK split, the 3 Gemini agent products, as of 2026-06-01 |
 | `webui-surfaces-and-silent-degradation.md` | published | Consumer/web-UI surfaces, tier-labeled; leads with documented gaps, as of 2026-06-01 |
+| `portable-baseline.md`                 | published | Portable prompt skeleton (convergence synthesis over Anthropic/OpenAI/Google guides), reasoning-era corrections, router-portable exclusion rules, uncovered-family procedure, as of 2026-07-19. Tier 2 format-sensitivity evidence flagged; family files always outrank it for a covered family |
 | `gemini-notebook-surface.md`           | published | **Family-scoped (Gemini), substitutive.** Gemini Notebook / NotebookLM + Notebook Enterprise, as of 2026-07-19. Renamed 2026-07-16. RAG not context (retrieval+ranking and query decomposition are vendor-documented); grounding differs between the standalone app and the Gemini app for the same notebook; no inference controls exposed; enterprise `v1alpha` REST API is CRUD + artifacts with **no chat/query endpoint**. Source ceiling 200MB consumer vs 500 MB enterprise. Chat-history retention `[disputed]` (stale marketing page) |
 
 An uncovered family or surface is an honest gap, not a placeholder. When the user asks about something not covered, tell them it is not yet covered rather than improvising a reference-shaped answer.
@@ -110,7 +113,7 @@ Applies to every loaded reference.
 
 ## Cross-Family Portability
 
-When porting a prompt or integration between families, these are the points where assumptions break. This list is the meta-map; each family file has the specifics. Consult the target family file before reusing a pattern.
+When porting a prompt or integration between families, these are the points where assumptions break. This list is the meta-map; each family file has the specifics. Consult the target family file before reusing a pattern. (For the inverse task — authoring one prompt that runs across families simultaneously rather than moving it between them — load `resources/portable-baseline.md`.)
 
 - **Reasoning / thinking controls are not portable.** Parameter names, accepted values, and semantics all differ: `reasoning.effort` {none,low,medium,high,xhigh} (OpenAI); `thinking.type: "adaptive"` + `output_config.effort` (Claude — adaptive-only on Opus 4.7/4.8 and Fable 5; on Fable 5 thinking is always on and `disabled` is unsupported; manual budgets rejected); `thinkingLevel` {minimal,low,medium,high} on Gemini 3 or `thinkingBudget` on Gemini 2.5; `enable_thinking` + `preserve_thinking` (Qwen); `<|think|>` token (Gemma); tri-state `thinking: {type:"enabled"|"disabled"}` or `reasoning_effort: "high" | "max"` (DeepSeek V4); binary `reasoning_effort: "high" | "none"` (Mistral, chat endpoint); `reasoning_effort` {low,medium,high} default `high`, no `none` (Grok grok-4.5); {none,low,medium,high} default `low` (Grok grok-4.3); `thinking.type: enabled|disabled` plus a 7-value `reasoning_effort` {none,minimal,low,medium,high,xhigh,max} that shims onto two tiers, GLM-5.2+ only (GLM); `thinking: {type:"adaptive"|"disabled"}`, M3 default OFF, M2.x cannot disable (MiniMax); `reasoning_effort: "max"` only — always on, no other value accepted as of 2026-07-19 (Kimi K3); `reasoning_effort` {low,medium,high} default medium set *inside the system message*, not a top-level param (gpt-oss / gpt-oss-safeguard, Harmony-format open weights); nothing at all (Llama). Treat `reasoning_effort` as a family-scoped name, not a universal knob — even where the name is shared, the accepted value set differs.
 
@@ -140,7 +143,7 @@ When porting a prompt or integration between families, these are the points wher
 
 ## Escalation
 
-- **Target family not covered.** Say so plainly. Offer to help at a general prompt-engineering level (via the `prompt-engineering-architect` skill) or to draft a new reference using `SCHEMA.md`.
+- **Target family not covered.** Say so plainly, then load `resources/portable-baseline.md` and follow its uncovered-family procedure: pull the family's own primary sources, apply the portable skeleton and exclusion rules, and deliver the prompt labeled as best-practices baseline, not family-grounded guidance. Offer to draft a new reference using `SCHEMA.md` if the family will recur.
 - **Reference is stale.** Flag to the user and offer to re-verify against primary sources before relying on the content for production work.
 - **User's current observation contradicts the reference.** Do not silently concede. Note the conflict, ask for the user's source if they have one, and recommend updating the file.
 

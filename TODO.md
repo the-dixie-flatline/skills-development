@@ -36,9 +36,16 @@ Captured here so they are not lost:
 - **Fabrication-guard / research-discipline block.** Generic, topic-independent guards for
   authoring deep-research-mode prompts (demand primary-source tiering; flag invented runtimes,
   mis-attributed benchmarks, fabricated CLI flags). Proven prompt-correction asset; model-agnostic.
-- **Router-portable / model-agnostic pattern set.** The inverse of "pick one family": enumerate
+- **Router-portable / model-agnostic pattern set.** ~~The inverse of "pick one family": enumerate
   forbidden family-specific affordances and substitution-robust alternatives for prompts that must
-  run across heterogeneous models behind a router.
+  run across heterogeneous models behind a router.~~ **Partially landed 2026-07-19** in
+  `prompt-engineering-skill/resources/portable-baseline.md` (0.8.0): the structural half —
+  exclusion rules, portable skeleton, uncovered-family procedure. Still architect-scoped:
+  per-target technique-selection methodology and evaluation strategy for multi-family prompts.
+  Router-layer status after the same-day third verification pass: mechanism-layer
+  normalization is now verified and cited in that file (LiteLLM drop_params/template
+  mapping, OpenRouter Response Healing); prompt-content authoring guidance from router
+  vendors remains absent.
 - **Citation-conflation detection rule.** The *phenomenon* is named in
   `webui-surfaces-and-silent-degradation.md`; the detection methodology (attribution-match, not
   URL-resolves) is author methodology and belongs in the architect skill.
