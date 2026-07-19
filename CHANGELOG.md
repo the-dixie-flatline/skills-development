@@ -12,6 +12,59 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.7.0 — 2026-07-19
+
+New family-scoped product-surface lane for Gemini Notebook (renamed from NotebookLM
+on 2026-07-16), plus the routing-model change needed to hold it. All facts retrieved
+2026-07-19 and verified by direct fetch of the canonical page — no claim in the new
+file rests on a search snippet or a research-agent summary. `SKILL.md` bumped to
+`0.7.0`; contract-version unchanged (2026-04-18).
+
+### Gemini Notebook — NEW (`gemini-notebook-surface.md`)
+
+Covers the consumer product and Gemini Notebook Enterprise. The load-bearing facts:
+
+- **RAG, not context.** Retrieval-and-ranking plus automatic query decomposition are
+  vendor-documented (`blog.google`, October 2025 engine post, including a labelled
+  RAG process diagram). The 1M token context window bounds what retrieval hands the
+  model per turn, not what a notebook can hold — a Standard-tier notebook at ceiling
+  exceeds it by more than an order of magnitude.
+- **Grounding differs per app for the same notebook.** Standalone grounds exclusively
+  in sources; the Gemini app adds web search and tools. Custom instructions are shared.
+  The confinement claim is further tier-scoped: Pro/Ultra agentic chat works "with or
+  without sources."
+- **Prompt-composition contract is published** — sources always, notes only when
+  selected, conversation history always.
+- **No inference controls exposed.** No sampling, thinking level, system prompt, or
+  chat template. Enterprise `v1alpha` REST API is CRUD plus artifact generation with
+  **no chat/query endpoint**; programmatic Q&A is not supported.
+- Source ceiling differs by tier: 200MB consumer, 500 MB enterprise.
+- Not integrated with Workspace DLP; IRM on Drive files is Google's stated mitigation.
+- `[disputed]`: the Workspace product-page FAQ still claims no chat history is kept,
+  contradicting the help center and the dated October 2025 post. Resolved in favor of
+  retention, with the contradiction flagged rather than silently dropped.
+- `[unverified]`: a reported five-tier Workspace access ladder including an "Expanded"
+  tier is not corroborated by any verified page and is explicitly not cited.
+
+### Routing model — CHANGED (`SKILL.md`)
+
+Surface files were previously defined as inherently cross-family and always additive.
+That framing could not hold a single-vendor product whose contract diverges from its
+own vendor's API. Surface files now split into two sub-kinds:
+
+- **Cross-family surfaces** (unchanged) — always loaded in addition to a family file.
+- **Family-scoped product surfaces** (new) — may be loaded *instead of* the family
+  file. `gemini-notebook-surface.md` is substitutive: the Gemini prompt/API files
+  apply only when the task also touches the Gemini API.
+
+Added Notebook tie-breakers against two overlapping triggers: Notebook's own Deep
+Research quota routes to the Notebook file rather than `deep-research-agents.md`
+(which covers hosted submit/poll APIs), and Notebook routes away from
+`webui-surfaces-and-silent-degradation.md` because Google documents its grounding and
+composition contract explicitly, so that file's lead finding does not apply.
+
+Skill `description` extended to trigger on source-grounded vendor products. Gemini
+coverage row now states that the prompt/API files do not apply to Notebook.
 ## prompt-engineering-skill 0.6.0 — 2026-07-19
 
 First live-model verification pass. The family references through 0.5.0 were authored
