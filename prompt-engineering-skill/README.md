@@ -23,7 +23,7 @@ The split is deliberate. Someone writing a Gemini webui prompt loads only `gemin
 - `SKILL.md` — Routing layer. Describes when this skill applies and how to pick which resource to load.
 - `SCHEMA.md` — Normative schema for every reference file: front-matter shape, section order, source tiers, inline markers, required workflow.
 - `README.md` — This file.
-- `resources/` — Per-family reference files, named `{family}-prompt.md` and `{family}-prompt-api.md`.
+- `resources/` — Per-family reference files, named `{family}-prompt.md` and `{family}-prompt-api.md`, plus surface files (`*-surface.md`) covering product surfaces whose contract differs from the underlying model API.
 
 ## Coverage
 
@@ -54,6 +54,8 @@ Every non-trivial claim carries inline provenance and a retrieval date. Every fi
 - **Uneven depth across families.** Providers with denser public documentation (Anthropic, Qwen) support deeper references than providers with thinner coverage (Grok). This is a sourcing limit, not a design choice.
 - **No benchmark tables, no model rankings, no buying guides.** Scope is how to prompt a given family, not which family is "best."
 - **No pre-current-generation coverage.** Retired model families (Claude 3.x, GPT-4.x, Gemini 2.x, Llama 2/3.x) are not covered except where migration guidance is warranted.
+- **Gemini Notebook is documentation-derived only.** The Gemini Notebook surface file is built entirely from Google's published documentation; no claim in it rests on first-party testing against the live product. Its retrieval date is three days after Google renamed the product from NotebookLM (2026-07-16), so naming and page structure are unusually volatile. Its enterprise API section is deliberately shallow because that API is `v1alpha`; the one claim worth re-checking there is the absence of a chat/query endpoint.
+- **Product surfaces carry a different confidence profile than model families.** Vendors document consumer and enterprise products less rigorously than APIs, and product pages go stale without version markers. Where a surface file records a vendor self-contradiction, both positions are stated rather than reconciled.
 
 ## Contributing
 

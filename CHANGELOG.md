@@ -87,6 +87,81 @@ empirical literature. Contents:
 `TODO.md`'s architect stockpile updated: the router-portable pattern set's structural
 half landed here; methodology remainder still queued for the architect skill.
 
+## prompt-engineering-skill 0.7.1 — 2026-07-19
+
+Correction and scope pass on the Gemini Notebook surface, plus the two cross-references
+0.7.0 should have carried. One verified-Tier-1 fetch of the Workspace admin page
+resolved an `[unverified]` marker *against* the file's own skepticism and surfaced three
+facts no prior research pass had found. `SKILL.md` is **not** re-bumped: this pass
+touches no routing logic, and the skill's `version:` field sits at `0.8.0` under the
+portable-baseline lane. Contract-version unchanged (2026-04-18).
+
+### Gemini Notebook — CORRECTED (`gemini-notebook-surface.md`)
+
+**The `[unverified]` five-tier Workspace ladder was real and is now verified.** 0.7.0
+declined to cite a reported Standard/More/Higher/Expanded/Highest ladder because no
+fetched page corroborated it. Fetching
+`knowledge.workspace.google.com/admin/generative-ai/gemini-notebook/turn-gemini-notebook-on-or-off-for-users`
+(last updated 2026-07-17) confirms it verbatim, including the Expanded tier at 400
+sources and 1,000 chats/day. The marker is removed and the table is now carried as
+Tier 1. 0.7.0's secondary claim that a reported "reports 100/day" figure conflicted with
+the Cloud table was also wrong — those are two different products, not a contradiction.
+
+**Section 5 restructured from one limit table to three.** Consumer Google AI plans,
+Workspace edition access levels, and Cloud enterprise are three independent axes; 0.7.0
+carried only the first and third. The Workspace ladder's Expanded tier appears in
+neither of the others, so interpolating between tables produced wrong numbers for
+Business Plus / Enterprise Standard users. Section now leads with the three-axis warning.
+
+New Tier-1 facts from the same page, none of which appeared in either 0.7.0 research pass:
+
+- **Drive source freshness is vendor-contradicted** — the Cloud page says a "static copy"
+  is created; the Workspace page says Drive files are "autosynced" and cached. Google
+  does not reconcile these, and no sync interval is published. Added to Disputed with
+  both positions stated; the open question (does editing a Drive source change what the
+  notebook retrieves) is flagged as load-bearing and unanswered.
+- **Workspace data-region settings do not apply to Notebook**, while Drive *sharing*
+  permissions do carry over. The asymmetry inverts what reasoning from Drive's posture
+  would predict. Cloud enterprise is the only path with regional control.
+- **Feature access is age-gated** (as of 2026-06-30): under-18 accounts lose Deep
+  Research, Infographics, Slides, and Cinematic/Short Video Overviews. A workflow built
+  on Deep Research silently does not run for those users.
+
+**Enterprise API section deliberately shallowed.** The API is `v1alpha`; documenting
+endpoint shapes guarantees the skill becomes wrong rather than silent. Method
+enumerations, paths, request bodies, and content-type tables removed, with an explicit
+in-file statement that this is intentional and that shapes should be read from source.
+Retained: the durable structural negative (no chat/query endpoint accepts a question),
+an instruction to re-verify *that* negative specifically since an alpha surface is
+exactly where a query endpoint would appear, and `sources.get`'s `metadata.tokenCount`
+under a new `[volatile: v1alpha]` marker as the only documented way to measure a
+source's token cost.
+
+**First `[testable:]` marker in the file** — `gemini-notebook.out-of-scope-refusal.v1`,
+on Google's own documented refusal example, scoped to standalone Standard tier because
+Pro/Ultra agentic chat and the Gemini app both break source confinement.
+
+### Cross-references — NEW (`gemini-prompt.md`, `README.md`)
+
+0.7.0 registered Notebook in the SKILL.md coverage table but left a discovery dead-end:
+anyone loading `gemini-prompt.md` directly — the likeliest entry point for "how do I
+prompt Gemini" — had no way to learn Notebook is a different contract.
+
+- `gemini-prompt.md` gains a lead-position "Not this file: Gemini Notebook" note routing
+  to the surface file and stating that neither Gemini family file applies to it.
+- `README.md` `## Files` now describes `*-surface.md` as a file class. Known Limitations
+  gains two entries: Notebook coverage is documentation-derived with no first-party
+  testing and an unusually volatile retrieval date (three days post-rename), and product
+  surfaces generally carry a lower confidence profile than model families because vendors
+  document them less rigorously and leave product pages stale without version markers.
+
+### Known gaps carried forward
+
+Notebook's own Deep Research behavior (the weakest-substantiated leg of the 0.7.0 routing
+tie-breaker) and mobile feature limitations remain undocumented. Both are additive
+coverage rather than defects and are queued for the 30-day re-verify, which the front
+matter's 2026-07-19 date and the post-rename volatility already warrant.
+
 ## prompt-engineering-skill 0.7.0 — 2026-07-19
 
 New family-scoped product-surface lane for Gemini Notebook (renamed from NotebookLM

@@ -155,7 +155,11 @@ that treats the notebook as a context window is wrong.
 
 ## 5. Limits that bind prompting
 
-Consumer tiers, per user unless noted:
+**There are three separate limit tables on three different axes.** Confusing them
+is the most common way to get a number wrong here. Identify which one applies
+before quoting any figure.
+
+**A. Consumer Google AI plans** — per user unless noted.
 [source: support.google.com/gemininotebook/answer/16213268, retrieved 2026-07-19]
 
 | | Standard | Plus | Pro | Ultra 20TB | Ultra 30TB |
@@ -165,6 +169,31 @@ Consumer tiers, per user unless noted:
 | Chats / day | 50 | 200 | 500 | 2.5K | 5K |
 | Deep Research | 10/month | 3/day | 20/day | 75/day | 200/day |
 | Audio Overviews / day | 3 | 6 | 20 | 100 | 200 |
+
+**B. Workspace edition access levels** — a five-tier ladder keyed to Workspace
+edition, not to a consumer plan. Business Plus / Standard and Enterprise Plus /
+Standard map to Higher; the AI Expanded Access and AI Ultra Access add-ons map to
+Expanded and Highest.
+[source: knowledge.workspace.google.com/admin/generative-ai/gemini-notebook/turn-gemini-notebook-on-or-off-for-users, retrieved 2026-07-19]
+
+| | Standard | More | Higher | Expanded | Highest |
+|---|---|---|---|---|---|
+| Notebooks / user | 100 | 200 | 500 | 500 | 500 |
+| Sources / notebook | 50 | 100 | 300 | 400 | 600 |
+| Chats / day | 50 | 200 | 500 | 1,000 | 5,000 |
+| Deep Research | 10/month | 3/day | 20/day | 30/day | 200/day |
+| Reports, Flashcards, Quizzes, Mind Maps / day | 10 | 20 | 100 | 200 | 1,000 |
+
+Model access is described only as "Access" (Standard, More), "Higher" (Higher,
+Expanded), and "Highest" (Highest) — no model ID at any tier. Note that Expanded
+gets Higher model access, not Highest, despite higher artifact quotas.
+
+**C. Gemini Notebook Enterprise via Google Cloud** — a single flat set, not a
+ladder. See section 8.
+
+The Workspace ladder (B) and the consumer plans (A) diverge at the top: Expanded
+allows 400 sources and 1,000 chats/day, which appears in neither the consumer nor
+the Cloud table. Never interpolate between tables.
 
 Per source: **500,000 words, or 200MB for local uploads**, no page limit. Import
 fails on word-count overage, size overage, or a copy-protected PDF.
@@ -212,6 +241,7 @@ answer this question." Google's own example is "rewrite the end of my short
 story." Refusal is expected behavior on this surface, not a failure to be
 prompted around.
 [source: support.google.com/gemininotebook/answer/16179559, retrieved 2026-07-19]
+[testable: id=gemini-notebook.out-of-scope-refusal.v1, expected=standalone Standard-tier chat over a synthetic source declines a purely generative request; scope=standalone app only, since Pro/Ultra agentic chat and the Gemini app both break source confinement]
 
 **Safety flags fire on source content.** Sources containing violence, sexuality,
 or obscenity can block answers "even in historical contexts." A refusal may
@@ -248,26 +278,52 @@ Information Rights Management (disabling download, copy, or print) on sensitive
 Drive files to prevent ingestion.
 [source: knowledge.workspace.google.com/admin/generative-ai/generative-ai-in-google-workspace-privacy-hub, retrieved 2026-07-19]
 
+**Workspace data-region settings do not cover Notebook.** Google states plainly
+that an organization's data region settings "don't apply to data processed and
+cached by Gemini Notebook." Drive sharing permissions *do* carry over — only users
+with at least view access to the original Drive file can use it as a source. The
+two behave differently, and the residency gap is easy to miss when reasoning from
+Drive's posture. Cloud enterprise is the path that gives regional control (US or
+EU multi-region); Workspace alone does not.
+[source: knowledge.workspace.google.com/admin/generative-ai/gemini-notebook/turn-gemini-notebook-on-or-off-for-users, retrieved 2026-07-19]
+
+**Feature access is age-gated**, current as of 2026-06-30. Users under 18 lose
+Deep Research, Infographics, Slides, Cinematic and Short Video Overviews, and
+Interactive Mode in Audio Overviews. Core chat, sources, flashcards, quizzes,
+reports, and standard Audio and Video Overviews remain available. Relevant when
+advising on education deployments — a prompt or workflow that depends on Deep
+Research will simply not run for under-18 accounts.
+[source: knowledge.workspace.google.com/admin/generative-ai/gemini-notebook/turn-gemini-notebook-on-or-off-for-users, retrieved 2026-07-19]
+
 ### The API is CRUD and artifacts, not inference
 
-A REST API exists at `{us|eu|global}-discoveryengine.googleapis.com/v1alpha/`
-covering `notebooks.create`, `.get`, `.listRecentlyViewed`, `.batchDelete`,
-`.share`; `notebooks.sources.batchCreate` (Drive docs/slides, raw text, web URLs,
-YouTube), `.uploadFile`, `.get`, `.batchDelete`; and a documented audio-overview
-endpoint.
+**This section is deliberately shallow. The API is `v1alpha`, and endpoint shapes
+are expected to change. Method signatures, paths, and request bodies are not
+documented here on purpose — read the Cloud docs for those. What is recorded here
+is the one durable structural fact and its consequence.**
+
+A REST API exists under `discoveryengine.googleapis.com` covering notebook CRUD,
+source management (Drive docs and slides, raw text, web URLs, YouTube, file
+upload), and audio-overview generation.
 [source: docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/api-notebooks, retrieved 2026-07-19]
 [source: docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/api-notebooks-sources, retrieved 2026-07-19]
 
 **No endpoint accepts a chat query or returns a chat response.** Across the
-notebook, source, and audio-overview API pages, there is no inference path. You
-can programmatically build and manage a notebook and generate an audio overview;
-you cannot programmatically ask it a question. Note also `v1alpha` — this is not
-a stable surface. If a user's plan depends on scripted Q&A against a notebook,
-say plainly that the documented API does not support it.
+notebook, source, and audio-overview API pages there is no inference path. You can
+programmatically build and manage a notebook and generate an audio overview; you
+cannot programmatically ask it a question. This is the load-bearing fact: when a
+user's plan depends on scripted Q&A against a notebook, say plainly that the
+documented API does not support it, and do not offer a workaround built on
+`v1alpha` behavior that is not documented.
 
-`sources.get` returns per-source `metadata.wordCount` and `metadata.tokenCount`.
-This is the only documented way to measure a source's token cost, and it is
-available only on the enterprise API.
+Re-verify this specific negative before relying on it — a query endpoint is
+exactly the kind of thing an alpha surface gains. Everything else in this section
+should be read from source rather than from here.
+
+One field is worth knowing because nothing else exposes it: `sources.get` returns
+per-source `metadata.wordCount` and `metadata.tokenCount`, the only documented way
+to measure a source's token cost anywhere in the product. Enterprise API only, and
+alpha-volatile like the rest. [volatile: v1alpha]
 
 ## 9. Disputed
 
@@ -290,11 +346,20 @@ are 5x notebooks (100 to 500) and 6x sources (50 to 300), while audio overviews
 go 3/day to 20/day. Treat "5x" as approximate marketing, not a computable
 multiplier.
 
-**A five-tier Workspace access ladder** (Standard / More / Higher / Expanded /
-Highest), including an "Expanded" tier at 400 sources and 1,000 chats/day, has
-been reported but is not corroborated by any page verified here. The consumer
-table (section 5) and the enterprise table (section 8) are verified; the ladder
-is not. Do not cite it. [unverified]
+**Drive source freshness.** The Cloud enterprise page states a "static copy of the
+document is created for analysis" and that Notebook "does not make changes to the
+original file." The Workspace admin page states "Drive files added to Gemini
+Notebook will be autosynced" and that Notebook "caches Drive files to improve
+performance."
+[source: docs.cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs/overview, retrieved 2026-07-19]
+[source: knowledge.workspace.google.com/admin/generative-ai/gemini-notebook/turn-gemini-notebook-on-or-off-for-users, retrieved 2026-07-19]
+
+These may be reconcilable — a synced cache is still a copy the model reads rather
+than the live file — but Google does not reconcile them, and the practical
+question they leave open is load-bearing: **whether editing a Drive source updates
+what the notebook retrieves, and how quickly.** No sync interval is published. Do
+not assert either that sources are frozen at import or that they track the
+original. State the conflict.
 
 ## 10. Anti-patterns
 

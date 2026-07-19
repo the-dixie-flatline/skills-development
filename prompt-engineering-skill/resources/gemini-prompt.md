@@ -45,6 +45,8 @@ maturity_note: |
 
 Portable prompting guidance for the current Gemini 3 generation (and 2.5 where still relevant). API-layer detail (parameter shapes, caching APIs, SDK-specific field paths) lives in `gemini-prompt-api.md`.
 
+**Not this file: Gemini Notebook** (formerly NotebookLM). That is a source-grounded retrieval product, not a model surface — it exposes no sampling, thinking level, system prompt, or chat template, and its chat path retrieves from an index rather than filling a context window. Nothing in this file or `gemini-prompt-api.md` applies to it. Load `gemini-notebook-surface.md` instead, and load these two alongside it only when the task also touches the Gemini API.
+
 ## 1. Model Selection
 
 Pick by task axis. Preview ≠ unstable, but does indicate the surface may still change.
