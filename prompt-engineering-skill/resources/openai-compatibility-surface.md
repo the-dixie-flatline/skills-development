@@ -1,7 +1,7 @@
 ---
 family: cross-family
 scope: openai-compatibility
-families: [grok, deepseek, gemini, qwen, mistral, vllm, llamacpp, minimax, glm, kimi]
+families: [grok, deepseek, gemini, qwen, mistral, vllm, llamacpp, minimax, glm, kimi, gpt-oss]
 retrieved: 2026-06-01
 primary_sources:
   - https://docs.x.ai/llms.txt
@@ -24,6 +24,8 @@ primary_sources:
   - https://docs.vllm.ai/en/latest/features/tool_calling/
   - https://docs.vllm.ai/en/latest/features/structured_outputs/
   - https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+  - https://developers.openai.com/cookbook/articles/gpt-oss-safeguard-guide
+  - https://developers.openai.com/cookbook/articles/openai-harmony
 maturity_note: |
   "OpenAI-compatible" at the wire level is not OpenAI-equivalent at the
   semantic level. An OpenAI-shaped request body deserializes against every
@@ -36,9 +38,11 @@ maturity_note: |
   grammar-decoding cross-reference to the vLLM/llama.cpp rows; no Tier-1 claim
   changed, so the retrieval date is unchanged. A 2026-07-19 pass added MiniMax,
   GLM, and Kimi provider sections and split the Grok reasoning-control line by
-  generation (grok-4.5 vs grok-4.3); those additions carry their own dated
-  sources, so the file-level `retrieved:` (which represents the 2026-06-01
-  sweep of the original seven providers) is unchanged.
+  generation (grok-4.5 vs grok-4.3); a 2026-07-19 pass also added a self-hosted
+  gpt-oss / gpt-oss-safeguard section (Harmony reasoning-effort divergence);
+  those additions carry their own dated sources, so the file-level `retrieved:`
+  (which represents the 2026-06-01 sweep of the original seven providers) is
+  unchanged.
 ---
 
 # OpenAI Compatibility Surface — Cross-Family Reference
@@ -90,6 +94,7 @@ routing index only.
 | MiniMax | `https://api.minimax.io/v1` | inline in `content` (split via `reasoning_split` → `reasoning_details`) | `top_k`/`stop_sequences` ignored; `max_tokens` accepted | `usage.prompt_tokens_details.cached_tokens` |
 | GLM (Z.ai) | see Gaps (native path not quoted) | `reasoning_content` (separate delta stream) | not documented | automatic prefix caching |
 | Kimi (Moonshot) | `https://api.moonshot.ai/v1` | `reasoning_content` | five sampling params fixed, ERROR on deviation | not documented (see section) |
+| gpt-oss (self-host) | server-defined (vLLM / Ollama / LM Studio) | server-dependent Harmony channels; effort is a system-message directive, NOT a request field | server-defined | server-defined |
 
 ---
 
@@ -377,6 +382,35 @@ OpenAI Chat Completions but diverges on:
 - **Anthropic surface** (`https://api.moonshot.ai/anthropic`) uses model string
   `kimi-k3[1m]` and does not support `ENABLE_TOOL_SEARCH`.
 - **Token cap:** `max_completion_tokens` default 131072, up to 1048576.
+
+---
+
+## gpt-oss / gpt-oss-safeguard (self-hosted, OpenAI-shaped wrappers)
+
+[source: https://developers.openai.com/cookbook/articles/gpt-oss-safeguard-guide, retrieved 2026-07-19]
+[source: https://developers.openai.com/cookbook/articles/openai-harmony, retrieved 2026-07-19]
+
+OpenAI's open-weight line (base gpt-oss 20b/120b + the gpt-oss-safeguard classifier
+fine-tunes) is commonly served through OpenAI-shaped Chat-Completions wrappers
+(vLLM, Ollama, LM Studio). It is wire-compatible at the request-body level but has
+one divergence worth calling out here; the full family contract (Harmony format,
+policy-as-prompt discipline) lives in `resources/gpt-oss-prompt-api.md`.
+
+- **Base URL:** server-defined (whatever host you run — vLLM, Ollama, or LM Studio).
+- **Reasoning control is NOT a top-level field.** Reasoning effort is a Harmony
+  system-message directive (`Reasoning: low|medium|high`, default medium), not a
+  top-level `reasoning.effort` / `reasoning_effort` request parameter. An OpenAI-style
+  client that sets a top-level effort param will not steer the model — the setting has
+  to be rendered into the Harmony system message, which the serving stack handles when
+  it applies the model's chat template.
+- **Harmony rendering is mandatory.** The model requires Harmony-format rendering to
+  work correctly; a raw non-Harmony prompt misbehaves. The OpenAI-shaped wrapper is a
+  transport convenience over a model whose native contract is Harmony, not the GPT-5.x
+  Responses API.
+- **Reasoning field (response):** server-dependent — the three Harmony channels
+  (analysis / commentary / final) are surfaced however the specific server exposes
+  parsed reasoning; there is no single standardized field across vLLM / Ollama /
+  LM Studio.
 
 ---
 

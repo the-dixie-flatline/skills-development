@@ -12,6 +12,124 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.5.0 — 2026-07-19
+
+Round-3 wrap-up: a new open-weight family lane, an OpenAI generational bump, and a
+Gemini surface restructure. All facts retrieved 2026-07-19 from canonical vendor
+surfaces (`developers.openai.com`, `ai.google.dev`, `blog.google`, and the
+`openai/gpt-oss` / `openai/harmony` GitHub repos + HuggingFace cards). `SKILL.md`
+bumped to `0.5.0`; contract-version unchanged (2026-04-18).
+
+### gpt-oss open-weight family — NEW (`gpt-oss-prompt.md`, `gpt-oss-prompt-api.md`)
+
+New family lane covering OpenAI's open-weight line: base gpt-oss (20b/120b) and the
+gpt-oss-safeguard (20b/120b) classifier fine-tunes. Apache-2.0, Harmony-format,
+self-hosted / host-served — the OpenAI counterpart to the Gemini (API) vs Gemma
+(open-weight) split, and explicitly distinct from the GPT-5.x Responses API files.
+Grounded on the safeguard cookbook guide + Harmony cookbook article (both
+`developers.openai.com`), the `openai/harmony` and `openai/gpt-oss` GitHub repos, the
+base and safeguard HF cards, and the base-20b raw `config.json`.
+
+- **Lineup + license:** both lines, two sizes each, total/active params, 16GB / single-80GB
+  footprints, Apache-2.0 (safeguard-120b license flagged inherited-by-statement). MXFP4 is
+  the native eval-time precision, not a host add-on; 131,072-token context via YaRN RoPE
+  scaling from a 4,096-token base (from raw `config.json`, not card prose).
+- **Harmony is mandatory:** non-Harmony prompts "will not work correctly." Full special-token
+  table with `o200k_harmony` token IDs, five-role hierarchy + precedence, three-channel model
+  (analysis/commentary/final), worked examples, and the `<|return|>`→`<|end|>` history-
+  normalization + drop-CoT-on-final multi-turn rules — all scoped to base gpt-oss.
+- **Safeguard policy-as-prompt discipline:** policy in `system`, content in `user`
+  (system-vs-developer conflict resolved flat to `system`; `developer` role scoped to base
+  gpt-oss); four-section policy structure; output-instruction reinforcement (twice); 400-600-
+  token heuristic; multi-policy pre-compression (300-600 tok/policy) + accuracy-degradation
+  warning; three output-contract tiers; ambiguity/precedence rules; teen-safety policy pack;
+  two-channel safeguard flow; raw-CoT-not-end-user-safe caution.
+- **API layer:** `reasoning_effort` {low,medium,high} default medium set IN the system message
+  (contrast with GPT-5.x top-level `reasoning.effort`); max-output guidance (do not cap tokens,
+  lower effort instead); base sampling T=1.0/top_p=1.0 (from `openai/gpt-oss` repo, no safeguard
+  override); verified self-host stack (vLLM, HF Transformers, Colab, Ollama, LM Studio); Groq
+  Tier-2 host facts including the safeguard-120b-not-served caution vs the served general 120b.
+- **Declared gaps:** no numeric multi-policy cap; no vendor multilingual classification
+  metrics; no primary quantization-vs-threshold-stability data; no safeguard-specific sampling
+  override; safeguard-120b license not re-confirmed from its own front matter.
+- **Cross-references:** the `openai-prompt.md` / `openai-prompt-api.md` files point at these two
+  files for the open-weight line; the SKILL.md coverage table gained a `gpt-oss` row and the
+  Cross-Family Portability reasoning-controls list gained the system-message `reasoning_effort`
+  variant; `openai-compatibility-surface.md` gained a self-hosted-OSS divergence note.
+
+### OpenAI — GPT-5.6 generation (`openai-prompt.md`, `openai-prompt-api.md`)
+
+- **GPT-5.6 generation added as flagship:** three tiers `gpt-5.6-sol` / `-terra` / `-luna`,
+  uniform 1,050,000 context / 128K max output / knowledge cutoff Feb 16 2026; Tier-1 pricing
+  (Sol $5/$30, Terra $2.50/$15, Luna $1/$6, cached-in $0.50/$0.25/$0.10). The `gpt-5.6` alias
+  routes to Sol; Terra and Luna have no generic alias (confirmed absence). GPT-5.5/5.5-pro/5.4/
+  mini/nano/5.3-codex demoted to prior-gen but remain Active; the registry-listed `GPT-5.4 Pro`
+  tier noted (not fully spec'd).
+- **`reasoning.effort` adds `max`** on 5.6 (default `medium`). Documented the two-surface vendor
+  conflict as `[disputed]`: `guides/latest-model` lists `none,low,medium,high,xhigh,max` (has
+  `max`, no `minimal`) vs `guides/reasoning` lists `none,minimal,low,medium,high,xhigh` (has
+  `minimal`, no `max`); both URLs cited, neither silently chosen.
+- **New `reasoning.mode` {standard,pro}:** per-request pro on 5.6 base models, billed at the base
+  model's standard token rates with no multiplier, ADDITIVE to (not a replacement for) the `-pro`
+  model IDs, which keep their behavior/pricing. Corrects the earlier deprecation framing.
+- **New `reasoning.context` {auto,current_turn,all_turns}:** response echoes the effective mode;
+  `all_turns` replay mechanics marked `[unverified]`.
+- **New assistant-message `phase` field** {commentary,final_answer}, assistant-only ("Don't add
+  `phase` to user messages"), confirmed for `gpt-5.4`/`gpt-5.5` only (codex / "subsequent"
+  unverified); must be preserved on manual history replay.
+- **Programmatic Tool Calling** (hosted V8 runtime, `allowed_callers` gate, `program`/
+  `program_output` items, ZDR note) and **explicit prompt-caching controls** authored as full
+  subsections: 1.25x cache-write fee on 5.6+, required `prompt_cache_key`,
+  `prompt_cache_options.mode`/`.ttl` (`30m`), `prompt_cache_breakpoint`, new `cache_write_tokens`
+  usage field, `prompt_cache_retention` deprecated for 5.6+.
+- **Multi-agent orchestration:** the "no hosted multi-agent handoff API endpoint" absolute
+  retracted — a hosted Responses-API beta exists (`responses_multi_agent=v1`, all GPT-5.6
+  models), with the six collaboration actions, three new item types, transport options, and four
+  documented limitations.
+- **Deep Research:** o3-deep-research/o4-mini-deep-research/gpt-5.2-codex shutdown pinned to
+  2026-07-23, disambiguated from the plain `o3-2025-04-16` snapshot's 2026-12-11 date; successor
+  invocation `return_token_budget` on the Responses web-search tool (changelog-only) added with
+  the guide-lag note retained.
+- **Deprecations:** added the 2026-12-11 snapshot wave, the completed 2026-05-12 dall-e-2/
+  dall-e-3/Realtime-Beta removal, and the June-2026 wave (Agent Builder, legacy Evals platform,
+  reusable prompts — all shutdown 2026-11-30, migration targets quoted). Assistants 2026-08-26
+  confirmed and kept.
+- Cross-reference added in both files to the new `gpt-oss-prompt*.md` open-weight coverage.
+
+### Gemini — Interactions-API-primary restructure (`gemini-prompt.md`, `gemini-prompt-api.md`, `deep-research-agents.md`)
+
+- **Interactions API added as the PRIMARY Gemini surface** (`gemini-prompt-api.md`): GA
+  2026-06-22, public beta since December 2025, vendor-recommended for all new projects.
+  `generateContent` relabeled legacy-but-fully-supported (still receiving new mainline models).
+  Every section now leads with the snake_case Interactions shape and retains the camelCase legacy
+  shape clearly labeled. Documented: endpoint `POST /v1beta/interactions` (v1 stable exists
+  alongside v1beta); `input`/`Step` envelope (step types `user_input`/`model_output`/
+  `function_call`/`function_result`/`thought`); `function_call.id` <-> `function_result.call_id`
+  pairing; terminal read `interaction.steps[-1].content[0].text`; `generation_config.thinking_level`
+  (lowercase minimal|low|medium|high); `tool_choice` UNDER `generation_config`
+  (auto|any|none|validated — the top-level shape is the out-of-scope Vertex enterprise product);
+  flat `{type:"function", name, description, parameters}` tool declaration plus
+  code_execution/google_search/url_context/mcp_server types; `response_format` with the four
+  Text/Audio/Image/Video sub-shapes (Tier-1, quoted field-for-field); `previous_interaction_id`
+  server-side state (store default true, retention 55 days paid / 1 day free); streaming SSE
+  events with stream resume via `last_event_id`/`event_id`; thought-signature auto-handling;
+  SDK floors google-genai >= 2.3.0 / @google/genai >= 2.3.0; and the not-yet-supported list.
+  Legacy lowercase `thinkingLevel` enums left unchanged.
+- **Surface-selection note added** to `gemini-prompt.md` (Interactions default for new work;
+  generateContent legacy-but-supported; prompt craft portable across both).
+- **`deep-research-agents.md` (Gemini section) reconciled to GA docs:** terminal schema corrected
+  from a flat `outputs` list to the vendor-documented `steps` array (promoted to Tier-1);
+  documented usage list trimmed to the 6-key core schema; `agent_config` promoted to Tier-1
+  (type deep-research required; thinking_summaries auto/none default none; visualization auto/off
+  default auto; collaborative_planning bool default false); SDK floors -> >= 2.3.0; retention
+  promoted to the Tier-1 55-day/1-day window; `deep-research-pro-preview-12-2025` re-dispositioned
+  (dropped from the overview supported-models table but still in the API-reference enum/example,
+  treated as stale/legacy but likely still resolving). OpenAI deep-research shutdown pinned to
+  2026-07-23 (the earlier Dec-11 reading conflated it with the base o3-2025-04-16 snapshot, which
+  retires 2026-12-11). Field observations re-tiered per fact-sheet §5: silent-400-zombie (N=2),
+  steps-hidden-until-terminal (N=2), GET-time usage-schema equivalence (N=2), and 3.6-8.9-min
+  latency (N=11) stay `[field-observed]`; the two withdrawn observations stay withdrawn.
+
 ## prompt-engineering-skill 0.4.1 — 2026-07-19
 
 Manual browser-verification fold-in. Thirteen bot-blocked/JS-rendered primaries were
