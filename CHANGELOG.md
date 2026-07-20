@@ -12,6 +12,19 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.8.2 — 2026-07-19
+
+Conformance patch: the SKILL.md front-matter `description` had grown to 1,049
+characters across three releases of trigger additions, exceeding the Agent Skills
+spec limit of 1,024 — Claude Code tolerated it, Claude Desktop rejects the skill.
+Compressed to 889 characters with every trigger category retained (family list,
+prompt/API/sampling/thinking triggers, migration, portable-baseline lane, hosted
+surfaces, Gemini Notebook, OpenAI-compat, web-UI vs API, both skip clauses); dropped
+only decorative qualifiers and the inline architect-skill aside, which the When-NOT-
+to-Use body section still carries. Deployment note: keep descriptions ≤1,024 chars
+(and names ≤64) or Desktop refuses the skill; `domain-research-skill` currently sits
+at 981 — near the ceiling, mind it on the next trigger addition. No content changes.
+
 ## prompt-engineering-skill 0.8.1 — 2026-07-19
 
 Gap-closure research pass on `portable-baseline.md` plus documentation catch-up. All
