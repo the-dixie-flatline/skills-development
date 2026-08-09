@@ -2,15 +2,18 @@
 family: gemini
 scope: prompt
 versions:
+  - gemini-3.6-flash
   - gemini-3.5-flash
+  - gemini-3.5-flash-lite
   - gemini-3.1-flash-lite
   - gemini-3.1-pro-preview
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-07-19
+retrieved: 2026-08-09
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
@@ -21,24 +24,24 @@ primary_sources:
   - https://ai.google.dev/gemini-api/docs/caching
   - https://ai.google.dev/gemini-api/docs/structured-output
   - https://ai.google.dev/gemini-api/docs/deprecations
+  - https://ai.google.dev/gemini-api/docs/changelog
+  - https://ai.google.dev/gemini-api/docs/pricing
+  - https://deepmind.google/models/model-cards/gemini-3-6-flash/
   - https://blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/
+  - https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/
 maturity_note: |
-  Gemini 3 is Google's current generation. The Interactions API reached GA on
-  2026-06-22 and is the vendor-recommended default for new work; `generateContent`
-  is legacy but fully supported. Prompt craft is portable across both surfaces
-  (see the surface-selection note in section 2). Gemini 3.5 Flash reached GA on
-  2026-05-19 and Gemini 3.1 Flash-Lite reached GA on 2026-05-07; Gemini 3.1
-  Pro remains Preview (no GA). The Gemini 3 line uses `thinkingLevel`
-  {minimal, low, medium, high} as the reasoning control, replacing the 2.5-era
-  `thinkingBudget` — this is the most material migration point for prompt
-  engineers coming from 2.5. Deprecation pressure is high: Gemini 2.0 Flash /
-  Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
-  sunset 2026-10-16; gemini-3.1-flash-lite (GA) is scheduled to shut down
-  2027-05-07. Per-model pricing is not fully present in the retrieved Tier 1
-  sources; consult the current models page at integration time. Implicit-caching
-  floors, the gemini-3.5-flash context window, and deprecation dates were
-  re-verified 2026-07-18 and carry that date inline; other claims retain their
-  2026-06-01 date.
+  Gemini 3 is Google's current generation. A 2026-08-09 pass added Gemini 3.6
+  Flash (GA 2026-07-21) — the new Flash-tier lead, positioned on output-token
+  efficiency and cheaper output than 3.5 Flash — and Gemini 3.5 Flash-Lite
+  (GA same day). Computer use is now a built-in client-side tool on Flash-tier
+  3.x models (Preview), reversing this file's earlier "not a 3.x-text-model
+  capability" claim. The 2026-10-16 sunset date for the 2.5-GA line is GONE
+  from the live deprecations page (all three now read "No shutdown date
+  announced"). Gemini 3.5 Pro is partner-only testing; 3.1 Pro Preview remains
+  the only Pro-tier offering. The Interactions API (GA 2026-06-22) is the
+  vendor-recommended default; `generateContent` is legacy but fully supported.
+  `thinkingLevel` {minimal, low, medium, high} remains the Gemini 3 reasoning
+  control. Claims not re-touched this pass retain their earlier inline dates.
 ---
 
 # Gemini — Prompt-Layer Reference
@@ -53,35 +56,50 @@ Pick by task axis. Preview ≠ unstable, but does indicate the surface may still
 
 | Target task                                                | Preferred model                       | Status       |
 |------------------------------------------------------------|---------------------------------------|--------------|
-| Most intelligent; sustained frontier agentic and coding    | `gemini-3.5-flash`                    | GA (released 2026-05-19) |
-| Lowest-latency, lowest-cost Gemini 3 text                  | `gemini-3.1-flash-lite`               | GA (since 2026-05-07) |
+| Flash-tier lead: fast agentic work, fewer output tokens/steps per task, cheaper output | `gemini-3.6-flash`  | GA (released 2026-07-21) |
+| Prior Flash-tier lead, still GA                            | `gemini-3.5-flash`                    | GA (released 2026-05-19) |
+| Fastest / cheapest current Gemini 3 text (claimed 350 output tok/s) | `gemini-3.5-flash-lite`      | GA (released 2026-07-21) |
+| Lowest-cost prior-gen Lite (replacement: `gemini-3.5-flash-lite`) | `gemini-3.1-flash-lite`        | GA (shutdown 2027-05-07) |
 | Advanced reasoning, long-horizon agentic work              | `gemini-3.1-pro-preview`              | Preview      |
-| Reasoning workloads on stable GA                           | `gemini-2.5-pro`                      | GA (sunset 2026-10-16) |
-| Price-performance on stable GA                             | `gemini-2.5-flash`                    | GA (sunset 2026-10-16) |
-| Fast / cheapest stable GA                                  | `gemini-2.5-flash-lite`               | GA (sunset 2026-10-16) |
-| UI automation via screen interaction                       | `gemini-2.5-computer-use-preview-10-2025` | Preview   |
+| Reasoning workloads on stable GA                           | `gemini-2.5-pro`                      | GA (no shutdown date announced) |
+| Price-performance on stable GA                             | `gemini-2.5-flash`                    | GA (no shutdown date announced) |
+| Fast / cheapest stable GA (2.5 line)                       | `gemini-2.5-flash-lite`               | GA (no shutdown date announced) |
+| UI automation via screen interaction                       | `gemini-3.6-flash` computer-use built-in tool (Preview), or `gemini-2.5-computer-use-preview-10-2025` | Preview |
 
-[source: ai.google.dev/gemini-api/docs/models, retrieved 2026-06-01]
-[source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
-[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite, retrieved 2026-06-01]
-[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/changelog, retrieved 2026-08-09]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.6-flash, retrieved 2026-08-09]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
+[source: blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/, retrieved 2026-08-09]
+
+[applies-to: gemini-3.6-flash] 3.6 Flash: 1,048,576 input / 65,536 output tokens (same as 3.5 Flash); inputs Text/Image/Video/Audio/PDF, output text only; knowledge cutoff **March 2026** (with the Gemini-3-family caveat that some domains may still reflect the January 2025 cutoff); pricing $1.50/1M input, $7.50/1M output including thinking tokens — cheaper output than 3.5 Flash's $9.00. Google's speed positioning is efficiency, not raw decode rate: ~17% fewer output tokens than 3.5 Flash for equivalent work and fewer reasoning steps/tool calls per task (the 17% figure is Google's, computed on the third-party Artificial Analysis Index — treat the number as vendor-cited third-party measurement). The model card also lists Grounding with Google Maps and File search as supported, plus Flex/Priority inference tiers, and documents enhanced CBRN/cyber-offense safeguards with a near-flat unjustified-refusal delta vs 3.5 Flash (+0.25pp).
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.6-flash, retrieved 2026-08-09]
+[source: ai.google.dev/gemini-api/docs/pricing, retrieved 2026-08-09]
+[source: deepmind.google/models/model-cards/gemini-3-6-flash/, retrieved 2026-08-09]
+[source: blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/, retrieved 2026-08-09]
+
+[applies-to: gemini-3.5-flash-lite] 3.5 Flash-Lite (GA 2026-07-21) is the fastest model in the 3.5 series — claimed 350 output tokens/s — priced $0.30/1M input, $2.50/1M output, and is the documented replacement for `gemini-3.1-flash-lite`.
+[source: blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/, retrieved 2026-08-09]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
 
 `gemini-3.5-flash` carries a Jan 2025 knowledge cutoff with a latest-update stamp of May 2026.
 [source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
 
+Gemini 3.5 Pro is in partner-only testing (not released); Google states pre-training for Gemini 4 has started. `gemini-3.1-pro-preview` remains the only current Pro-tier offering.
+[source: blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/, retrieved 2026-08-09]
+
 A separate endpoint, `gemini-3.1-pro-preview-customtools`, is tuned to prioritize your custom tools over built-in tools.
 [source: ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview, retrieved 2026-06-01]
 
-**Computer use is not a 3.x-text-model capability.** Only `gemini-2.5-computer-use-preview-10-2025` (Preview) supports screen interaction. `gemini-3.5-flash`, `gemini-3.1-flash-lite`, and `gemini-3.1-pro-preview` do **not** support computer use.
-[source: ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025, retrieved 2026-06-01]
-[source: ai.google.dev/gemini-api/docs/models/gemini-3.5-flash, retrieved 2026-06-01]
-[source: ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite, retrieved 2026-06-01]
+**Computer use is now a built-in client-side tool on Flash-tier 3.x models (Preview).** This supersedes the earlier state in which only `gemini-2.5-computer-use-preview-10-2025` supported screen interaction: `gemini-3.6-flash` and `gemini-3.5-flash-lite` list "Computer use Supported (Preview)" directly, via the Gemini API and Gemini Enterprise. The dedicated 2.5 computer-use model remains available. Whether the pre-3.6 text models (3.5 Flash, 3.1 line) gained the tool was not confirmed this pass — check the per-model pages.
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.6-flash, retrieved 2026-08-09]
+[source: blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/, retrieved 2026-08-09]
 
 ### Deprecated / retired
 
-- `gemini-2.0-flash` / `gemini-2.0-flash-lite` GA (and `-001` variants) shut down **2026-06-01**.
-- `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` GA sunset **2026-10-16**.
-- `gemini-3.1-flash-lite` (the **GA** model) has an announced shutdown date of **2027-05-07**. [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-07-18]
+- `gemini-2.0-flash` / `gemini-2.0-flash-lite` GA (and `-001` variants) shut down **2026-06-01** (executed; the models page now marks them "Shut down"). [source: ai.google.dev/gemini-api/docs/models, retrieved 2026-08-09]
+- `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite`: the previously-published **2026-10-16 GA sunset date has been removed** from the live deprecations page — all three now read "No shutdown date announced." Plans keyed to the October date should be re-based; a new date can still be announced. [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
+- `gemini-3.1-flash-lite` (the **GA** model): shutdown **2027-05-07**, unchanged; the ledger now names `gemini-3.5-flash-lite` as the recommended replacement. [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
+- `gemini-3.6-flash`: released 2026-07-21, no shutdown date announced. [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
 - `gemini-3-pro-preview` (the **original** 3 Pro preview — superseded by `gemini-3.1-pro-preview`) shut down **2026-03-09**.
 - `gemini-3.1-flash-lite-preview` shut down **2026-05-25** (superseded by GA `gemini-3.1-flash-lite`).
 - `gemini-3-flash-preview` was the preview that `gemini-3.5-flash` replaced.
@@ -118,8 +136,8 @@ Unlike Anthropic, Google's Gemini documentation does not recommend a specific XM
 
 ### Thinking defaults vary by tier on Gemini 3
 
-`thinkingLevel` {minimal, low, medium, high} is the recommended reasoning control for Gemini 3 models and onward; it replaces the 2.5-era `thinkingBudget`. Defaults differ by model: `gemini-3.1-pro-preview` defaults to `high`, `gemini-3.5-flash` to `medium`, `gemini-3.1-flash-lite` to `minimal`. For latency- or token-sensitive workloads on Pro or Flash, step down explicitly — do not assume reasoning is off by default the way it is on many OpenAI-compatible stacks.
-[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
+`thinkingLevel` {minimal, low, medium, high} is the recommended reasoning control for Gemini 3 models and onward; it replaces the 2.5-era `thinkingBudget`. Defaults differ by model: `gemini-3.1-pro-preview` defaults to `high`, `gemini-3.6-flash` and `gemini-3.5-flash` to `medium` (thinking On by default, full four-value enum supported), `gemini-3.1-flash-lite` to `minimal`. For latency- or token-sensitive workloads on Pro or Flash, step down explicitly — do not assume reasoning is off by default the way it is on many OpenAI-compatible stacks.
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-08-09]
 
 [applies-to: gemini-3.1-pro-preview] 3.1 Pro cannot set `minimal` and cannot disable thinking.
 [source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
@@ -166,9 +184,9 @@ Gemini is natively multimodal — text, image, video, audio, and PDF inputs are 
 
 - **Images and video** enter as either `inlineData` (base64 payload) or `fileData` (URI returned by the Files API).
 - **PDFs** work the same way — pass as `inlineData` or `fileData`.
-- **Screen interaction / computer use** is exposed only via the specialized `gemini-2.5-computer-use-preview-10-2025` model, which takes screenshots as image parts and emits UI action commands. The 3.x text models do not support computer use.
+- **Screen interaction / computer use** is available two ways as of 2026-08-09: as a built-in client-side tool on Flash-tier 3.x models (`gemini-3.6-flash`, `gemini-3.5-flash-lite` — Preview), or via the specialized `gemini-2.5-computer-use-preview-10-2025` model. Both take screenshots as image parts and emit UI action commands.
 
-[source: ai.google.dev/gemini-api/docs/function-calling, retrieved 2026-04-18]
+[source: ai.google.dev/gemini-api/docs/models/gemini-3.6-flash, retrieved 2026-08-09]
 [source: ai.google.dev/gemini-api/docs/models/gemini-2.5-computer-use-preview-10-2025, retrieved 2026-06-01]
 
 A common convention: place multimodal inputs **before** the text instructions that reference them. Gemini attends to ordering within a `user` turn's parts array.

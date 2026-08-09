@@ -4,81 +4,105 @@ scope: api
 versions:
   - deepseek-v4-flash
   - deepseek-v4-pro
+  - deepseek-ai/DeepSeek-V4-Flash-0731
   - deepseek-ai/DeepSeek-V3.2
-  - deepseek-ai/DeepSeek-V3.2-Speciale
-retrieved: 2026-06-01
+retrieved: 2026-08-09
 primary_sources:
-  - https://api-docs.deepseek.com/news/news260424
-  - https://api-docs.deepseek.com/quick_start/pricing
   - https://api-docs.deepseek.com/updates
+  - https://api-docs.deepseek.com/quick_start/pricing
   - https://api-docs.deepseek.com/guides/thinking_mode
-  - https://api-docs.deepseek.com/guides/reasoning_model
-  - https://api-docs.deepseek.com/guides/function_calling
+  - https://api-docs.deepseek.com/guides/tool_calls
+  - https://api-docs.deepseek.com/guides/responses_api
+  - https://api-docs.deepseek.com/guides/anthropic_api
   - https://api-docs.deepseek.com/guides/kv_cache
   - https://api-docs.deepseek.com/api/create-chat-completion
-  - https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro
+  - https://api-docs.deepseek.com/quick_start/agent_integrations/codex/
+  - https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731
   - https://huggingface.co/deepseek-ai/DeepSeek-V3.2
-  - https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale
 maturity_note: |
-  DeepSeek V4 is the current production generation, exposed as `deepseek-v4-flash`
-  and `deepseek-v4-pro` over both OpenAI ChatCompletions and Anthropic interfaces.
-  Open weights are MIT-licensed, context length is 1M tokens (default across all
-  DeepSeek services), and max output is 384K. The beta endpoint exposes strict-mode
-  function calling with richer schema features than OpenAI's subset. The V4 release
-  ships WITHOUT a Jinja chat template — callers must use DeepSeek's Python encoder.
-  Context caching on disk is automatic and materially cheaper than most competitors.
-  Legacy API model names `deepseek-chat` / `deepseek-reasoner` map onto V4-Flash but
-  hard-retire and become inaccessible after Jul 24th, 2026, 15:59 UTC.
+  DeepSeek V4 is the production generation. The 2026-07-31 update replaced the model
+  behind `deepseek-v4-flash` with DeepSeek-V4-Flash-0731 (the official release; the
+  April 2026 launch is retroactively labeled Preview) without changing the API model
+  ID. `deepseek-v4-pro` still serves the Preview build; its official release is
+  promised "soon". New since the last pass: a native OpenAI Responses API surface
+  (flash-only), a documented default of thinking-on at effort high, a real `low`
+  effort level on flash, USD pricing with much steeper cache-hit discounts, and a
+  vendor pre-announcement of a significant future price increase. Legacy
+  `deepseek-chat` / `deepseek-reasoner` retired 2026-07-24 and are gone from the
+  model enum. Docs restructured: /guides/function_calling and /guides/reasoning_model
+  now 404 (moved to /guides/tool_calls and /guides/thinking_mode).
 ---
 
 # DeepSeek — API-Layer Reference
 
-API-call-level detail for the current DeepSeek generation. Portable prompt-layer content (selection, thinking semantics, anti-patterns) lives in `deepseek-prompt.md`.
+API-call-level detail for the current DeepSeek generation. Portable prompt-layer content (selection, thinking semantics, session management, anti-patterns) lives in `deepseek-prompt.md`.
 
 ## 1. API Surface
 
 ### Base URLs
 
 - **OpenAI ChatCompletions format**: `https://api.deepseek.com`.
+- **OpenAI Responses API format**: same base; `wire_api="responses"`. Flash-only (see §4).
 - **Anthropic format**: `https://api.deepseek.com/anthropic`.
+- **Beta**: `https://api.deepseek.com/beta` — strict-mode tool calls and features in validation.
 
-[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-06-01]
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/anthropic_api, retrieved 2026-08-09]
 
-- **Beta**: `https://api.deepseek.com/beta` — same OpenAI shape plus strict-mode tool calls and newer features in validation.
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
-
-Cross-family reasoning field-name and round-trip-400 hazards (how DeepSeek's `reasoning_content` differs from OpenAI/Anthropic reasoning fields) are tabulated in `resources/openai-compatibility-surface.md`. DeepSeek's own statements are kept here.
+Cross-family reasoning field-name and round-trip hazards are tabulated in `resources/openai-compatibility-surface.md`. DeepSeek's own statements are kept here.
 
 ### Model IDs
 
-| ID                  | Notes                                                                       |
-|---------------------|-----------------------------------------------------------------------------|
-| `deepseek-v4-flash` | 284B total / 13B active; tri-state reasoning; legacy `deepseek-chat`/`deepseek-reasoner` map here |
-| `deepseek-v4-pro`   | 1.6T total / 49B active; flagship; tri-state reasoning                       |
+| ID                  | Serving model version   | Notes                                                       |
+|---------------------|-------------------------|--------------------------------------------------------------|
+| `deepseek-v4-flash` | DeepSeek-V4-Flash-0731  | Official release (public beta since 2026-07-31); 284B total / 13B active; effort low/high/max |
+| `deepseek-v4-pro`   | DeepSeek-V4-Pro (Preview build) | 1.6T total / 49B active; official release "will follow soon"; effort high/max only |
 
-`deepseek-chat` and `deepseek-reasoner` still resolve (mapping to V4-Flash non-thinking and thinking respectively) but hard-retire and become inaccessible after **Jul 24th, 2026, 15:59 UTC**.
-[source: api-docs.deepseek.com/news/news260424, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/updates, retrieved 2026-06-01]
+The 0731 release did **not** introduce a new API model ID. The stable alias `deepseek-v4-flash` was repointed to the new checkpoint: "The API calling method remains unchanged — simply set the model name to `deepseek-v4-flash` to use the latest version." The pricing page documents the per-ID serving version explicitly.
+[source: api-docs.deepseek.com/updates, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
+
+The Chat Completions `model` enum now contains **only** the two V4 IDs. `deepseek-chat` and `deepseek-reasoner` retired 2026-07-24, 15:59 UTC and no longer appear in the enum or on the pricing page (see §9).
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+
+Third-party aggregators pin the checkpoint under dated slugs (OpenRouter: `deepseek/deepseek-v4-flash-0731`) even though the native API does not.
+[tier: 2, source: openrouter.ai/deepseek/deepseek-v4-flash-0731, retrieved 2026-08-09]
+
+### Concurrency limits
+
+Documented per model: **2500** concurrent for `deepseek-v4-flash`, **500** for `deepseek-v4-pro`.
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
+
+### Pricing (USD, captured 2026-08-09)
+
+| Per 1M tokens        | deepseek-v4-flash | deepseek-v4-pro |
+|----------------------|-------------------|-----------------|
+| Input, cache hit     | $0.0028           | $0.003625       |
+| Input, cache miss    | $0.14             | $0.435          |
+| Output               | $0.28             | $0.87           |
+
+Cache-hit input is ~2% of cache-miss input on flash (~50x discount; ~120x on pro) — much steeper than the prior generation's 10x framing. DeepSeek has pre-announced a **significant across-the-board price increase** with no published amount or date: "We plan to raise the overall pricing for DeepSeek API services in the near future, with a significant increase expected." Treat the figures above as time-limited.
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
 
 ### SDKs
 
-Any OpenAI-compatible SDK works by pointing `base_url` at `https://api.deepseek.com` (or `/beta`) and supplying a DeepSeek API key. The Anthropic interface uses `https://api.deepseek.com/anthropic`.
-[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-06-01]
+Any OpenAI-compatible SDK works by pointing `base_url` at `https://api.deepseek.com` (or `/beta`). The Responses API surface is reachable with `wire_api="responses"`-style clients (vendor documents a Codex `config.toml` using exactly that against the same base URL, with `model_reasoning_effort = "high"` as the shipped default). The Anthropic interface uses `https://api.deepseek.com/anthropic`.
+[source: api-docs.deepseek.com/quick_start/agent_integrations/codex/, retrieved 2026-08-09]
 
 ### Open weights
 
-`deepseek-ai/DeepSeek-V4-Pro` — MIT-licensed, 1.6T total / 49B active params.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
-
-`deepseek-ai/DeepSeek-V3.2` — MIT-licensed, 685B total parameters, DeepSeek Sparse Attention (DSA) architecture. Prior generation.
+- **`deepseek-ai/DeepSeek-V4-Flash-0731`** — MIT. Official release superseding the preview; same architecture and size (re-post-train only). Ships with a bundled **DSpark speculative-decoding module**, which is why HF safetensors metadata reads 304B params against the 284B-total/13B-active base architecture.
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/updates, retrieved 2026-08-09]
+- **`deepseek-ai/DeepSeek-V3.2`** — MIT, 685B total, DeepSeek Sparse Attention (DSA). Prior generation.
 [source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
 
 ## 2. Chat Template / Message Structure
 
 ### Special tokens (open weights)
 
-DeepSeek-V3.2 uses full-width characters for control tokens — **not** the ASCII `<|...|>` form used by most open-weights families.
+DeepSeek uses full-width characters for control tokens — **not** the ASCII `<|...|>` form used by most open-weights families.
 
 | Token                               | Purpose                                  |
 |-------------------------------------|------------------------------------------|
@@ -86,32 +110,19 @@ DeepSeek-V3.2 uses full-width characters for control tokens — **not** the ASCI
 | `<｜end▁of▁sentence｜>`            | End-of-sequence (EOS)                    |
 | `<｜User｜>`                        | User-turn delimiter                      |
 | `<｜Assistant｜>`                   | Assistant-turn delimiter                 |
-| `<｜Developer｜>`                   | Developer role (search-agent scenarios only) |
+| `<｜Developer｜>`                   | Developer role (V3.2: search-agent scenarios only) |
 | `<think>` / `</think>`              | Reasoning block wrapper                  |
 
 [source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
 
-Note the characters:
-- `｜` is U+FF5C (FULLWIDTH VERTICAL LINE), not ASCII `|` (U+007C).
-- `▁` is U+2581 (LOWER ONE EIGHTH BLOCK), not ASCII `_`.
+Note the characters: `｜` is U+FF5C (FULLWIDTH VERTICAL LINE), not ASCII `|`; `▁` is U+2581 (LOWER ONE EIGHTH BLOCK), not ASCII `_`. Hand-built chat strings substituting ASCII look right on screen but tokenize differently. Use the provided encoder. Whether 0731 changed any individual special tokens vs V3.2 is unverified (the 0731 `encoding/README.md` was not retrieved); the encoder interface is the stable contract.
 
-Hand-built chat strings substituting ASCII look right on screen but tokenize differently. Use the provided encoder.
+### No Jinja template; `encoding_dsv4` encoder
 
-### No Jinja template
+The 0731 release again ships **no Jinja-format chat template**. It provides an `encoding` folder with Python `encode_messages(...)` / `parse_message_from_completion_text(...)`. New on 0731: `encode_messages` takes `thinking_mode` and `reasoning_effort` arguments — the effort level is a **chat-template-level control**, rendered into the token stream, not only an API parameter.
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
 
-The DeepSeek V4 release ships **no Jinja-format chat template**. It provides an `encoding` folder with Python `encode_messages(...)` and `parse_message_from_completion_text(...)` helpers; use those rather than `apply_chat_template`. Recommended local sampling for the open weights: temperature=1.0, top_p=1.0.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
-
-[applies-to: deepseek-ai/DeepSeek-V3.2] DeepSeek-V3.2 likewise ships no Jinja template; its model card directs callers to `encoding/encoding_dsv32.py` with `encode_messages()` and `parse_message_from_completion_text()`.
-[source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
-
-### Example template rendering
-
-[applies-to: deepseek-ai/DeepSeek-V3.2]
-```
-<｜begin▁of▁sentence｜><｜User｜>hello<｜Assistant｜></think>Hello! I am DeepSeek.<｜end▁of▁sentence｜>
-```
-
+[applies-to: deepseek-ai/DeepSeek-V3.2] V3.2 likewise ships no Jinja template; use `encoding/encoding_dsv32.py`.
 [source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
 
 ### API-layer message shape
@@ -127,41 +138,42 @@ The DeepSeek V4 release ships **no Jinja-format chat template**. It provides an 
 }
 ```
 
-Roles: `user`, `assistant`, `tool`. OpenAI-compatible otherwise.
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
+Roles on Chat Completions: `system`, `user`, `assistant`, `tool`. On the **Responses API**, input roles are `user` / `assistant` / `system` / `developer`, and `developer` **is treated as `system`** — a general-purpose alias on that surface, unlike the narrow V3.2 search-agent `<｜Developer｜>` role.
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
 
 ## 3. Sampling Parameters
 
-- `frequency_penalty` and `presence_penalty` are documented as **hard-deprecated** — no effect.
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
-  Verified 2026-07-19: through OpenRouter this is **serving-stack-dependent**, not a universal no-op. On a repetition-inducing fixture (40 short testimonials, temperature 0.7, thinking off; metric = mean max repeated 4-gram, N=20/arm) max penalty (freq=2.0, pres=2.0) was inert on Fireworks (no-penalty 2.55 vs max-penalty 2.60) and Novita (2.80 vs 2.67) but measurably reduced repetition on Parasail (2.13 vs 1.00) (via OpenRouter). Do not state a blanket "no effect" for OpenRouter callers — whether the penalties do anything depends on the routed provider.
-
-For the V4 open weights, DeepSeek recommends local sampling of temperature=1.0, top_p=1.0.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
+- **In thinking mode, `temperature`, `top_p`, `presence_penalty`, and `frequency_penalty` are all unsupported** — passed values are ignored without error. Since thinking is now on by default (§4), a default-configuration caller has no live sampling knobs.
+[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-08-09]
+- `frequency_penalty` / `presence_penalty` are hard-deprecated on the native API in general: "This parameter is no longer supported. It will not take effect if you pass it to the API."
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+  Verified 2026-07-19 (pre-0731): through OpenRouter this is **serving-stack-dependent**, not universal — max penalties were inert on Fireworks and Novita but measurably reduced repetition on Parasail (mean max repeated 4-gram 2.13 → 1.00, N=20/arm). Whether the penalties do anything for OpenRouter callers depends on the routed provider.
+- Recommended local sampling for the 0731 open weights: **temperature=1.0, with top_p=0.95 for agentic scenarios and top_p=1.0 otherwise** — superseding the flat 1.0/1.0 recommendation of the preview generation.
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
 
 ## 4. Reasoning / Thinking Control
 
-### Tri-state reasoning toggle
+### Defaults and the effort ladder
 
-V4 exposes three reasoning levels: Non-think, Think (High), and Think Max. Set them via either parameter:
+**Thinking mode is enabled by default, with default effort `high`.**
+[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-08-09]
+
+Controls, via either parameter:
 
 - `thinking: {"type": "enabled" | "disabled"}`, or
-- `reasoning_effort: "high" | "max"`.
+- `reasoning_effort: "low" | "high" | "max"`.
 
-`reasoning_effort` values `low`/`medium` map to `high`; `xhigh` maps to `max`. Some complex agent harnesses (for example Claude Code and OpenCode) automatically set effort to `max`.
+`deepseek-v4-flash` supports all three effort levels — `low` is a **real tier** on 0731, not an alias. `deepseek-v4-pro` temporarily supports only `high` and `max` (`low` is treated as `high`, `xhigh` as `max`).
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
 
-```python
-response = client.chat.completions.create(
-    model="deepseek-v4-flash",
-    messages=[...],
-    extra_body={"thinking": {"type": "enabled"}},  # or reasoning_effort="high" | "max"
-)
-```
+Doc inconsistency, flagged: create-chat-completion also says "medium and xhigh are mapped to high" generically, while the same paragraph and the thinking_mode table give the pro-only mapping xhigh→max. Off-ladder values are accepted and mapped rather than rejected; the exact mapping of `medium`/`xhigh` per model is [disputed: create-chat-completion vs thinking_mode tables disagree on where medium/xhigh land].
 
-[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-06-01]
+[field-observed] Via OpenRouter (Novita, fp8, N=1 per value, 2026-08-09): all of none/low/medium/high/xhigh/max returned 200; `reasoning_effort: "none"` disabled thinking entirely (0 reasoning tokens). On a nontrivial prompt, low produced ~180 reasoning tokens vs ~840 (high) and ~620 (max) — low is materially lighter; high vs max did not separate at N=1.
 
-Think Max is the maximum reasoning-effort mode. For it, DeepSeek recommends a context window of at least 384K tokens (a recommendation, not a hard gate); it uses a special system prompt.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
+[field-observed] OpenRouter control mapping (Novita, N=1 per cell, 2026-08-09): OpenRouter's normalized controls work (`reasoning: {"enabled": false}` and `reasoning_effort: "none"` both disable thinking), but the DeepSeek-native `thinking: {"type": "disabled"}` body passed through OpenRouter did **not** disable thinking. Through OpenRouter, use OpenRouter's `reasoning` parameter family, not DeepSeek's native `thinking` field. Note also a catalog bug: OpenRouter's static catalog briefly exposed only a "high" tier for the 0731 slug while the live API advertised low/high/max — at least one agent CLI shipped a patch for it.
+[tier: 2, source: github.com/can1357/oh-my-pi/issues/7307, retrieved 2026-08-09]
 
 ### Response shape
 
@@ -179,19 +191,20 @@ Thinking responses carry `reasoning_content` at the same level as `content` (thi
 }
 ```
 
-[source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
+[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-08-09]
 
 ### Critical multi-turn rule: `reasoning_content` round-trip (V4)
 
-On V4 the round-trip behavior depends on whether the turn performs tool calls:
+Unchanged on 0731. The round-trip behavior depends on whether the conversation carries tools:
 
 - On turns that do **not** perform tool calls, passing `reasoning_content` back in `messages` is **ignored** (no error).
-- On turns that **do** perform tool calls, DeepSeek's native contract is that `reasoning_content` **must** be passed back or the API returns **HTTP 400**. This is a **native-only** (`api.deepseek.com`) assertion — see the OpenRouter caveat below.
+- For requests carrying the `tools` parameter, `reasoning_content` **must be fully passed back** in subsequent requests, or the native API returns **HTTP 400**. This is a **native-only** (`api.deepseek.com`) assertion — see the OpenRouter caveat below.
+[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-08-09]
 
-Verified 2026-07-19: the hard-400 did NOT reproduce via OpenRouter (DeepInfra). A tool-call turn resubmitted with `reasoning_content` / `reasoning_details` **stripped** returned HTTP 200 (2/2); the intact resubmit also 200; a non-tool stripped turn 200 (via OpenRouter/DeepInfra). OpenRouter manages reasoning as `reasoning_details` and tolerates its absence, so code that strips reasoning on tool-turn resubmit does not break the V4 loop on this route. The first-party OpenRouter `deepseek` endpoint could not be pinned to re-test the native contract (404, provider not available at the test account), so the HTTP 400 assertion is verified only against DeepSeek's own docs, not directly re-observed.
+Verified 2026-07-19 (DeepInfra) and re-verified 2026-08-09 on 0731 (Novita, N=2): the hard-400 does **not** reproduce via OpenRouter — a tool-call turn resubmitted with reasoning stripped returned HTTP 200, as did the intact resubmit. OpenRouter-routed code that strips reasoning on tool turns does not break, but the same code moved to the native API will 400. The first-party DeepSeek endpoint on OpenRouter could not be pinned from the test account (404 "No endpoints found" with `provider.order: ["deepseek"]`), so the native contract remains verified against DeepSeek's docs, not directly re-observed.
 
 ```python
-# Tool-call turn: reasoning_content REQUIRED on round-trip or HTTP 400
+# Tool-call turn: reasoning_content REQUIRED on round-trip (native API) or HTTP 400
 messages.append({
     "role": "assistant",
     "content": prior_response.content,
@@ -203,36 +216,27 @@ messages.append({
 messages.append({"role": "assistant", "content": prior_response.content})
 ```
 
-This inverts the legacy `deepseek-reasoner` behavior, where **any** `reasoning_content` in input returned 400. It also diverges from Claude (which requires signature-authenticated `thinking` blocks to persist in tool-use multi-turn) and OpenAI (which expects reasoning items via `previous_response_id`).
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/guides/thinking_mode, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
-[testable: id=deepseek.reasoning-content-roundtrip-tool-turn.v2, expected=on native api.deepseek.com a V4 tool-call turn omitting prior reasoning_content returns HTTP 400; a non-tool-call turn including it is accepted. Native-only: verified 2026-07-19 the 400 does not reproduce via OpenRouter/DeepInfra (stripped tool-turn 200, 2/2)]
+[testable: id=deepseek.reasoning-content-roundtrip-tool-turn.v2, expected=on native api.deepseek.com a V4 tool-call turn omitting prior reasoning_content returns HTTP 400; a non-tool-call turn including it is accepted. Native-only: the 400 does not reproduce via OpenRouter (DeepInfra 2026-07-19 2/2; Novita on 0731 2026-08-09 2/2)]
 
 ### `max_tokens` includes CoT
 
-```
-max_tokens >= reasoning_tokens + content_tokens
-```
+`max_tokens >= reasoning_tokens + content_tokens`. Max output is 384K. On 0731 the vendor recommends a **maximum output length of 384K for both `high` and `max` effort** — reframed from the preview generation's Think-Max-only context-window recommendation.
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
 
-`max_tokens` includes the chain-of-thought portion. Budget output accordingly when thinking is enabled. Max output is 384K.
-[source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-06-01]
+[field-observed] When the CoT exhausts `max_tokens`, the response is a **200 with empty `content`** and `completion_tokens_details.reasoning_tokens == max_tokens` — not an error (observed 4/63 analysis-style turns at `max_tokens: 4096`, 2026-08-09, via OpenRouter/Novita). Detect via the reasoning-token count, and budget 8K+ for analysis turns with thinking on.
 
-### Thinking with tool use
+### Responses API (new surface, flash-only)
 
-The model can interleave reasoning and tool calls within a single thinking-enabled turn:
+`deepseek-v4-flash` natively supports the OpenAI Responses API format, specifically adapted for Codex. `deepseek-v4-pro` support was promised for "early August 2026" and was **not yet live as of 2026-08-09**. Key contract points:
 
-- Emit a thought.
-- Call a tool.
-- Receive the result.
-- Emit another thought.
-- Call another tool or emit the final answer.
+- **Stateless**: `previous_response_id` and `conversation` are not supported; `store` is always `false`. The caller manages history.
+- `parallel_tool_calls` is ignored — parallel tool calling is **always enabled**; `max_tool_calls` is also ignored.
+- Server-side **`web_search`** tool (executed on DeepSeek's servers; `search_context_size` and `user_location` ignored) and a custom **`apply_patch`** tool for Codex compatibility.
+- `text.format` is fully supported (structured output path; `verbosity` accepted but no effect).
+- Streaming events are fully enumerated (`response.created` … `response.reasoning_text.delta` … `response.completed` / `response.incomplete` / `response.failed`); there is **no `data: [DONE]`** terminator on this surface.
 
-[source: api-docs.deepseek.com/news/news260424, retrieved 2026-06-01]
-
-**Exception**: `deepseek-ai/DeepSeek-V3.2-Speciale` does **not** support tool calls (weights-only variant).
-[source: huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale, retrieved 2026-06-01]
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
 
 ## 5. Tool Use / Function Calling
 
@@ -257,169 +261,138 @@ The model can interleave reasoning and tool calls within a single thinking-enabl
 ]
 ```
 
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
+[source: api-docs.deepseek.com/guides/tool_calls, retrieved 2026-08-09]
+
+### `tool_choice` and limits
+
+- `tool_choice` accepts `none` / `auto` / `required` plus the named-function form. Defaults: `none` when no tools are present, `auto` when tools are present.
+- **Maximum 128 functions** per request (now vendor-documented).
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+
+### Parallel tool calls
+
+Verified 2026-07-19 (pre-0731, OpenRouter/DeepInfra, 3/3): default behavior is parallel — two independent tools produced 2 `tool_calls` in one assistant turn with no parameter set. Handle multi-entry `tool_calls` arrays. On the Responses API and Anthropic surfaces, parallel tool use is always on and **cannot be disabled** (`parallel_tool_calls` / `disable_parallel_tool_use` ignored). The native Chat Completions surface documents no `parallel_tool_calls` parameter at all.
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/anthropic_api, retrieved 2026-08-09]
 
 ### Strict mode
 
-Available via the **beta endpoint** (`base_url="https://api.deepseek.com/beta"`). Set `"strict": true` on each function definition. Strict mode requires:
-
-- All object properties marked required.
-- `"additionalProperties": false` on every object.
-
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
-
-### Supported JSON Schema features
-
-Richer than OpenAI's subset:
-
-- Basic: `object`, `string`, `number`, `integer`, `boolean`, `array`.
-- `enum`, `anyOf`.
-- `$def` — define reusable sub-schemas.
-- `$ref` — reference them; can be used for **recursive structures**.
-
-Recursive structures are the notable addition: data extraction over tree-shaped content (ASTs, org hierarchies, nested JSON) can be modeled directly.
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
-
-### Response shape
-
-```json
-{
-  "choices": [{
-    "message": {
-      "role": "assistant",
-      "content": null,
-      "tool_calls": [
-        {
-          "id": "call_abc",
-          "type": "function",
-          "function": {
-            "name": "get_weather",
-            "arguments": "{\"location\":\"Paris\"}"
-          }
-        }
-      ]
-    }
-  }]
-}
-```
-
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
+Available via the **beta endpoint** (`base_url="https://api.deepseek.com/beta"`), supported in **both thinking and non-thinking mode**. Set `"strict": true` per function; requires all object properties `required` and `additionalProperties: false`. Supported JSON Schema features remain richer than OpenAI's subset — `enum`, `anyOf`, `$def`, `$ref` (recursive structures) — plus string `pattern` and `format` (email, hostname, ipv4, ipv6, uuid). **Not** supported: `minLength`/`maxLength`, `minItems`/`maxItems`.
+[source: api-docs.deepseek.com/guides/tool_calls, retrieved 2026-08-09]
 
 ### Tool-result roundtrip
 
 Append a `tool` role message with `tool_call_id`:
 
 ```json
-{ "role": "tool", "tool_call_id": "call_abc", "content": "20°C, sunny" }
+{ "role": "tool", "tool_call_id": "call_abc", "content": "20C, sunny" }
 ```
 
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
+[source: api-docs.deepseek.com/guides/tool_calls, retrieved 2026-08-09]
 
-### Notable gaps in the retrieved function-calling excerpt
-
-- **Max tools per request** — not quoted in the retrieved primary excerpt (earlier search results suggested up to 128; not verified).
-- **`tool_choice` values** — not quoted.
-- **Parallel tool-call default** — Verified 2026-07-19: default is parallel. Given two independent tools ("weather and time in Paris?"), deepseek-v4-flash emitted 2 `tool_calls` in one assistant turn with no param set (3/3, via OpenRouter/DeepInfra); tool-orchestration code must handle a multi-entry `tool_calls` array. The `parallel_tool_calls:false` **disable flag** remains unverified/native-only — no OpenRouter provider for this slug advertises the parameter in `supported_parameters`.
-
-See §10.
+Community telemetry note: OpenRouter's provider table for the 0731 slug showed a 1.78-5.39% (avg 3.56%) tool-call error rate on DeepSeek's own first-party endpoint, vs 0.23-0.72% on the best third-party hosts of the same weights. Aggregator telemetry, not a vendor number.
+[tier: 2, source: openrouter.ai/deepseek/deepseek-v4-flash-0731, retrieved 2026-08-09]
 
 ## 6. Structured Outputs
 
-DeepSeek's documented path for structured output is **through function calling with `strict: true`** on the beta endpoint. Define the extraction target as a function, force its invocation via `tool_choice`, and the strict-schema validation gives you schema-conforming `arguments`.
+- **Chat Completions**: `response_format` supports **only `text` and `json_object`** — there is no dedicated `json_schema` path on this surface.
+- **Responses API**: `text.format` is fully supported — the first vendor-documented schema-shaped output path outside function calling (flash-only, since the surface is flash-only).
+- **Strict function calling** (beta endpoint) remains the most featureful path: force the extraction function via `tool_choice` and rely on strict-schema validation.
 
-A dedicated `response_format: {"type": "json_schema", ...}` path (as on OpenAI) is not explicitly documented in the retrieved primary sources. Treat as partial.
-[source: api-docs.deepseek.com/guides/function_calling, retrieved 2026-04-19]
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
+
+[field-observed] Via OpenRouter, `response_format` acceptance is provider-dependent: Novita rejected even `json_object` with a 400 while other hosts advertise `structured_outputs` support (N=1, 2026-08-09). Check the routed provider's `supported_parameters` before relying on it.
 
 ## 7. Caching, Batch, Streaming
 
-### Context caching (automatic, disk-backed)
+### Context caching (automatic, rewritten mechanics)
 
-- **Always on** — no parameter needed.
-- **Minimum cacheable**: **64 tokens**.
-- **TTL**: "a few hours to a few days" after last use.
-- **Pricing**: cache hit **0.1 yuan / MTok**, miss 1 yuan / MTok — **10× discount** (approximately 90% off).
-- **Scope**: matches **prefix only** — system prompts, earlier conversation turns, initial examples.
-- **Response reporting**:
-  - `usage.prompt_cache_hit_tokens` — tokens served from cache.
-  - `usage.prompt_cache_miss_tokens` — tokens not cached.
+The kv_cache guide was rewritten for the sliding-window-attention serving stack. Caching is still automatic (no parameter), but:
 
-[source: api-docs.deepseek.com/guides/kv_cache, retrieved 2026-04-19]
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
+- Cached prefixes are stored and matched as **independent, complete "cache prefix units"** — a hit requires fully matching a stored unit, not merely sharing an arbitrary prefix. Units are cut at request boundaries, detected common prefixes, and fixed token intervals.
+- The previously documented **64-token minimum no longer appears** anywhere in the guide.
+- TTL unchanged: cleared automatically "within a few hours to a few days" after last use.
+- Usage reporting unchanged: `usage.prompt_cache_hit_tokens` / `usage.prompt_cache_miss_tokens`.
+- Pricing: cache-hit input $0.0028/M vs miss $0.14/M on flash (§1) — a ~50x discount, materially steeper than the prior 10x framing.
 
-No `cache_control` field or explicit breakpoints — the cache operates on prefix hashing automatically. This is closer to OpenAI's automatic caching than to Anthropic's explicit `cache_control` model.
+[source: api-docs.deepseek.com/guides/kv_cache, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
+
+A `user_id` request parameter now exists and provides **KVCache isolation** (plus content-safety attribution and scheduling isolation) for multi-tenant deployments.
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+
+[field-observed] Cache interaction with thinking controls (OpenRouter/Novita, N=1 per cell, 2026-08-09, OpenAI-style `cached_tokens` reporting): a ~24K-token stable prefix hit the cache on repeat calls; changing `reasoning_effort` (high → low → max → high) **preserved** the cache hit, while toggling thinking **off** invalidated it (cached=0) and shrank the rendered prompt by ~79 tokens — consistent with a thinking-mode-specific template preamble. Session rule: hold the thinking on/off state constant mid-session; effort changes were cache-safe on this provider. Native-API cache-unit behavior may differ; not re-tested there.
 
 ### Streaming
 
-Standard OpenAI-compatible SSE streaming. In thinking mode, both `reasoning_content` and `content` are streamed — delta events carry them in separate fields at the same level.
-[source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
-
-Exact SSE event-type enumeration was not quoted in the retrieved excerpts.
+- **Chat Completions**: standard SSE terminated by `data: [DONE]`. In thinking mode, delta events carry `reasoning_content` and `content` as separate fields at the same level. `finish_reason` enum: `stop`, `length`, `content_filter`, `tool_calls`, `insufficient_system_resource`. Logprobs are available on `reasoning_content` tokens as well as `content` tokens.
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
+- **Responses API**: typed event stream, no `[DONE]` (§4).
 
 ### Batch
 
-Not covered in the retrieved primary sources for this pass.
+Still undocumented — no batch page exists on api-docs.deepseek.com and the pricing/API reference make no mention.
 
 ## 8. Deployment Flags (open weights)
 
-Self-hosted deployment paths:
-
-- **`deepseek-ai/DeepSeek-V4-Pro`** — MIT, 1.6T total / 49B active params. The release provides an `encoding` folder with `encode_messages(...)` / `parse_message_from_completion_text(...)`; required for chat-template rendering because no Jinja template is shipped. Recommended local sampling: temperature=1.0, top_p=1.0.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
-- **`deepseek-ai/DeepSeek-V3.2`** — MIT, 685B total parameters, DSA architecture. Prior generation; uses `encoding/encoding_dsv32.py`.
+- **`deepseek-ai/DeepSeek-V4-Flash-0731`** — MIT; the official flash release. Bundled **DSpark speculative-decoding module** drafting from the same checkpoint (no separate draft model): vLLM enables it with `--speculative-config` (`method: dspark`); SGLang with `--speculative-algorithm DSPARK` and no `--speculative-draft-model-path`. The bundle is why safetensors metadata reads 304B params vs the 284B/13B base architecture. Chat rendering requires `encoding_dsv4` (`encode_messages(...)` with `thinking_mode` / `reasoning_effort`); no Jinja template. Recommended sampling: temperature=1.0, top_p=0.95 agentic / 1.0 otherwise.
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
+- **`deepseek-ai/DeepSeek-V3.2`** — MIT, 685B, DSA; prior generation; `encoding_dsv32.py`.
 [source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
-- **Community deployments**: vLLM and SGLang support DeepSeek models via their implementations; exact minimum versions for the V4 chat-encoding helper were not quoted in the retrieved primary sources. Verify against release notes at deployment time.
+- Community-reported serving defect, unresolved as of 2026-08-09: a load-dependent output-corruption bug for self-hosted 0731 under **concurrent agentic traffic** (30-70 tools/request, 50K-500K contexts) — wrong-language insertions, DSML tool-call markup leaking into `reasoning_content` without a closing `</think>`, token-soup at the extreme. Reproduced by three operators on different hardware (2x H200, 8x H100, 1x B300) on **both SGLang and vLLM 0.26.0**; one single-GPU repro at ~12.5% of sequential requests. Clean on single-request smoke tests — load-test before production self-hosting.
+[tier: 2, source: github.com/sgl-project/sglang/issues/33397, retrieved 2026-08-09]
+- vLLM/SGLang minimum versions for 0731 are still not quoted by the vendor; the model card links a vLLM recipe and SGLang cookbook (not fetched this pass).
 
 ## 9. Deprecations and Breaking Changes
 
-### Legacy model IDs hard-retire 2026-07-24
+### Legacy model IDs retired (executed)
 
 [applies-to: deepseek-chat, deepseek-reasoner]
-`deepseek-chat` and `deepseek-reasoner` are hard-retired and inaccessible after **Jul 24th, 2026, 15:59 UTC**. Until then they map to the non-thinking and thinking modes of `deepseek-v4-flash` respectively. Migrate to explicit `deepseek-v4-flash` / `deepseek-v4-pro` IDs plus a reasoning toggle.
-[source: api-docs.deepseek.com/news/news260424, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/updates, retrieved 2026-06-01]
+`deepseek-chat` and `deepseek-reasoner` retired **2026-07-24, 15:59 UTC**. The retirement executed on schedule: both IDs are gone from the Chat Completions model enum and the pricing page. (No doc page states the retirement in past tense; the evidence is the deadline passing plus removal from the enum — a live-probe confirmation was not run.)
+[source: api-docs.deepseek.com/news/news260424, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-08-09]
 
-### `reasoning_content` round-trip rule changed on V4
+### April 2026 release retroactively labeled Preview
 
-[applies-to: deepseek-v4-flash, deepseek-v4-pro]
-On V4, `reasoning_content` is ignored on non-tool-call turns but **required** (or HTTP 400) on tool-call turns. This inverts the legacy `deepseek-reasoner` rule, where any input `reasoning_content` returned 400. Code that unconditionally strips `reasoning_content` will break tool-call round-trips on V4.
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
-[source: api-docs.deepseek.com/guides/reasoning_model, retrieved 2026-06-01]
+The April V4 launch is now titled "DeepSeek V4 Preview Release". The production generation is: flash = 0731 official release; pro = Preview build pending its own official release. Several pro-side promises ("early August 2026": Responses API support, Codex support, three-level effort) were still unfulfilled as of 2026-08-09 — re-check before relying on them.
+[source: api-docs.deepseek.com/news/news260424, retrieved 2026-08-09]
+[source: api-docs.deepseek.com/guides/responses_api, retrieved 2026-08-09]
 
-### `frequency_penalty` / `presence_penalty` hard-deprecated (native); serving-stack-dependent via OpenRouter
+### Documentation URLs moved
 
-`frequency_penalty` and `presence_penalty` are documented as having no effect on the native API.
-[source: api-docs.deepseek.com/api/create-chat-completion, retrieved 2026-06-01]
-Verified 2026-07-19: for OpenRouter callers this is not universal — inert on Fireworks and Novita but effective on Parasail (max penalty cut mean max repeated 4-gram 2.13 to 1.00, N=20/arm, via OpenRouter). Full per-provider numbers in §3.
+`/guides/function_calling` and `/guides/reasoning_model` now return 404. Content lives at `/guides/tool_calls` and `/guides/thinking_mode`. Update any pinned citations.
+[source: api-docs.deepseek.com/guides/function_calling (404), retrieved 2026-08-09]
+
+### Caching contract changes
+
+The 64-token minimum cacheable size is no longer documented; cache matching is now unit-based (§7). Pricing framing moved from yuan (10x discount) to USD (~50x/~120x discounts).
+[source: api-docs.deepseek.com/guides/kv_cache, retrieved 2026-08-09]
+
+### Pre-announced price increase
+
+A significant across-the-board API price increase is announced with no amount or date. Budget models built on the $0.14/$0.28 figures should carry this as a known risk.
+[source: api-docs.deepseek.com/quick_start/pricing, retrieved 2026-08-09]
 
 ### V3.2-Speciale API endpoint expired
 
 [applies-to: deepseek-ai/DeepSeek-V3.2-Speciale]
-Speciale is a weights-only deep-reasoning variant with no tool-calling. Its temporary API endpoint (`https://api.deepseek.com/v3.2_speciale_expires_on_20251215`) **expired 2025-12-15, 15:59 UTC** — it is no longer an active API model. The open weights remain available.
-[source: api-docs.deepseek.com/updates, retrieved 2026-06-01]
-[source: huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale, retrieved 2026-06-01]
-
-### V3.2 vs V3.1 chat template
-
-[applies-to: deepseek-ai/DeepSeek-V3.2]
-V3.2 introduced a revised chat template with new tool-calling format and the "thinking with tools" capability. Code paths built against V3.1's chat template will not render correctly. The safest path: use DeepSeek's `encode_messages()` helper from `encoding_dsv32.py`.
-[source: huggingface.co/deepseek-ai/DeepSeek-V3.2, retrieved 2026-04-19]
+Weights-only deep-reasoning variant, no tool calls; its temporary API endpoint expired 2025-12-15. Weights remain on HF.
+[source: api-docs.deepseek.com/updates, retrieved 2026-08-09]
 
 ### License
 
-**MIT License** (weights) — most permissive of any frontier-scale model family in this reference library. No 700M MAU clause, no regional restriction, no attribution requirement beyond MIT's standard disclaimer.
-[source: huggingface.co/deepseek-ai/DeepSeek-V4-Pro, retrieved 2026-06-01]
+**MIT** (weights), unchanged on 0731 — still the most permissive license of any frontier-scale family in this reference library.
+[source: huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731, retrieved 2026-08-09]
 
 ## 10. Gaps
 
-- **Knowledge cutoff dates** for any V3.x or V4 model are not documented in primary sources.
-- **Maximum tools per request** is not quoted in the retrieved function-calling primary excerpt.
-- **`tool_choice` values** (`auto`, `required`, `none`, named-function form) are not quoted.
-- **Parallel tool-call default** — confirmed parallel-by-default (2 `tool_calls` in one turn, 3/3, Verified 2026-07-19 via OpenRouter/DeepInfra; see §5). The `parallel_tool_calls:false` **disable flag** stays open (native-only — not advertised by any OpenRouter provider for this slug).
-- **Dedicated `response_format: {"type": "json_schema", ...}` parameter** — a path independent of function calling — is not documented in retrieved sources.
-- **Streaming event-type enumeration** on `reasoning_content` vs `content` deltas is not quoted.
-- **vLLM / SGLang minimum versions** supporting the V4 chat-encoding helper are not quoted.
-- **Batch API** shape / availability is not covered.
-- **`Developer` role full behavior** in search-agent scenarios is not detailed.
-- **Chat Prefix Completion (Beta)** feature exists per `thinking_mode` docs but is not covered here.
-- **Exact FIM (Fill-in-the-Middle) support status** — noted as Beta-unsupported in thinking mode; broader availability unclear.
+- **Knowledge cutoff** — still undocumented for any V4 model, on both api-docs and the 0731 model card.
+- **Batch API** — still undocumented.
+- **`parallel_tool_calls` on native Chat Completions** — the parameter is not documented at all on that surface (Responses/Anthropic: always-on, cannot disable). Observed-parallel-by-default stands (2026-07-19, 3/3 via OpenRouter).
+- **Effort mapping for `medium`/`xhigh`** — vendor pages disagree (§4); treat off-ladder values as best-effort mapped.
+- **0731 special-token deltas** — `encoding/README.md` and `inference/README.md` on HF were not fetched; token-level changes vs `encoding_dsv32` unverified.
+- **Native-API re-observation of the tool-turn 400** — doc-verified on 0731, not re-observed live (first-party OpenRouter endpoint unpinnable from the test account; native API not called this pass).
+- **vLLM/SGLang minimum versions** for 0731 — not vendor-quoted.
+- **DeepSeek Harness** (benchmark framework, "minimal mode") — "to be released soon"; vendor benchmark configs are not yet independently reproducible.
+- **Param-count reconciliation** — news260424 still describes flash as 284B total / 13B active while HF safetensors metadata shows 304B for 0731; the model card attributes the difference to the bundled DSpark module, but no single vendor page states both numbers together.

@@ -6,11 +6,11 @@ versions:
   - kimi-k2.6
   - kimi-k2.7-code
   - kimi-k2.7-code-highspeed
-retrieved: 2026-07-19
+retrieved: 2026-08-09
 primary_sources:
   - https://platform.kimi.ai/docs/guide/kimi-k3-quickstart
   - https://platform.kimi.ai/docs/api/models-overview
-  - https://platform.kimi.ai/docs/guide/use-thinking-effort
+  - https://platform.kimi.ai/docs/guide/use-reasoning-effort
   - https://platform.kimi.ai/docs/guide/response_format
   - https://platform.kimi.ai/docs/guide/use-dynamic-tool-loading
   - https://platform.kimi.ai/docs/guide/use-official-tools
@@ -19,16 +19,19 @@ primary_sources:
   - https://platform.kimi.ai/docs/pricing/chat-k3
   - https://platform.kimi.ai/docs/models
   - https://www.kimi.com/blog/kimi-k3
-  - https://huggingface.co/moonshotai
-  - https://github.com/moonshotai
+  - https://huggingface.co/moonshotai/Kimi-K3
+  - https://github.com/MoonshotAI/Kimi-K3
 maturity_note: |
-  Kimi K3 (`kimi-k3`, Moonshot AI) launched ~2026-07-17 and is three days
-  old at this retrieval date. Content is launch-week and volatile: every
-  vendor "currently" / "coming soon" qualifier is preserved and dated
-  2026-07-19. Reasoning is always on and `reasoning_effort` accepts only
-  `max` today. Open weights are announced for release by 2026-07-27 but are
-  NOT yet released, so all open-weights guidance (chat template, special
-  tokens, license) is a declared gap, not an omission. API-layer detail
+  Kimi K3 (`kimi-k3`, Moonshot AI) launched ~2026-07-17. A 2026-08-09
+  re-verification pass superseded the launch-week snapshot: `reasoning_effort`
+  now accepts low / high / max (default max) — no longer max-only — and the
+  open weights shipped on schedule at `moonshotai/Kimi-K3` under the custom
+  "Kimi K3 License" (MIT-style with revenue/MAU thresholds), so the
+  open-weights gaps are narrowed rather than open. Vendor blog now documents
+  two behavioral limitations (excessive proactiveness; sensitivity to broken
+  thinking-history replay) and a self-assessed UX gap versus Claude Fable 5 /
+  GPT-5.6 Sol. The vendor's own web-search caution is now internally
+  inconsistent across doc pages and carried here as disputed. API-layer detail
   (message shapes, sampling params, tool protocol, structured output) lives
   in `kimi-prompt-api.md`.
 ---
@@ -41,9 +44,12 @@ Vendor is Moonshot AI; the platform documentation is at `platform.kimi.ai` and t
 
 ## 1. Model Selection
 
-Current flagship is **`kimi-k3`**: 2.8 trillion parameters, using Kimi Delta Attention (KDA), a hybrid linear attention mechanism. The vendor frames it as its "first open-source model to reach 2.8 trillion parameters" / "3-trillion-parameter class." Context window is 1,048,576 tokens (1M).
+Current flagship is **`kimi-k3`**: 2.8 trillion total / 104B activated parameters (MoE: 93 layers, 896 experts with 16 selected + 2 shared per token, 160K vocabulary), using Kimi Delta Attention (KDA), a hybrid linear attention mechanism, with native MXFP4 weights / MXFP8 activations via quantization-aware training and a MoonViT-V2 401M vision encoder. Context window is 1,048,576 tokens (1M).
 [source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
-[source: platform.kimi.ai/docs/pricing/chat-k3, retrieved 2026-07-19]
+[source: github.com/MoonshotAI/Kimi-K3, retrieved 2026-08-09]
+
+Access requirement: `kimi-k3` is a flagship model unlocked only after a minimum $1 top-up; cumulative top-up determines the rate-limit tier.
+[source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-08-09]
 
 K3 reasons on every request (see §3); there is no non-thinking variant of K3.
 
@@ -63,7 +69,8 @@ K3 reasons on every request (see §3); there is no non-thinking variant of K3.
 - **Long-horizon reasoning, deep knowledge work, agentic coding over long context** — `kimi-k3`. Always-on reasoning, 1M context.
 - **General chat where a smaller context and optional thinking suffice** — `kimi-k2.6`.
 - **Coding with a distinct thinking contract or throughput-sensitive coding** — `kimi-k2.7-code` / `kimi-k2.7-code-highspeed`. Do not port K3's `reasoning_effort` semantics to these; K2.7-code uses its own thinking object.
-- **Self-hosting K3 open weights** — not possible at this retrieval date. Weights are announced for release by 2026-07-27 but not yet published (§8).
+- **Self-hosting K3 open weights** — now possible: weights shipped ~2026-07-27 at `moonshotai/Kimi-K3` under the Kimi K3 License. Hardware floor is high (vendor recipe: at least 8x GB300, or MI355X/MI350X on ROCm; multi-node for production) — see `kimi-prompt-api.md` §8.
+[source: huggingface.co/moonshotai/Kimi-K3, retrieved 2026-08-09]
 
 ### Kimi Code is a separate product
 
@@ -85,17 +92,19 @@ This places K3 in the "preserve the full assistant turn" camp (like Claude and O
 
 ### Open-weights chat template
 
-No canonical chat template, special tokens, or tokenizer config is published for K3 at this retrieval date (weights unreleased — §8). There is no vendor encoder to cite yet. Work through the hosted API message structure above; do not hand-assemble a token stream from memory.
-[source: huggingface.co/moonshotai, retrieved 2026-07-19]
-[source: github.com/moonshotai, retrieved 2026-07-19]
+K3 weights are now published (`moonshotai/Kimi-K3`, ~2026-07-27), but this pass did not verify the shipped chat template, special tokens, or tokenizer config against the repo contents (§8). Work through the hosted API message structure above, or read the repo's template files directly; do not hand-assemble a token stream from memory.
+[source: huggingface.co/moonshotai/Kimi-K3, retrieved 2026-08-09]
 
 ## 3. Instruction Patterns
 
 ### Reasoning is always on
 
-K3 always reasons and may return a separate `reasoning_content` field alongside `content`. Reasoning depth is governed by the top-level `reasoning_effort` parameter (API detail in `kimi-prompt-api.md`), which currently accepts only `max`; the vendor states more reasoning-effort levels are "coming soon."
-[source: platform.kimi.ai/docs/guide/use-thinking-effort, retrieved 2026-07-19]
-[source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
+K3 always reasons and may return a separate `reasoning_content` field alongside `content`. Reasoning depth is governed by the top-level `reasoning_effort` parameter (API detail in `kimi-prompt-api.md`), which now accepts **`low`, `high`, and `max`** with `max` as the default — the launch-week max-only restriction is lifted (the promised "more levels" shipped).
+[source: platform.kimi.ai/docs/guide/use-reasoning-effort, retrieved 2026-08-09]
+[source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-08-09]
+
+**Decide the effort level before the session starts.** Switching `reasoning_effort` mid-session invalidates prefix-cache hits; the vendor's own recommendation is to pick the level up front and hold it for the conversation.
+[source: platform.kimi.ai/docs/api/models-overview, retrieved 2026-08-09]
 Verified 2026-07-19: kimi-k3 with `reasoning_effort` omitted returned non-empty reasoning content even on a trivial prompt ("What is 2+2? one word") — 5/5 reasoning present (23–75 reasoning tokens, via OpenRouter/Moonshot). Confirms K3 reasons on every request; there is no non-thinking variant.
 
 Because reasoning is unconditional, do not prompt for explicit step-by-step chain-of-thought as a way to "turn on" deliberation; the model already reasons internally and surfaces it in `reasoning_content`. Prompts that demand the model print its scratch reasoning into `content` fight the model's own separation of `reasoning_content` from `content`.
@@ -138,15 +147,25 @@ Audio input is not documented in the retrieved sources.
 - **Reasoning is always on and separated.** K3 emits its chain-of-thought in `reasoning_content`, distinct from `content`. Consumers that read only `content` still get the answer; consumers that log the whole message object see the reasoning trace as well.
 [source: platform.kimi.ai/docs/guide/use-thinking-effort, retrieved 2026-07-19]
 
-- **`reasoning_effort` is single-valued today.** Only `max` is accepted as of 2026-07-19; the vendor says more levels are "coming soon." Do not hard-code an assumption that lower-effort values will be rejected forever, but do not send them today.
-[source: platform.kimi.ai/docs/guide/use-thinking-effort, retrieved 2026-07-19]
+- **`reasoning_effort` now has three levels.** `low`, `high`, and `max` are accepted, default `max` (as of 2026-08-09; supersedes the launch-week max-only state). Off-ladder values are not documented — do not send them. Mid-session switches bust the prefix cache (§3).
+[source: platform.kimi.ai/docs/guide/use-reasoning-effort, retrieved 2026-08-09]
+
+- **Excessive proactiveness (vendor-documented).** K3's training emphasizes long-horizon, challenging tasks; on ambiguous tasks it "may make unexpected decisions on the user's behalf." Scope ambiguous requests explicitly and state what is out of bounds.
+[source: kimi.com/blog/kimi-k3, retrieved 2026-08-09]
+
+- **Sensitive to broken thinking-history replay (vendor-documented).** The vendor flags degraded behavior when harnesses drop or mangle reasoning history across turns or switch models mid-session — consistent with the load-bearing full-replay contract in §2. Keep the assistant message intact and avoid mid-session model swaps.
+[source: kimi.com/blog/kimi-k3, retrieved 2026-08-09]
+
+- **Vendor self-assessment: UX gap vs frontier peers.** Despite benchmark scores, the vendor states K3 "exhibits a noticeable gap in user experience compared with Claude Fable 5 and GPT 5.6 Sol." Community sentiment (partially verified — the underlying threads are automation-blocked; corroborated only via search snippets) reads the same: faster and much cheaper, weaker on the hardest long-horizon agentic tasks. [community-reported]
+[source: kimi.com/blog/kimi-k3, retrieved 2026-08-09]
 
 - **Fixed sampling parameters.** `temperature`, `top_p`, `n`, `presence_penalty`, and `frequency_penalty` are fixed and cannot be modified; passing a non-default value returns an error. Omit them from requests. Full values and details are in `kimi-prompt-api.md`.
 [source: platform.kimi.ai/docs/api/models-overview, retrieved 2026-07-19]
 [source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
 
-- **The `web-search` official tool is not recommended right now.** The vendor states verbatim: "The web search (web_search) is currently being updated. We do not recommend using this functionality in the near term."
-[source: platform.kimi.ai/docs/guide/use-official-tools, retrieved 2026-07-19]
+- **The `web-search` official tool's status is vendor-inconsistent.** [disputed: the kimi-k3-quickstart "Important limits" section still states web search "is being updated and is not recommended for production workflows in the near term," while the pricing page flags that caution as outdated documentation and the official-tools guide ships a working web-search example with no caution attached] Both positions are live vendor pages as of 2026-08-09. Treat web-search as usable-but-unsettled; do not build production dependence on it until the docs converge.
+[source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-08-09]
+[source: platform.kimi.ai/docs/pricing/chat-k3, retrieved 2026-08-09]
 
 - **Public image URLs fail.** See §5; a common OpenAI-style prompt that passes an `image_url` pointing at a public URL will be rejected. Base64 or upload first.
 [source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
@@ -170,8 +189,8 @@ Refusal patterns, verbosity defaults, and hedging tendencies are not documented 
 - **Do not pass a public image URL.** K3 rejects public HTTP/HTTPS image URLs; use a base64 data URI or an `ms://` upload reference.
 [source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-07-19]
 
-- **Do not rely on the `web-search` official tool right now.** The vendor advises against using it in the near term while it is being updated.
-[source: platform.kimi.ai/docs/guide/use-official-tools, retrieved 2026-07-19]
+- **Do not build production dependence on the `web-search` official tool yet.** Vendor pages disagree on whether the launch-week caution still applies (§6); until they converge, treat it as usable for experimentation only.
+[source: platform.kimi.ai/docs/guide/kimi-k3-quickstart, retrieved 2026-08-09]
 
 - **Do not port K3's `reasoning_effort` to `kimi-k2.7-code`.** K2.7-code uses its own `thinking` object; the dynamic-tool-loading construct also fails on non-K3 models (§ tool use in `kimi-prompt-api.md`).
 [source: platform.kimi.ai/docs/models, retrieved 2026-07-19]
@@ -181,16 +200,12 @@ Refusal patterns, verbosity defaults, and hedging tendencies are not documented 
 
 ## 8. Gaps
 
-- **Open weights not released.** No public repo, license file, chat template, special tokens, thinking delimiters, or tool-call wire format on Moonshot/Kimi channels, HF `moonshotai`, or GitHub `moonshotai` as of 2026-07-19. Vendor target: "The full model weights will be released by July 27, 2026." A technical report is also pending. Until then, no canonical encoder exists to cite.
-[source: www.kimi.com/blog/kimi-k3, retrieved 2026-07-19]
-[source: huggingface.co/moonshotai, retrieved 2026-07-19]
-[source: github.com/moonshotai, retrieved 2026-07-19]
-
-- **K3 weights license unknown.** "Modified MIT" for K3 appears only in third-party aggregators, not on any vendor page; the K3 launch blog carries no license statement. The K2 lineage was modified-MIT, but K3 is unconfirmed. Not stated as fact here until the license file ships. [community-reported]
-[source: www.kimi.com/blog/kimi-k3, retrieved 2026-07-19]
-
+- **RESOLVED (2026-08-09): open weights released.** `moonshotai/Kimi-K3` (HF) and `MoonshotAI/Kimi-K3` (GitHub) shipped ~2026-07-27 under the **Kimi K3 License** — an MIT-style permissive grant with a $20M/12-month Model-as-a-Service revenue threshold requiring a separate agreement, and a >100M-MAU / $20M-monthly-revenue attribution clause. Not plain MIT and not the previously-rumored "Modified MIT" label; read the license file for the thresholds.
+[source: huggingface.co/moonshotai/Kimi-K3/blob/main/LICENSE, retrieved 2026-08-09]
+- **Shipped chat template / special tokens not verified.** The weights repo exists but this pass did not read its tokenizer/template files; thinking delimiters and tool-call wire format at the token level remain unconfirmed here.
 - **Context-window degradation points and ordering effects** within the 1M window are not documented.
-- **Refusal patterns, verbosity defaults, hedging tendencies** for K3 are not documented.
+- **Refusal patterns and verbosity defaults** for K3 are only partially documented — the vendor blog's two behavioral limitations (§6) are the extent of it.
 - **Few-shot / CoT prompting behavior** specific to K3 (beyond "reasoning is always on") is not documented.
 - **Audio input support** is not documented (image and video are — §5).
-- **Rate-limit and 429 semantics** are not documented on the pricing/quickstart pages checked 2026-07-19 (API-layer gap; see `kimi-prompt-api.md`).
+- **Rate-limit and 429 semantics** are still not documented on the pricing/quickstart pages (re-checked 2026-08-09; API-layer gap; see `kimi-prompt-api.md`).
+- **Kimi Code product docs unreadable by automation.** `www.kimi.com/code/docs` renders as an empty client-side SPA shell on automated fetch (HTTP 200, no content); Kimi Code claims could not be re-verified this pass.

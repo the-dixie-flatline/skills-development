@@ -2,15 +2,20 @@
 family: gemini
 scope: api
 versions:
+  - gemini-3.6-flash
   - gemini-3.5-flash
+  - gemini-3.5-flash-lite
   - gemini-3.1-flash-lite
   - gemini-3.1-pro-preview
   - gemini-2.5-pro
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
-retrieved: 2026-07-19
+retrieved: 2026-08-09
 primary_sources:
   - https://ai.google.dev/gemini-api/docs/models
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.6-flash
+  - https://ai.google.dev/gemini-api/docs/changelog
+  - https://ai.google.dev/gemini-api/docs/pricing
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.1-pro-preview
@@ -28,19 +33,19 @@ primary_sources:
   - https://ai.google.dev/gemini-api/docs/deprecations
   - https://blog.google/innovation-and-ai/technology/developers-tools/interactions-api-general-availability/
 maturity_note: |
-  The Interactions API reached GA on 2026-06-22 and is now the vendor-recommended
-  primary surface for all new projects; `generateContent` is relabeled legacy but
-  remains fully supported and continues to receive new mainline Gemini models.
-  This file leads each section with the Interactions (snake_case) shape and retains
-  the legacy `generateContent` (camelCase) shape clearly labeled. Gemini 3.5 Flash
-  reached GA on 2026-05-19 and Gemini 3.1 Flash-Lite reached GA on 2026-05-07;
-  Gemini 3.1 Pro remains Preview. The Gemini 3 line uses `thinkingLevel`, replacing
-  the 2.5-era `thinkingBudget`. Deprecation pressure is high: Gemini 2.0 Flash /
-  Flash-Lite GA shut down 2026-06-01; Gemini 2.5 Pro / Flash / Flash-Lite GA
-  sunset 2026-10-16. Cache discount percentages and several rate-limit specifics
-  are partial in the retrieved sources and appear in Gaps. Interactions API facts
-  carry a 2026-07-19 retrieval date; older legacy claims retain their 2026-04-18 /
-  2026-06-01 / 2026-07-18 inline dates.
+  A 2026-08-09 pass added Gemini 3.6 Flash (GA 2026-07-21; documented on both
+  the Interactions API and legacy generateContent; default thinking On (medium);
+  computer use as a built-in tool, Preview) and Gemini 3.5 Flash-Lite (GA same
+  day). The 2026-10-16 sunset previously published for the 2.5-GA line has been
+  REMOVED from the live deprecations page (all three now "No shutdown date
+  announced"). The Interactions API (GA 2026-06-22) remains the vendor-recommended
+  primary surface; `generateContent` is legacy but fully supported and still
+  receives mainline models (3.6 Flash confirms this). This file leads each
+  section with the Interactions (snake_case) shape and retains the legacy
+  camelCase shape clearly labeled. The Gemini 3 line uses `thinkingLevel`,
+  replacing the 2.5-era `thinkingBudget`. Cache discount percentages and several
+  rate-limit specifics remain partial and appear in Gaps. Claims not re-touched
+  this pass retain their earlier inline dates.
 ---
 
 # Gemini — API-Layer Reference
@@ -214,10 +219,11 @@ Valid values and defaults:
 | Model                       | Default `thinkingLevel` | Notes                                                                       |
 |-----------------------------|--------------------------|-----------------------------------------------------------------------------|
 | `gemini-3.1-pro-preview`    | `high`                   | Cannot set `minimal`; cannot disable thinking                               |
+| `gemini-3.6-flash`          | `medium` (On)            | Full minimal/low/medium/high enum supported                                 |
 | `gemini-3.5-flash`          | `medium`                 |                                                                             |
 | `gemini-3.1-flash-lite`     | `minimal`                | Does not think by default; raise level for reasoning tasks                  |
 
-[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/thinking, retrieved 2026-08-09]
 Verified 2026-07-19: on gemini-3.1-flash-lite the default is effectively zero, not merely low. With no `thinkingConfig` the model emitted **zero** reasoning tokens (5/5); `reasoning:{effort:high}` emitted 295-463 on the same route, so the field is surfaced and the zero default is real, not a reporting gap (via Google AI Studio). "Minimal thinking by default" holds at the floor: dynamic thinking is off by default here.
 [testable: id=gemini.flash-lite-thinking-default-minimal.v1, expected=request to gemini-3.1-flash-lite with no thinkingConfig produces zero reasoning tokens; effort:high produces non-zero (295-463 observed 2026-07-19)]
 
@@ -484,15 +490,16 @@ Do not generalize "silently ignored" to every out-of-subset keyword. Verified 20
 
 | Model                             | Structured output | Notes                                              |
 |-----------------------------------|-------------------|----------------------------------------------------|
+| `gemini-3.6-flash`                | ✓                 | Combines with function calling                     |
 | `gemini-3.5-flash`                | ✓                 | Combines with function calling                     |
 | `gemini-3.1-flash-lite`           | ✓                 | Combines with function calling                     |
 | `gemini-3.1-pro-preview`          | ✓                 | Combines with function calling                     |
-| `gemini-2.5-pro`                  | ✓                 | GA sunset 2026-10-16                               |
-| `gemini-2.5-flash`                | ✓                 | GA sunset 2026-10-16                               |
-| `gemini-2.5-flash-lite`           | ✓                 | GA sunset 2026-10-16                               |
+| `gemini-2.5-pro`                  | ✓                 | No shutdown date announced (2026-10-16 sunset removed) |
+| `gemini-2.5-flash`                | ✓                 | No shutdown date announced (2026-10-16 sunset removed) |
+| `gemini-2.5-flash-lite`           | ✓                 | No shutdown date announced (2026-10-16 sunset removed) |
 
 [source: ai.google.dev/gemini-api/docs/structured-output, retrieved 2026-04-18]
-[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-06-01]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
 
 ### Function calling + structured output
 
@@ -614,10 +621,17 @@ The Interactions API GA'd 2026-06-22 and is the recommended default for new deve
 `gemini-2.0-flash` / `gemini-2.0-flash-lite` GA, including the `-001` variants, shut down **2026-06-01**.
 [source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-06-01]
 
-### Gemini 2.5 GA sunset (2026-10-16)
+### Gemini 2.5 GA sunset date WITHDRAWN
 
-`gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` GA sunset **2026-10-16**.
-[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-06-01]
+The **2026-10-16** sunset previously published for `gemini-2.5-pro` / `gemini-2.5-flash` / `gemini-2.5-flash-lite` is no longer present on the live deprecations page — all three now read "No shutdown date announced." Migration plans keyed to the October date should be re-based; a new date can still be announced at any time.
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
+
+### New GA models 2026-07-21
+
+`gemini-3.6-flash` and `gemini-3.5-flash-lite` reached GA on 2026-07-21 ("Released stable, production-ready versions of our latest 3.x Flash models"). Both are documented on the Interactions API and the legacy `generateContent` surface — confirming the legacy surface still receives mainline models. `gemini-3.5-flash-lite` is the named replacement for `gemini-3.1-flash-lite` (shutdown 2027-05-07, unchanged).
+[source: ai.google.dev/gemini-api/docs/changelog, retrieved 2026-08-09]
+[source: ai.google.dev/api/generate-content, retrieved 2026-08-09]
+[source: ai.google.dev/gemini-api/docs/deprecations, retrieved 2026-08-09]
 
 ### Shut-down preview IDs
 
@@ -642,5 +656,7 @@ Gemini 3 responses carry a unique `id` on every `functionCall`. Code from the Ge
 - **Safety settings** (`safetySettings` array, category / threshold enums) were not targeted in this retrieval pass.
 - **OpenAI-compat thought-summary retrieval shape** — `extra_body.google.thinking_config.include_thoughts=true` enables summaries, but the response field/shape carrying them is not specified in the docs.
 - **Rate-limit and quota specifics** per model / per tier are not covered.
+- **Vertex AI availability/pricing for `gemini-3.6-flash`** was not fetched this pass; any Vertex-specific divergence from the Gemini API is unverified.
+- **`gemini-3.5-flash` Cyber** (limited-access CodeMender-scoped variant announced 2026-07-21) is out of scope for this file and not researched beyond the launch-blog mention.
 - **Interactions API `v1` (stable) vs `v1beta` divergence** — the reference page notes a stable `v1` exists alongside the `v1beta` documented here; per-version field or behavior differences are not enumerated at `ai.google.dev/api/interactions-api`, checked 2026-07-19.
 - **Interactions usage-object schema divergence** — `ai.google.dev/gemini-api/docs/tokens` documents a 6-key core usage schema (`total_input_tokens`, `total_output_tokens`, `total_thought_tokens`, `total_cached_tokens`, `total_tool_use_tokens`, `total_tokens`), while the `ai.google.dev/api/interactions-api` `Usage` schema additionally lists `cached_tokens_by_modality` and `grounding_tool_count`. Whether those two are populated in practice is unconfirmed; parse the usage object defensively.

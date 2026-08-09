@@ -3,15 +3,19 @@ family: claude
 scope: prompt
 versions:
   - claude-fable-5
+  - claude-opus-5
   - claude-opus-4-8
   - claude-opus-4-7
   - claude-sonnet-5
   - claude-sonnet-4-6
   - claude-haiku-4-5
   - claude-haiku-4-5-20251001
-retrieved: 2026-07-19
+retrieved: 2026-08-09
 primary_sources:
   - https://platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5
+  - https://platform.claude.com/docs/en/about-claude/models/whats-new-opus-5
+  - https://www.anthropic.com/news/claude-opus-5
+  - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5
   - https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback
   - https://www-cdn.anthropic.com/d00db56fa754a1b115b6dd7cb2e3c342ee809620.pdf
@@ -44,9 +48,16 @@ maturity_note: |
   and the `frontier_llm` refusal category re-verified 2026-07-18 (see §1 / §6).
   A 2026-07-19 Tier-1 browser-verification pass added Claude Sonnet 5 (GA
   2026-06-30, drop-in successor to Sonnet 4.6), re-anchored the retired
-  whats-new-claude-4-7 citations, pinned last-turn prefill rejection, and
-  re-confirmed the Mythos Preview 2026-07-21 retirement; those claims carry a
-  2026-07-19 retrieval date inline.
+  whats-new-claude-4-7 citations, and pinned last-turn prefill rejection.
+  A 2026-08-09 pass added Claude Opus 5 (`claude-opus-5`, launched 2026-07-24):
+  now Anthropic's recommended starting model, approaching Fable 5 intelligence
+  at half the price, with thinking on by default, safety classifiers (cyber far
+  less restrictive than Fable 5's), and May 2026 knowledge cutoff. Fable 5
+  remains the flagship. Same pass: Opus 4.1 retirement executed 2026-08-05;
+  the previously-stated Mythos Preview 2026-07-21 retirement did NOT execute
+  (now listed deprecated, no dated retirement); raw chain of thought is now
+  documented as never returned on ANY model. Claims not re-touched retain
+  their earlier inline dates.
 ---
 
 # Claude — Prompt-Layer Reference
@@ -60,7 +71,8 @@ Pick by task axis, not brand.
 | Target task                                                | Preferred model                              | Notes                                                                                      |
 |------------------------------------------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------|
 | Hardest unsolved problems: multi-day autonomous runs, end-to-end work that takes a person hours-to-weeks, ambiguous multi-threaded requests | `claude-fable-5` | Current flagship (GA 2026-06-09); 1M context; 128K max output; adaptive thinking always on; safety classifiers can refuse cyber/bio/reasoning-extraction requests |
-| Hard reasoning and long-horizon agentic coding where Fable 5's cost, latency, or refusal surface is unwanted | `claude-opus-4-8`            | Prior flagship (GA 2026-05-28), still Active and the documented fallback target for Fable 5 refusals; 1M context (200K on Microsoft Foundry); 128K max output; adaptive thinking only |
+| **Recommended starting model**: complex agentic coding and enterprise work | `claude-opus-5`              | Launched 2026-07-24; "a step-change improvement over Claude Opus 4.8"; approaches Fable 5 intelligence at half its price ($5/$25 vs $10/$50); 1M context (default and max, no smaller variant, no beta header); 128K max output; thinking on by default (adaptive), disable allowed only at effort ≤ high; full effort ladder incl. xhigh/max, default high; safety classifiers with a far less restrictive cyber surface than Fable 5; May 2026 knowledge and training cutoff; no special data-retention constraint (unlike Fable 5) |
+| Hard reasoning and long-horizon agentic coding where Opus 5's classifiers or defaults are unwanted | `claude-opus-4-8`            | Prior flagship (GA 2026-05-28), still Active; documented fallback target for cyber-flagged requests; 1M context (200K on Microsoft Foundry); 128K max output; adaptive thinking only; dropped from Anthropic's Latest-models comparison table (now Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5) |
 | Prior flagship, still Active for pinned/complex workloads  | `claude-opus-4-7`                            | 1M context; 128K max output; adaptive thinking only; new tokenizer (higher token counts than Opus 4.6; the 1.0–1.35× figure is historical, no longer vendor-documented as of 2026-07-19) |
 | Balanced intelligence and speed; coding; computer use      | `claude-sonnet-5`                            | Current Sonnet tier (GA 2026-06-30), drop-in successor to Sonnet 4.6 (4.6 dropped from Anthropic's Latest-models comparison, still Active); 1M context (default and max, no beta header); 128K max output (300K via Batch); adaptive thinking on by default, `{type:"disabled"}` supported; effort defaults `high`; sampling params rejected (400); new tokenizer (~30% more tokens than 4.6, per-token price unchanged); no Priority Tier; first Sonnet tier with real-time cybersecurity safeguards (refusals return HTTP 200 `stop_reason: "refusal"`) |
 | Prior Sonnet tier, still Active for pinned workloads       | `claude-sonnet-4-6`                          | 1M context; 64K max output; adaptive + manual thinking                                     |
@@ -81,6 +93,13 @@ Pick by task axis, not brand.
 [source: platform.claude.com/docs/en/about-claude/models/introducing-claude-fable-5-and-claude-mythos-5, retrieved 2026-06-10]
 [source: www-cdn.anthropic.com/d00db56fa754a1b115b6dd7cb2e3c342ee809620.pdf, system card 2026-06-09, retrieved 2026-06-10]
 
+[applies-to: claude-opus-5] Opus 5 (`claude-opus-5`, launched 2026-07-24) is Anthropic's recommended starting model: "If you're unsure which model to use, start with Claude Opus 5 for complex agentic coding and enterprise work," with Fable 5 reserved for the highest-capability needs. Official positioning: it "comes close to the frontier intelligence of Claude Fable 5 at half the price," and is the default model on Claude Max and the strongest model on Claude Pro. Knowledge and training-data cutoffs are both **May 2026** (Fable 5 and Sonnet 5 remain Jan 2026) — currently the freshest cutoff in the lineup. Pricing $5/MTok input, $25/MTok output (identical to Opus 4.8). The dateless ID is a pinned snapshot. Unlike Fable 5, Opus 5 has no special data-retention requirement for general access. Documented behavior deltas that need prompt tuning: longer default responses and written deliverables, more frequent progress narration, readier subagent delegation, and **unprompted self-verification — remove carried-over "verify your work" instructions**, which cause over-verification with no quality gain.
+[source: docs.claude.com/en/release-notes/api, retrieved 2026-08-09]
+[source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-08-09]
+[source: anthropic.com/news/claude-opus-5, retrieved 2026-08-09]
+[source: platform.claude.com/docs/en/about-claude/models/whats-new-opus-5, retrieved 2026-08-09]
+[source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5, retrieved 2026-08-09]
+
 Opus 4.8 is a hybrid reasoning model; its adaptive thinking automatically adjusts how much thinking it uses. Knowledge cutoff and training-data cutoff are both Jan 2026; pricing is $5/MTok input, $25/MTok output.
 [source: anthropic.com/claude/opus, retrieved 2026-06-01]
 [source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
@@ -94,8 +113,8 @@ Opus 4.8 is a hybrid reasoning model; its adaptive thinking automatically adjust
 [source: docs.claude.com/en/docs/about-claude/models/overview, retrieved 2026-06-01]
 [source: anthropic.com/transparency, retrieved 2026-06-01]
 
-Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5) remain available for pinned workloads. Claude Opus 4.1 is now **Deprecated** (deprecated 2026-06-05) and retires **2026-08-05** (replacement `claude-opus-4-8`). Claude Sonnet 4 and Claude Opus 4 (deprecated 2026-04-14) were **retired 2026-06-15** (completed) — replacements `claude-sonnet-4-6` and `claude-opus-4-8`. Claude Mythos Preview retires **2026-07-21** (imminent as of 2026-07-19, two days out; replacement `claude-mythos-5`); the model-deprecations page carries only this date, with no conflicting Anthropic surface. Claude Haiku 3 (`claude-3-haiku-20240307`) is **Retired** (retirement date April 20, 2026; replacement `claude-haiku-4-5-20251001`). Migrate before remaining retirement dates.
-[source: platform.claude.com/docs/en/about-claude/model-deprecations, retrieved 2026-07-19]
+Legacy models (Opus 4.6, Sonnet 4.5, Opus 4.5) remain available for pinned workloads. Claude Opus 4.1 (`claude-opus-4-1-20250805`) **retired on schedule 2026-08-05** (executed; the deprecations table shows Retired). The Aug 5 release note recommends upgrading to Opus 5, while the deprecation-history table still lists `claude-opus-4-8` as the replacement — both are live Anthropic statements. Claude Sonnet 4 and Claude Opus 4 (deprecated 2026-04-14) were **retired 2026-06-15**. **Claude Mythos Preview did NOT retire on 2026-07-21 as previously scheduled**: as of 2026-08-09 the deprecations page lists it as Deprecated with no executed or dated retirement, and the models overview still describes it operating within Project Glasswing (replacement `claude-mythos-5`). Claude Haiku 3 is **Retired** (2026-04-20). Lifecycle floor dates: Opus 5 Active, tentative retirement not sooner than 2027-07-24; Opus 4.8 not sooner than 2027-05-28; Opus 4.7, Sonnet 5, Sonnet 4.6, and Haiku 4.5 all remain Active. No Sonnet or Haiku successor has shipped since 2026-07-19.
+[source: platform.claude.com/docs/en/about-claude/model-deprecations, retrieved 2026-08-09]
 
 Vision is supported across the current models. Claude Opus 4.7 accepts images up to 2576 px / 3.75 MP — roughly 3× Opus 4.6's 1568 px / 1.15 MP ceiling — and maps model coordinates 1:1 to pixels (no scale-factor math for computer-use workflows).
 [source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, vendor page retired as of 2026-07-19 (301 to whats-new-claude-4-8, which no longer documents this); historical, no longer vendor-documented]
@@ -207,11 +226,11 @@ A corollary: prompts and skills developed for prior models are often **too presc
 [applies-to: claude-fable-5] Do not surface remaining-context token countdowns to Fable 5 where avoidable. In very long sessions, a visible token countdown is the most common trigger for the model suggesting a new session, offering to summarize and hand off, or trimming its own work. If the harness must show a countdown, Anthropic's documented reassurance helps: "You have ample context remaining. Do not stop, summarize, or suggest a new session on account of context limits. Continue the work."
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5, retrieved 2026-06-10]
 
-[applies-to: claude-opus-4-7] Opus 4.7 uses a new tokenizer that consumes more tokens for the same text than Opus 4.6; the vendor's original 1.0×–1.35× figure is historical and no longer vendor-documented as of 2026-07-19 (the whats-new-claude-4-7 page now redirects to the Opus 4.8 page, which does not carry it). Still budget `max_tokens` and compaction triggers with headroom for the larger token counts.
-[source: platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7, vendor page retired as of 2026-07-19 (301 to whats-new-claude-4-8, which no longer documents this); historical, no longer vendor-documented]
+The new tokenizer's cost is now vendor-quantified generation-wide: the pricing page documents **approximately 30% more tokens for the same text** on all Claude 4.7-and-later models (including Opus 4.8, Sonnet 5, Fable 5, and Opus 5) plus Mythos Preview, replacing the retired Opus 4.7-specific 1.0×–1.35× figure. Budget `max_tokens` and compaction triggers with that headroom.
+[source: platform.claude.com/docs/en/about-claude/pricing, retrieved 2026-08-09]
 
-[applies-to: claude-sonnet-4-6, claude-haiku-4-5] These models have **context awareness** — they track their remaining context-window budget during a conversation. In agent harnesses that compact context, tell Claude so in the system prompt so it does not prematurely wrap up work as the window fills.
-[source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
+[applies-to: claude-sonnet-5, claude-sonnet-4-6, claude-haiku-4-5] **Context awareness** (injected token-budget tags) now covers Sonnet 5, Sonnet 4.6, Sonnet 4.5, and Haiku 4.5 — and is explicitly **not** injected on Opus 4.7 and later Opus models, Fable 5, or Mythos 5, which use beta task budgets instead. In agent harnesses that compact context, tell context-aware models so in the system prompt so they do not prematurely wrap up work as the window fills.
+[source: platform.claude.com/docs/en/build-with-claude/context-windows, retrieved 2026-08-09]
 
 Long-context structural tips: wrap each document in `<document index="n">` with `<document_content>` and `<source>` subtags; put the query at the end.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
@@ -272,6 +291,19 @@ Videos are processed as frame sequences; the current Claude generation does not 
 [source: docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-fable-5.html, retrieved 2026-06-10]
 [source: www-cdn.anthropic.com/d00db56fa754a1b115b6dd7cb2e3c342ee809620.pdf, system card 2026-06-09, retrieved 2026-06-10]
 
+[applies-to: claude-opus-5]
+
+- **Safety classifiers are no longer Fable-5-only.** Opus 5 carries classifiers and the `stop_reason: "refusal"` surface. A fifth refusal category **`general_harms`** now exists alongside `cyber` / `bio` / `frontier_llm` / `reasoning_extraction` — and Anthropic notes benign work can sometimes trigger it. Opus 5's cyber classifiers are far less restrictive than Fable 5's: source-code vulnerability finding is permitted, while binary-based scanning, penetration testing, and exploit generation are blocked; Anthropic expects interventions "around 85% less often than they do for Fable 5." A Cyber Verification Program (CVP) gives vetted enterprises/researchers access to an Opus 5 version with fewer security restrictions. Routing change on Fable 5: bio-blocked requests on Fable 5 now fall back to **Opus 5**, not Opus 4.8 (cyber-flagged still goes to Opus 4.8). In Claude Code, Opus 5 cyber-flagged requests re-run on Opus 4.8, but Opus 5 biology flags end in a refusal with **no** fallback model. The security-code-review refusal problem documented for Fable 5 above is therefore materially reduced on Opus 5 — it is the better default for security-review harnesses.
+[source: platform.claude.com/docs/en/build-with-claude/refusals-and-fallback, retrieved 2026-08-09]
+[source: anthropic.com/news/claude-opus-5, retrieved 2026-08-09]
+[source: docs.claude.com/en/docs/claude-code/model-config, retrieved 2026-08-09]
+
+- **With thinking disabled, occasional protocol leakage.** Opus 5 can emit a tool call as plain text instead of a structured `tool_use` block, and can leak internal XML tags into visible output. Vendor mitigation: keep thinking enabled at `low` effort rather than disabling it, or use the documented combined instruction (avoid naming thinking tags explicitly).
+[source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5, retrieved 2026-08-09]
+
+- **Effort controls thinking volume, not visible response length.** Changing effort does not reliably shorten responses on Opus 5 — prompt for length instead. Anthropic advises a fresh effort sweep on your own evals rather than carrying settings from earlier models.
+[source: platform.claude.com/docs/en/build-with-claude/effort, retrieved 2026-08-09]
+
 [applies-to: claude-opus-4-7]
 
 - **Response length calibrates to task complexity** rather than defaulting to fixed verbosity. Simple lookups get short answers; open-ended analysis gets long ones. If your product depends on a specific verbosity, tune the prompt — do not rely on defaults.
@@ -295,7 +327,8 @@ Videos are processed as frame sequences; the current Claude generation does not 
 
 ### Tool-use triggering on code review
 
-[applies-to: claude-opus-4-7, claude-opus-4-8, claude-sonnet-5] Review harnesses with language like "only report high-severity issues" or "don't nitpick" measurably suppress low/medium-severity finding recall on current tiers, which follow the filter faithfully. First documented on Opus 4.7; live testing confirms it on the current split-review tiers (verified 2026-07-19, seeded synthetic module, N=20/arm, via OpenRouter→Anthropic): filtered-arm low/medium recall falls below a report-everything baseline by ~23 pp on Sonnet 5 and ~22 pp on Opus 4.8 (bootstrap 95% CIs excluding zero), with the Opus 4.7 control at ~18 pp — same direction, just under the pre-registered 20 pp margin. High-severity recall stayed at 100% in every arm on every tier, so the filter suppresses exactly the low/medium findings [testable: id=claude.review-recall-suppression-crossver.v1, expected=a "report only high-severity / don't nitpick" filter lowers low/medium finding recall relative to a report-everything instruction]. Move filtering to a separate verification pass, or instruct the finding stage to report everything with confidence and severity scores for downstream ranking.
+[applies-to: claude-opus-5, claude-opus-4-7, claude-opus-4-8, claude-sonnet-5] Review harnesses with language like "only report high-severity issues" or "don't nitpick" measurably suppress low/medium-severity finding recall on current tiers, which follow the filter faithfully. On Opus 5 this is now vendor-documented, not only field-observed: "the model may follow that instruction literally and report less; ask it to report everything and filter in a separate pass instead."
+[source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5, retrieved 2026-08-09] First documented on Opus 4.7; live testing confirms it on the current split-review tiers (verified 2026-07-19, seeded synthetic module, N=20/arm, via OpenRouter→Anthropic): filtered-arm low/medium recall falls below a report-everything baseline by ~23 pp on Sonnet 5 and ~22 pp on Opus 4.8 (bootstrap 95% CIs excluding zero), with the Opus 4.7 control at ~18 pp — same direction, just under the pre-registered 20 pp margin. High-severity recall stayed at 100% in every arm on every tier, so the filter suppresses exactly the low/medium findings [testable: id=claude.review-recall-suppression-crossver.v1, expected=a "report only high-severity / don't nitpick" filter lowers low/medium finding recall relative to a report-everything instruction]. Move filtering to a separate verification pass, or instruct the finding stage to report everything with confidence and severity scores for downstream ranking.
 [source: platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, retrieved 2026-04-18]
 
 ## 7. Anti-Patterns
@@ -341,7 +374,11 @@ Videos are processed as frame sequences; the current Claude generation does not 
 
 ## 8. Gaps
 
-- **Fable 5 image-dimension ceiling** (px / MP maximum) was not stated in the retrieved sources; only the qualitative vision improvements are documented.
+- **Fable 5 and Opus 5 image-dimension ceilings** (px / MP maximum) are not stated in any retrieved source; only qualitative vision improvements are documented.
+- **Opus 5 system card** (anthropic.com/claude-opus-5-system-card) was not fetched in the 2026-08-09 pass; quantitative refusal-rate, alignment-audit, and capability-eval figures are absent here.
+- **Fable 5 / Mythos 5 access suspension and restoration (2026-07-01).** The release notes record that access was suspended and then restored, with a statement at anthropic.com/news/redeploying-fable-5; that statement was not fetched, so the cause and scope of the flagship-continuity event are not covered here.
+- **The string `claude-opus-5[1m]` is a Claude Code `/model` selection form, not an API model ID.** Claude Code documents a `[1m]` suffix convention on aliases and full model names; on the API, Opus 5 (like Fable 5 and Sonnet 5) always runs the 1M window. Claude Code plans gate Opus 1M by entitlement; `CLAUDE_CODE_DISABLE_1M_CONTEXT` removes the 1M variants. No Tier 1 source shows the exact `claude-opus-5[1m]` string.
+[source: docs.claude.com/en/docs/claude-code/model-config, retrieved 2026-08-09]
 - **System-card coverage is partial.** The extraction of the Fable 5 / Mythos 5 system card used here truncated mid-document; sections covering refusal-rate tables, alignment/honesty evals, and capability benchmarks (card §§4–8) were captured only as summaries. Quantitative refusal rates are therefore not reproduced here beyond the Bedrock card's qualitative "materially higher" statement.
 - **Mythos 5 prompting differences** are not covered in depth. Access is limited-release (Project Glasswing); practitioner experience is not broadly representative. The system card notes Mythos 5's reasoning text is denser and harder to interpret than prior models and that it is somewhat more vulnerable to prefill attacks — both observed on Mythos, not Fable.
 - **Haiku 4.5 extended-thinking patterns** are new as of this generation; the best-practices guide does not yet include Haiku-specific thinking recommendations. Use adaptive-thinking guidance from Sonnet 4.6 as a starting point and validate on Haiku workloads.

@@ -12,6 +12,105 @@ Initial public-release scaffolding:
 - `README.md` — includes a "Source Validation — Known Limitation" section documenting bot-blocker 403s on several federal primary sources and the manual-browser-verification fallback.
 - `TODO.md` — open workflow items, principally the source-validation backlog (automated fetch 403s on Cloudflare-protected primary sources; preference for structured-data endpoints like the Federal Register JSON API where HTML surfaces are blocked; open questions on a maintainer-facing verification helper).
 
+## prompt-engineering-skill 0.9.0 — 2026-08-09
+
+Four-family release sweep (DeepSeek 0731 deep dive + Claude Opus 5 + Gemini 3.6
+Flash + Kimi K3 re-verification), grounded in a five-lane primary-source research
+pass with per-claim adversarial re-fetch verification, plus an empirical probe lane
+against `deepseek/deepseek-v4-flash-0731` via OpenRouter (187 requests, $0.20,
+provider-pinned Novita fp8 unless noted). `SKILL.md` bumped to `0.9.0`;
+contract-version unchanged (2026-04-18).
+
+### DeepSeek — CHANGED (both files, major)
+
+- **The 0731 release is not a new API ID**: `deepseek-v4-flash` now serves
+  DeepSeek-V4-Flash-0731 (official release, public beta 2026-07-31; the April
+  launch is retroactively "Preview"; re-post-train only). `deepseek-v4-pro`
+  still serves the Preview build. Vendor agentic benchmarks put flash-0731
+  above the pro Preview.
+- Thinking now documented **default-on at effort high**; effort ladder gains a
+  real `low` on flash (pro: high/max only); thinking mode silently ignores
+  temperature/top_p/penalties. New native **Responses API** surface (flash-only,
+  stateless, server-side web_search, full SSE event enumeration, `text.format`
+  structured output). Anthropic-surface claude-name mapping documented.
+- Pricing now USD with ~50x cache-hit discount ($0.0028 hit / $0.14 miss /
+  $0.28 out) and a **pre-announced significant price increase** (no date).
+  kv_cache guide rewritten around SWA "cache prefix units"; the 64-token
+  minimum is gone. Legacy `deepseek-chat`/`deepseek-reasoner` retirement
+  executed 2026-07-24. Docs moved: /guides/function_calling → /guides/tool_calls,
+  /guides/reasoning_model → /guides/thinking_mode (old URLs 404).
+- Gaps closed with Tier-1 cites: tool_choice values/defaults, 128-function max,
+  FIM (beta, non-thinking only), Chat Prefix Completion CoT input, streaming
+  event types (both surfaces), finish_reason enum, user_id KVCache isolation.
+- **New field-observed session guidance** (the daily-driver ask): session-contract
+  placement system-role vs first-user-message indistinguishable (N=3x12-turn
+  sessions/arm + control); no constraint drift or recall loss out to 40 turns /
+  ~237K ctx; terse local format instructions override standing session rules on
+  their turn (10/12); CoT exhaustion of max_tokens returns a silent empty
+  content; effort switches are cache-safe while the thinking on/off toggle busts
+  the prefix cache; append-only history sustained a 95.9% median cached fraction
+  past 200K ctx. All via OpenRouter (first-party endpoint unpinnable), marked
+  with N and provider throughout.
+- Tier-2 (marked): OpenRouter provider variance (fp4-fp8 quant, 131K-1M ctx
+  caps), conflicting agent-loop reliability reports, advisor-model supervision
+  pattern, self-host corruption bug under concurrent load (sglang tracker),
+  tool-call error-rate telemetry.
+
+### Claude — CHANGED (both files)
+
+- Added **Opus 5** (`claude-opus-5`, launched 2026-07-24): recommended starting
+  model at half Fable 5's price; 1M ctx (default=max); thinking on by default
+  with `disabled` accepted only at effort <= high (400 with xhigh/max);
+  classifiers with new fifth category `general_harms`; cyber classifiers ~85%
+  less restrictive than Fable 5's; 512-token cache minimum; May 2026 cutoff;
+  fast mode (`speed:"fast"`, $10/$50, research preview); prompting deltas
+  (remove carried-over verification instructions; thinking-disabled tool-call/
+  XML leakage).
+- Corrections: raw CoT documented never-returned on ANY model; batch refusals DO
+  carry full stop_details; forced tool use now works with adaptive thinking;
+  fallback beta headers rev'd to 2026-07-01 (+ "default" server-selected mode;
+  entries can override output_config/speed); Fable 5 bio-refusals now fall back
+  to Opus 5; **Mythos Preview's 2026-07-21 retirement did not execute**
+  (deprecated, undated); Opus 4.1 retired 2026-08-05 (executed); ~30% tokenizer
+  overhead now vendor-documented for all 4.7+ models; context-awareness roster
+  corrected (Sonnet tier + Haiku only, explicitly not Opus 4.7+/Fable/Mythos).
+
+### Gemini — CHANGED (both files)
+
+- Added **gemini-3.6-flash** (GA 2026-07-21): default thinking On (medium),
+  full thinkingLevel enum, 1M/65K tokens, Mar 2026 cutoff, $1.50/$7.50,
+  efficiency positioning (~17% fewer output tokens than 3.5 Flash — vendor-cited
+  third-party figure), computer use as a **built-in client-side tool (Preview)** —
+  reversing the prior "no computer use on 3.x text models" claim. Added
+  **gemini-3.5-flash-lite** (GA, claimed 350 tok/s, $0.30/$2.50, named
+  replacement for 3.1 Flash-Lite).
+- **The 2.5-GA 2026-10-16 sunset date was withdrawn** — deprecations page now
+  shows "No shutdown date announced" for all three 2.5 models. 2.0 shutdown
+  confirmed executed. 3.5 Pro is partner-only; Gemini 4 pre-training started.
+
+### Kimi — CHANGED (both files)
+
+- `reasoning_effort` widened from max-only to **{low, high, max}, default max**;
+  mid-session switches invalidate the prefix cache (vendor-documented).
+- **Open weights released** ~2026-07-27 on schedule: `moonshotai/Kimi-K3` under
+  the custom **Kimi K3 License** (MIT-style; $20M MaaS revenue threshold;
+  >100M-MAU attribution clause) — resolves the launch-week gap and the
+  "Modified MIT" rumor. Architecture disclosed (2.8T/104B active, 896 experts,
+  MXFP4/MXFP8); vLLM 0.27+ docker image, SGLang, TokenSpeed; 8x GB300-class
+  hardware floor; unsloth GGUFs need an unmerged llama.cpp fork (Tier 2).
+- `tool_choice: "required"` is K3-exclusive (K2.x errors). Vendor blog documents
+  excessive proactiveness and thinking-history-replay sensitivity, and
+  self-assesses a UX gap vs Fable 5 / GPT-5.6 Sol. The web-search caution is now
+  vendor-inconsistent across live pages — carried as `[disputed]`. K3 unlock
+  requires a $1 minimum top-up. K2.5/moonshot-v1 2026-08-31 sunset on schedule.
+
+### SKILL.md — CHANGED
+
+- Coverage rows rewritten for the four families; cross-family reasoning-controls
+  line updated (DeepSeek default-on + low/high/max; Kimi widened ladder +
+  cache-invalidation note; Claude Opus 5 disable-gate; Gemini 3.6 Flash default).
+  Version 0.9.0.
+
 ## prompt-engineering-skill 0.8.2 — 2026-07-19
 
 Conformance patch: the SKILL.md front-matter `description` had grown to 1,049
